@@ -20,3 +20,9 @@
  */
 
 _Pragma("once")
+
+#include <stdio.h>
+#include <stdarg.h>
+
+extern FILE* xcomm_io_fopen(const char* restrict file, const char* restrict mode);
+extern int   xcomm_io_vsprintf(char* str, size_t size, const char* restrict format, va_list ap);

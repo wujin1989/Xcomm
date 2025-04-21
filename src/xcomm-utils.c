@@ -19,3 +19,17 @@
  *  IN THE SOFTWARE.
  */
 
+#include "xcomm-utils.h"
+#include "platform/platform-utils.h"
+
+int xcomm_utils_cpus(void) {
+    return platform_utils_cpus();
+}
+
+xcomm_tid_t xcomm_utils_gettid(void) {
+    return platform_utils_gettid();
+}
+
+xcomm_pid_t xcomm_utils_getpid(void) {
+    return platform_utils_getpid();
+}

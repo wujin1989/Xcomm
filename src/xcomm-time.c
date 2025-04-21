@@ -19,3 +19,13 @@
  *  IN THE SOFTWARE.
  */
 
+#include "xcomm-time.h"
+#include "platform/platform-time.h"
+
+void xcomm_time_sleep(const uint32_t ms) {
+    platform_time_sleep(ms);
+}
+
+void xcomm_time_localtime(const time_t* restrict time, struct tm* restrict tm) {
+    platform_time_localtime(time, tm);
+}

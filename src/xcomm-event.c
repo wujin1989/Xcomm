@@ -19,3 +19,23 @@
  *  IN THE SOFTWARE.
  */
 
+#include "xcomm-event.h"
+#include "platform/platform-event.h"
+
+void xcomm_event_add(xcomm_pollfd_t pfd, xcomm_sock_t sfd, int events, void* ud){
+    platform_event_add(pfd, sfd, events, ud);
+}
+
+void xcomm_event_mod(
+    xcomm_pollfd_t pfd, xcomm_sock_t sfd, int events, void* ud) {
+    platform_event_mod(pfd, sfd, events, ud);
+}
+
+void xcomm_event_del(xcomm_pollfd_t pfd, xcomm_sock_t sfd) {
+    platform_event_del(pfd, sfd);
+}
+
+int xcomm_event_wait(
+    xcomm_pollfd_t pfd, xcomm_pollevent_t* events, int timeout) {
+    return platform_event_wait(pfd, events, timeout);
+}

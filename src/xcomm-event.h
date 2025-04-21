@@ -20,3 +20,10 @@
  */
 
 _Pragma("once")
+
+#include "xcomm-types.h"
+
+extern void xcomm_event_add(xcomm_pollfd_t pfd, xcomm_sock_t sfd, int events, void* ud);
+extern void xcomm_event_mod(xcomm_pollfd_t pfd, xcomm_sock_t sfd, int events, void* ud);
+extern void xcomm_event_del(xcomm_pollfd_t pfd, xcomm_sock_t sfd);
+extern int  xcomm_event_wait(xcomm_pollfd_t pfd, xcomm_pollevent_t* events, int timeout);

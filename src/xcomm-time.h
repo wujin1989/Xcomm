@@ -20,3 +20,9 @@
  */
 
 _Pragma("once")
+
+#include <time.h>
+#include <stdint.h>
+
+extern void xcomm_time_sleep(const uint32_t ms);
+extern void xcomm_time_localtime(const time_t* restrict time, struct tm* restrict tm);

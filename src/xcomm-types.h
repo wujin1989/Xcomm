@@ -20,3 +20,20 @@
  */
 
 _Pragma("once")
+
+#include "platform/platform-types.h"
+
+#define XCOMM_SO_ERROR_EAGAIN         PLATFORM_SO_ERROR_EAGAIN
+#define XCOMM_SO_ERROR_EWOULDBLOCK    PLATFORM_SO_ERROR_EWOULDBLOCK
+#define XCOMM_SO_ERROR_ECONNRESET     PLATFORM_SO_ERROR_ECONNRESET
+#define XCOMM_SO_ERROR_ETIMEDOUT      PLATFORM_SO_ERROR_ETIMEDOUT
+#define XCOMM_SO_ERROR_INVALID_SOCKET PLATFORM_SO_ERROR_INVALID_SOCKET
+#define XCOMM_SO_ERROR_SOCKET_ERROR   PLATFORM_SO_ERROR_SOCKET_ERROR
+
+#define XCOMM_MAX_PROCESS_EVENTS      PLATFORM_MAX_PROCESS_EVENTS
+
+typedef platform_tid_t       xcomm_tid_t;
+typedef platform_pid_t       xcomm_pid_t;
+typedef platform_pollfd_t    xcomm_pollfd_t;
+typedef platform_sock_t      xcomm_sock_t;
+typedef platform_pollevent_t xcomm_pollevent_t;

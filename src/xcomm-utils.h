@@ -20,3 +20,9 @@
  */
 
 _Pragma("once")
+
+#include "xcomm-types.h"
+
+extern int         xcomm_utils_cpus(void);
+extern xcomm_tid_t xcomm_utils_gettid(void);
+extern xcomm_pid_t xcomm_utils_getpid(void);
