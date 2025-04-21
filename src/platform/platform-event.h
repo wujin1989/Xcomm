@@ -20,3 +20,10 @@
  */
 
 _Pragma("once")
+
+#include "platform-types.h"
+
+extern void platform_event_add(platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud);
+extern void platform_event_mod(platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud);
+extern void platform_event_del(platform_pollfd_t pfd, platform_sock_t sfd);
+extern int  platform_event_wait(platform_pollfd_t pfd, platform_pollevent_t* events, int timeout);

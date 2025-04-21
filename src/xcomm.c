@@ -19,4 +19,12 @@
  *  IN THE SOFTWARE.
  */
 
-#include "flink.h"
+#include "xcomm.h"
+
+xcomm_t* xcomm_create(xcomm_scene_t scene) {
+    return NULL;
+}
+
+void xcomm_destroy(xcomm_t* restrict xcomm) {
+
+}

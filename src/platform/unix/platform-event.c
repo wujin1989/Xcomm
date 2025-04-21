@@ -18,3 +18,137 @@
  *  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  *  IN THE SOFTWARE.
  */
+
+#include "platform/platform-event.h"
+
+#if defined(__linux__)
+void platform_event_add(
+    platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud) {
+    struct epoll_event ee = {0};
+    if (events & PLATFORM_EVENT_RD) {
+        ee.events |= EPOLLIN;
+    }
+    if (events & PLATFORM_EVENT_WR) {
+        ee.events |= EPOLLOUT;
+    }
+    ee.data.ptr = ud;
+    epoll_ctl(pfd, EPOLL_CTL_ADD, sfd, (struct epoll_event*)&ee);
+}
+
+void platform_event_mod(
+    platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud) {
+    struct epoll_event ee = {0};
+    if (events & PLATFORM_EVENT_RD) {
+        ee.events |= EPOLLIN;
+    }
+    if (events & PLATFORM_EVENT_WR) {
+        ee.events |= EPOLLOUT;
+    }
+    ee.data.ptr = ud;
+    epoll_ctl(pfd, EPOLL_CTL_MOD, sfd, (struct epoll_event*)&ee);
+}
+
+void platform_event_del(platform_pollfd_t pfd, platform_sock_t sfd) {
+    epoll_ctl(pfd, EPOLL_CTL_DEL, sfd, NULL);
+}
+
+int platform_event_wait(
+    platform_pollfd_t pfd, platform_pollevent_t* events, int timeout) {
+    int                n;
+    struct epoll_event __events[PLATFORM_MAX_PROCESS_EVENTS] = {0};
+    memset(
+        events, 0, sizeof(platform_pollevent_t) * PLATFORM_MAX_PROCESS_EVENTS);
+    do {
+        n = epoll_wait(pfd, __events, PLATFORM_MAX_PROCESS_EVENTS, timeout);
+    } while (n == -1 && errno == EINTR);
+
+    if (n < 0) {
+        return 0;
+    }
+    for (int i = 0; i < n; i++) {
+        events[i].ptr = __events[i].data.ptr;
+        if (__events[i].events & (EPOLLIN | EPOLLHUP | EPOLLERR)) {
+            events[i].events |= PLATFORM_EVENT_RD;
+        }
+        if (__events[i].events & (EPOLLOUT | EPOLLHUP | EPOLLERR)) {
+            events[i].events |= PLATFORM_EVENT_WR;
+        }
+    }
+    return n;
+}
+#endif
+
+#if defined(__APPLE__)
+void platform_event_add(
+    platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud) {
+    struct kevent ke = {0};
+    if (events & PLATFORM_EVENT_RD) {
+        EV_SET(&ke, sfd, EVFILT_READ, EV_ADD, 0, 0, ud);
+        kevent(pfd, &ke, 1, NULL, 0, NULL);
+    }
+    if (events & PLATFORM_EVENT_WR) {
+        EV_SET(&ke, sfd, EVFILT_WRITE, EV_ADD, 0, 0, ud);
+        kevent(pfd, &ke, 1, NULL, 0, NULL);
+    }
+}
+
+void platform_event_mod(
+    platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud) {
+    struct kevent ke = {0};
+    if (events & PLATFORM_EVENT_RD) {
+        EV_SET(&ke, sfd, EVFILT_READ, EV_ADD, 0, 0, ud);
+        kevent(pfd, &ke, 1, NULL, 0, NULL);
+    }
+    if (events & PLATFORM_EVENT_WR) {
+        EV_SET(&ke, sfd, EVFILT_WRITE, EV_ADD, 0, 0, ud);
+        kevent(pfd, &ke, 1, NULL, 0, NULL);
+    }
+}
+
+void platform_event_del(platform_pollfd_t pfd, platform_sock_t sfd) {
+    struct kevent ke = {0};
+    EV_SET(&ke, sfd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+    kevent(pfd, &ke, 1, NULL, 0, NULL);
+
+    EV_SET(&ke, sfd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+    kevent(pfd, &ke, 1, NULL, 0, NULL);
+}
+
+int platform_event_wait(
+    platform_pollfd_t pfd, platform_pollevent_t* events, int timeout) {
+    struct kevent __events[PLATFORM_MAX_PROCESS_EVENTS];
+
+    memset(
+        events, 0, sizeof(platform_pollevent_t) * PLATFORM_MAX_PROCESS_EVENTS);
+    struct timespec ts = {0, 0};
+    ts.tv_sec = (timeout / 1000UL);
+    ts.tv_nsec = ((timeout % 1000UL) * 1000000UL);
+
+    int n = kevent(pfd, NULL, 0, __events, PLATFORM_MAX_PROCESS_EVENTS, &ts);
+    /**
+     * In systems utilizing the kqueue mechanism, read and write events are
+     * handled independently, differing from the behavior of epoll. With epoll,
+     * read and write events can be combined, allowing the use of bitwise
+     * operations (such as the & operator) to check for specific event types on
+     * a file descriptor. However, in kqueue, read and write events are treated
+     * as entirely separate occurrences. This means that bitwise operations
+     * cannot be simply applied to determine the event type. Consequently, when
+     * processing events returned by kqueue, each event must be examined
+     * individually to ascertain whether it is a read event or a write event,
+     * and then the event handling logic should be updated accordingly.
+     * This typically involves maintaining a separate state for each file
+     * descriptor to track the event types that have occurred, rather than
+     * employing bitwise operations within a single event mask.
+     */
+    for (int i = 0; i < n; i++) {
+        events[i].ptr = __events[i].udata;
+        if (__events[i].filter == EVFILT_READ) {
+            events[i].events |= PLATFORM_EVENT_RD;
+        }
+        if (__events[i].filter == EVFILT_WRITE) {
+            events[i].events |= PLATFORM_EVENT_WR;
+        }
+    }
+    return n;
+}
+#endif

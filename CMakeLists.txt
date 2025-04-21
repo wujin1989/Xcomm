@@ -19,6 +19,11 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 set(SRCS
 	src/xcomm.c
 	src/xcomm-logger.c
+	src/xcomm-event.c
+	src/xcomm-io.c
+	src/xcomm-socket.c
+	src/xcomm-time.c
+	src/xcomm-utils.c
 
 	src/melsec/melsec-1c.c
 	src/melsec/melsec-3c.c
@@ -30,6 +35,7 @@ if(WIN32)
 		src/platform/win/platform-utils.c
 		src/platform/win/platform-socket.c
 		src/platform/win/platform-event.c
+		src/platform/win/wepoll/wepoll.c
 		src/platform/win/platform-time.c
 		src/platform/win/platform-io.c
 	)

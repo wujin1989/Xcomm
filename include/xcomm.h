@@ -21,9 +21,10 @@
 
 _Pragma("once")
 
+#include <stdio.h>
 #include <stdbool.h>
 
-    typedef struct xcomm_s xcomm_t;
+typedef struct xcomm_s                 xcomm_t;
 typedef struct xcomm_scene_s           xcomm_scene_t;
 typedef struct xcomm_scene_melsec_1c_s xcomm_scene_melsec_1c_t;
 typedef struct xcomm_scene_melsec_3c_s xcomm_scene_melsec_3c_t;
@@ -31,16 +32,17 @@ typedef struct xcomm_scene_melsec_3e_s xcomm_scene_melsec_3e_t;
 
 const char* xcomm_scenes[] = {"melsec-1c", "melsec-3c", "melsec-3e"};
 
-struct xcomm_s {
-    xcomm_scene_t scene;
-    bool          logging;
+struct xcomm_scene_melsec_1c_s {
+    int a;
 };
 
-struct xcomm_scene_melsec_1c_s {};
+struct xcomm_scene_melsec_3c_s {
+    int a;
+};
 
-struct xcomm_scene_melsec_3c_s {};
-
-struct xcomm_scene_melsec_3e_s {};
+struct xcomm_scene_melsec_3e_s {
+    int a;
+};
 
 struct xcomm_scene_s {
     union {
@@ -51,7 +53,10 @@ struct xcomm_scene_s {
     char* restrict name;
 };
 
+struct xcomm_s {
+    xcomm_scene_t scene;
+    bool          logging;
+};
+
 extern xcomm_t* xcomm_create(xcomm_scene_t scene);
-extern void     xcomm_dial(xcomm_t* restrict xcomm);
-extern void     xcomm_listen(xcomm_t* restrict xcomm);
 extern void     xcomm_destroy(xcomm_t* restrict xcomm);

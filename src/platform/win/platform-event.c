@@ -18,3 +18,61 @@
  *  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  *  IN THE SOFTWARE.
  */
+
+#include "wepoll/wepoll.h"
+#include "platform/platform-event.h"
+
+void platform_event_add(
+    platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud) {
+    struct epoll_event ee = {0};
+    if (events & PLATFORM_EVENT_RD) {
+        ee.events |= EPOLLIN;
+    }
+    if (events & PLATFORM_EVENT_WR) {
+        ee.events |= EPOLLOUT;
+    }
+    ee.data.ptr = ud;
+    epoll_ctl(pfd, EPOLL_CTL_ADD, sfd, (struct epoll_event*)&ee);
+}
+
+void platform_event_mod(
+    platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud) {
+    struct epoll_event ee = {0};
+    if (events & PLATFORM_EVENT_RD) {
+        ee.events |= EPOLLIN;
+    }
+    if (events & PLATFORM_EVENT_WR) {
+        ee.events |= EPOLLOUT;
+    }
+    ee.data.ptr = ud;
+    epoll_ctl(pfd, EPOLL_CTL_MOD, sfd, (struct epoll_event*)&ee);
+}
+
+void platform_event_del(platform_pollfd_t pfd, platform_sock_t sfd) {
+    epoll_ctl(pfd, EPOLL_CTL_DEL, sfd, NULL);
+}
+
+int platform_event_wait(
+    platform_pollfd_t pfd, platform_pollevent_t* events, int timeout) {
+    int                n;
+    struct epoll_event __events[PLATFORM_MAX_PROCESS_EVENTS] = {0};
+    memset(
+        events, 0, sizeof(platform_pollevent_t) * PLATFORM_MAX_PROCESS_EVENTS);
+    do {
+        n = epoll_wait(pfd, __events, PLATFORM_MAX_PROCESS_EVENTS, timeout);
+    } while (n == -1 && errno == EINTR);
+
+    if (n < 0) {
+        return 0;
+    }
+    for (int i = 0; i < n; i++) {
+        events[i].ptr = __events[i].data.ptr;
+        if (__events[i].events & (EPOLLIN | EPOLLHUP | EPOLLERR)) {
+            events[i].events |= PLATFORM_EVENT_RD;
+        }
+        if (__events[i].events & (EPOLLOUT | EPOLLHUP | EPOLLERR)) {
+            events[i].events |= PLATFORM_EVENT_WR;
+        }
+    }
+    return n;
+}
