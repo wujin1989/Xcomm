@@ -21,9 +21,11 @@
 
 _Pragma("once")
 
-#include "flink-types.h"
+#define flink_logi(...)    flink_logger_log(LOGGER_LEVEL_INFO,  __FILE__, __LINE__, __VA_ARGS__)
+#define flink_logd(...)    flink_logger_log(LOGGER_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#define flink_logw(...)    flink_logger_log(LOGGER_LEVEL_WARN,  __FILE__, __LINE__, __VA_ARGS__)
+#define flink_loge(...)    flink_logger_log(LOGGER_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 
-extern flink_t* flink_create(flink_scene_t scene);
-extern void flink_dial(flink_t* restrict flink);
-extern void flink_listen(flink_t* restrict flink);
-extern void flink_destroy(flink_t* restrict flink);
+extern void flink_logger_create(const char* restrict file);
+extern void flink_logger_destroy(void);
+extern void flink_logger_log(cdk_logger_level_t level, const char* restrict file, int line, const char* restrict fmt, ...);

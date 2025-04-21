@@ -21,9 +21,8 @@
 
 _Pragma("once")
 
-#include "flink-types.h"
+#include "platform-types.h"
 
-extern flink_t* flink_create(flink_scene_t scene);
-extern void flink_dial(flink_t* restrict flink);
-extern void flink_listen(flink_t* restrict flink);
-extern void flink_destroy(flink_t* restrict flink);
+extern int platform_utils_cpus(void);
+extern platform_tid_t platform_utils_gettid(void);
+extern platform_pid_t platform_utils_getpid(void);

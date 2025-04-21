@@ -21,9 +21,8 @@
 
 _Pragma("once")
 
-#include "flink-types.h"
+#include <time.h>
+#include <stdint.h>
 
-extern flink_t* flink_create(flink_scene_t scene);
-extern void flink_dial(flink_t* restrict flink);
-extern void flink_listen(flink_t* restrict flink);
-extern void flink_destroy(flink_t* restrict flink);
+extern void platform_time_sleep(const uint32_t ms);
+extern void platform_time_localtime(const time_t* restrict time, struct tm* restrict tm);

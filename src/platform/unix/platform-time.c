@@ -18,12 +18,22 @@
  *  FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS
  *  IN THE SOFTWARE.
  */
+#include <errno.h>
+#include "platform/platform-time.h"
 
-_Pragma("once")
+void platform_time_sleep(const uint32_t ms) {
+    int ret;
+    struct timespec req;
+    struct timespec rem;
 
-#include "flink-types.h"
+    req.tv_sec = ms / (1000UL);
+    req.tv_nsec = (ms % 1000UL) * (1000000UL);
+    do {
+        ret = nanosleep(&req, &rem);
+    } while (ret == -1 && errno == EINTR);
+}
 
-extern flink_t* flink_create(flink_scene_t scene);
-extern void flink_dial(flink_t* restrict flink);
-extern void flink_listen(flink_t* restrict flink);
-extern void flink_destroy(flink_t* restrict flink);
+void platform_time_localtime(const time_t* restrict time, struct tm* restrict tm) {
+    tzset();
+    localtime_r(time, tm);
+}

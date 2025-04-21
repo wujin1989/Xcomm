@@ -19,11 +19,12 @@
  *  IN THE SOFTWARE.
  */
 
-_Pragma("once")
+#include "platform/platform-io.h"
 
-#include "flink-types.h"
+FILE* platform_io_fopen(const char* restrict file, const char* restrict mode) {
+    return fopen(file, mode);
+}
 
-extern flink_t* flink_create(flink_scene_t scene);
-extern void flink_dial(flink_t* restrict flink);
-extern void flink_listen(flink_t* restrict flink);
-extern void flink_destroy(flink_t* restrict flink);
+int platform_io_vsprintf(char* str, size_t size, const char* restrict format, va_list ap) {
+    return vsnprintf(str, size, format, ap);
+}

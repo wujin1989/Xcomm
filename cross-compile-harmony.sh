@@ -5,7 +5,7 @@ export PATH=${OHOS_NDK_HOME}/build-tools/cmake/bin:$PATH
 
 cmake.exe 																		\
 	-G Ninja 																	\
-	-B out 																	\
+	-B out 																	    \
 	-DCMAKE_TOOLCHAIN_FILE="${OHOS_NDK_HOME}/build/cmake/ohos.toolchain.cmake" 	\
 	-DOHOS_ARCH=arm64-v8a														\
 	-DOHOS_STL=c++_static														\

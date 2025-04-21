@@ -19,11 +19,18 @@
  *  IN THE SOFTWARE.
  */
 
-_Pragma("once")
+#include "platform/platform-utils.h"
 
-#include "flink-types.h"
+int platform_utils_cpus(void) {
+    SYSTEM_INFO si;
+    GetSystemInfo(&si);
+    return (int)si.dwNumberOfProcessors;
+}
 
-extern flink_t* flink_create(flink_scene_t scene);
-extern void flink_dial(flink_t* restrict flink);
-extern void flink_listen(flink_t* restrict flink);
-extern void flink_destroy(flink_t* restrict flink);
+platform_tid_t platform_utils_gettid(void) {
+    return GetCurrentThreadId();
+}
+
+platform_pid_t platform_utils_getpid(void) {
+    return GetCurrentProcessId();
+}

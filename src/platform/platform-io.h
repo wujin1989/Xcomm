@@ -21,9 +21,8 @@
 
 _Pragma("once")
 
-#include "flink-types.h"
+#include <stdio.h>
+#include <stdarg.h>
 
-extern flink_t* flink_create(flink_scene_t scene);
-extern void flink_dial(flink_t* restrict flink);
-extern void flink_listen(flink_t* restrict flink);
-extern void flink_destroy(flink_t* restrict flink);
+extern FILE* platform_io_fopen(const char* restrict file, const char* restrict mode);
+extern int platform_io_vsprintf(char* str, size_t size, const char* restrict format, va_list ap);

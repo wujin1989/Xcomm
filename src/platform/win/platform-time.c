@@ -19,11 +19,18 @@
  *  IN THE SOFTWARE.
  */
 
-_Pragma("once")
+#include "platform/platform-time.h"
+#include "deprecated/c11-threads.h"
 
-#include "flink-types.h"
+void platform_time_sleep(const uint32_t ms) {
+    struct timespec ts;
+    ts.tv_sec = ms / 1000UL;
+    ts.tv_nsec = (ms % 1000UL) * 1000000UL;
 
-extern flink_t* flink_create(flink_scene_t scene);
-extern void flink_dial(flink_t* restrict flink);
-extern void flink_listen(flink_t* restrict flink);
-extern void flink_destroy(flink_t* restrict flink);
+    thrd_sleep(&ts, NULL);
+}
+
+void platform_time_localtime(const time_t* restrict time, struct tm* restrict tm) {
+    _tzset();
+    localtime_s(tm, time);
+}

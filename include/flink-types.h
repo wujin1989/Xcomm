@@ -21,9 +21,37 @@
 
 _Pragma("once")
 
-#include "flink-types.h"
+#include <stdbool.h>
 
-extern flink_t* flink_create(flink_scene_t scene);
-extern void flink_dial(flink_t* restrict flink);
-extern void flink_listen(flink_t* restrict flink);
-extern void flink_destroy(flink_t* restrict flink);
+typedef struct flink_s                 flink_t;
+typedef struct flink_scene_s           flink_scene_t;
+typedef union flink_scene_melsec_u     flink_scene_melsec_t;
+typedef struct flink_scene_melsec_1c_s flink_scene_melsec_1c_t;
+typedef struct flink_scene_melsec_3c_s flink_scene_melsec_3c_t;
+typedef struct flink_scene_melsec_3e_s flink_scene_melsec_3e_t;
+
+const char* flink_scenes[] = {"melsec-1c", "melsec-3c", "melsec-3e"};
+
+struct flink_s {
+    flink_scene_t scene;
+    bool          logging;
+};
+
+struct flink_scene_melsec_1c_s {};
+
+struct flink_scene_melsec_3c_s {};
+
+struct flink_scene_melsec_3e_s {};
+
+union flink_scene_melsec_u {
+    flink_scene_melsec_1c_t mc_1c;
+    flink_scene_melsec_3c_t mc_3c;
+    flink_scene_melsec_3e_t mc_3e;
+};
+
+struct flink_scene_s {
+    union {
+        flink_scene_melsec_t melsec;
+    };
+    char* restrict name;
+};

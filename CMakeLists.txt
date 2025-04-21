@@ -2,10 +2,6 @@ cmake_minimum_required(VERSION 3.16)
 
 project(flink LANGUAGES C)
 
-if (CMAKE_SIZEOF_VOID_P LESS 8)
-	message(FATAL_ERROR "only 64bit supported")
-endif()
-
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
@@ -21,18 +17,31 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(SRCS
-	
+	src/flink.c
+	src/flink-logger.c
+
+	src/melsec/melsec-1c.c
+	src/melsec/melsec-3c.c
+	src/melsec/melsec-3e.c
 )
 
 if(WIN32)
 	list(APPEND SRCS 
-		
+		src/platform/win/platform-utils.c
+		src/platform/win/platform-socket.c
+		src/platform/win/platform-event.c
+		src/platform/win/platform-time.c
+		src/platform/win/platform-io.c
 	)
 endif()
 
 if(UNIX)
 	list(APPEND SRCS 
-		
+		src/platform/unix/platform-utils.c
+		src/platform/unix/platform-socket.c
+		src/platform/unix/platform-event.c
+		src/platform/unix/platform-time.c
+		src/platform/unix/platform-io.c
 	)
 endif()
 

@@ -19,11 +19,26 @@
  *  IN THE SOFTWARE.
  */
 
-_Pragma("once")
+#include "platform/platform-utils.h"
 
-#include "flink-types.h"
+#if defined(__APPLE__)
+platform_tid_t platform_utils_gettid(void) {
+    uint64_t tid;
+    pthread_threadid_np(NULL, &tid);
+    return tid;
+}
+#endif
 
-extern flink_t* flink_create(flink_scene_t scene);
-extern void flink_dial(flink_t* restrict flink);
-extern void flink_listen(flink_t* restrict flink);
-extern void flink_destroy(flink_t* restrict flink);
+#if defined(__linux__)
+platform_tid_t platform_utils_gettid(void) {
+    return syscall(SYS_gettid);
+}
+#endif
+
+int platform_utils_cpus(void) {
+    return (int)sysconf(_SC_NPROCESSORS_ONLN);
+}
+
+platform_pid_t platform_utils_getpid(void) {
+    return getpid();
+}
