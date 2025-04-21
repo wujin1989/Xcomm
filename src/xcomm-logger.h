@@ -21,37 +21,20 @@
 
 _Pragma("once")
 
-#include <stdbool.h>
+#define xcomm_logi(...)                                                        \
+    xcomm_logger_log(LOGGER_LEVEL_INFO, __FILE__, __LINE__, __VA_ARGS__)
+#define xcomm_logd(...)                                                        \
+    xcomm_logger_log(LOGGER_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#define xcomm_logw(...)                                                        \
+    xcomm_logger_log(LOGGER_LEVEL_WARN, __FILE__, __LINE__, __VA_ARGS__)
+#define xcomm_loge(...)                                                        \
+    xcomm_logger_log(LOGGER_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
 
-    typedef struct xlink_s xlink_t;
-typedef struct xlink_scene_s           xlink_scene_t;
-typedef struct xlink_scene_melsec_1c_s xlink_scene_melsec_1c_t;
-typedef struct xlink_scene_melsec_3c_s xlink_scene_melsec_3c_t;
-typedef struct xlink_scene_melsec_3e_s xlink_scene_melsec_3e_t;
-
-const char* xlink_scenes[] = {"melsec-1c", "melsec-3c", "melsec-3e"};
-
-struct xlink_s {
-    xlink_scene_t scene;
-    bool          logging;
-};
-
-struct xlink_scene_melsec_1c_s {};
-
-struct xlink_scene_melsec_3c_s {};
-
-struct xlink_scene_melsec_3e_s {};
-
-struct xlink_scene_s {
-    union {
-        xlink_scene_melsec_1c_t mc_1c;
-        xlink_scene_melsec_3c_t mc_3c;
-        xlink_scene_melsec_3e_t mc_3e;
-    };
-    char* restrict name;
-};
-
-extern xlink_t* xlink_create(xlink_scene_t scene);
-extern void xlink_dial(xlink_t* restrict xlink);
-extern void xlink_listen(xlink_t* restrict xlink);
-extern void xlink_destroy(xlink_t* restrict xlink);
+extern void xcomm_logger_create(const char* restrict file);
+extern void xcomm_logger_destroy(void);
+extern void xcomm_logger_log(
+    cdk_logger_level_t level,
+    const char* restrict file,
+    int line,
+    const char* restrict fmt,
+    ...);

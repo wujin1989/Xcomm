@@ -1,5 +1,5 @@
 # Overview
-xlink is a client toolkit that integrates multiple communication protocols, encapsulating the functionalities of different protocols into a unified and streamlined interface for developers. Whether it's industrial protocols or other general communication protocols, Xlink provides seamless support, simplifying data interaction and system integration in complex environments. With Xlink, users can efficiently achieve cross-platform and cross-protocol communication, significantly enhancing development efficiency and system compatibility.
+Xcomm is a client toolkit that integrates multiple communication protocols, encapsulating the functionalities of different protocols into a unified and streamlined interface for developers. Whether it's industrial protocols or other general communication protocols, Xlink provides seamless support, simplifying data interaction and system integration in complex environments. With Xlink, users can efficiently achieve cross-platform and cross-protocol communication, significantly enhancing development efficiency and system compatibility.
 
 # Feature
 - Cross-platform Compatibility

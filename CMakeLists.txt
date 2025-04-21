@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-project(xlink LANGUAGES C)
+project(Xcomm LANGUAGES C)
 
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_C_STANDARD_REQUIRED ON)
@@ -17,8 +17,8 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(SRCS
-	src/xlink.c
-	src/xlink-logger.c
+	src/xcomm.c
+	src/xcomm-logger.c
 
 	src/melsec/melsec-1c.c
 	src/melsec/melsec-3c.c
@@ -45,12 +45,12 @@ if(UNIX)
 	)
 endif()
 
-add_library(xlink STATIC ${SRCS})
-target_link_libraries(xlink PRIVATE ${CMAKE_DL_LIBS})
+add_library(xcomm STATIC ${SRCS})
+target_link_libraries(xcomm PRIVATE ${CMAKE_DL_LIBS})
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include DESTINATION . FILES_MATCHING PATTERN "*")
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs DESTINATION . FILES_MATCHING PATTERN "*")
-install(TARGETS xlink DESTINATION lib)
+install(TARGETS xcomm DESTINATION lib)
 
 add_subdirectory(examples)
 

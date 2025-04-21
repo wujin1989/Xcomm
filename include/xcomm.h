@@ -21,11 +21,37 @@
 
 _Pragma("once")
 
-#define flink_logi(...)    flink_logger_log(LOGGER_LEVEL_INFO,  __FILE__, __LINE__, __VA_ARGS__)
-#define flink_logd(...)    flink_logger_log(LOGGER_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
-#define flink_logw(...)    flink_logger_log(LOGGER_LEVEL_WARN,  __FILE__, __LINE__, __VA_ARGS__)
-#define flink_loge(...)    flink_logger_log(LOGGER_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
+#include <stdbool.h>
 
-extern void flink_logger_create(const char* restrict file);
-extern void flink_logger_destroy(void);
-extern void flink_logger_log(cdk_logger_level_t level, const char* restrict file, int line, const char* restrict fmt, ...);
+    typedef struct xcomm_s xcomm_t;
+typedef struct xcomm_scene_s           xcomm_scene_t;
+typedef struct xcomm_scene_melsec_1c_s xcomm_scene_melsec_1c_t;
+typedef struct xcomm_scene_melsec_3c_s xcomm_scene_melsec_3c_t;
+typedef struct xcomm_scene_melsec_3e_s xcomm_scene_melsec_3e_t;
+
+const char* xcomm_scenes[] = {"melsec-1c", "melsec-3c", "melsec-3e"};
+
+struct xcomm_s {
+    xcomm_scene_t scene;
+    bool          logging;
+};
+
+struct xcomm_scene_melsec_1c_s {};
+
+struct xcomm_scene_melsec_3c_s {};
+
+struct xcomm_scene_melsec_3e_s {};
+
+struct xcomm_scene_s {
+    union {
+        xcomm_scene_melsec_1c_t mc_1c;
+        xcomm_scene_melsec_3c_t mc_3c;
+        xcomm_scene_melsec_3e_t mc_3e;
+    };
+    char* restrict name;
+};
+
+extern xcomm_t* xcomm_create(xcomm_scene_t scene);
+extern void     xcomm_dial(xcomm_t* restrict xcomm);
+extern void     xcomm_listen(xcomm_t* restrict xcomm);
+extern void     xcomm_destroy(xcomm_t* restrict xcomm);
