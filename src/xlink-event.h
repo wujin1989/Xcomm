@@ -20,10 +20,3 @@
  */
 
 _Pragma("once")
-
-#include "flink-types.h"
-
-extern flink_t* flink_create(flink_scene_t scene);
-extern void flink_dial(flink_t* restrict flink);
-extern void flink_listen(flink_t* restrict flink);
-extern void flink_destroy(flink_t* restrict flink);

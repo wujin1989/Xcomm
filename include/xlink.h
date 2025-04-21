@@ -23,35 +23,35 @@ _Pragma("once")
 
 #include <stdbool.h>
 
-typedef struct flink_s                 flink_t;
-typedef struct flink_scene_s           flink_scene_t;
-typedef union flink_scene_melsec_u     flink_scene_melsec_t;
-typedef struct flink_scene_melsec_1c_s flink_scene_melsec_1c_t;
-typedef struct flink_scene_melsec_3c_s flink_scene_melsec_3c_t;
-typedef struct flink_scene_melsec_3e_s flink_scene_melsec_3e_t;
+    typedef struct xlink_s xlink_t;
+typedef struct xlink_scene_s           xlink_scene_t;
+typedef struct xlink_scene_melsec_1c_s xlink_scene_melsec_1c_t;
+typedef struct xlink_scene_melsec_3c_s xlink_scene_melsec_3c_t;
+typedef struct xlink_scene_melsec_3e_s xlink_scene_melsec_3e_t;
 
-const char* flink_scenes[] = {"melsec-1c", "melsec-3c", "melsec-3e"};
+const char* xlink_scenes[] = {"melsec-1c", "melsec-3c", "melsec-3e"};
 
-struct flink_s {
-    flink_scene_t scene;
+struct xlink_s {
+    xlink_scene_t scene;
     bool          logging;
 };
 
-struct flink_scene_melsec_1c_s {};
+struct xlink_scene_melsec_1c_s {};
 
-struct flink_scene_melsec_3c_s {};
+struct xlink_scene_melsec_3c_s {};
 
-struct flink_scene_melsec_3e_s {};
+struct xlink_scene_melsec_3e_s {};
 
-union flink_scene_melsec_u {
-    flink_scene_melsec_1c_t mc_1c;
-    flink_scene_melsec_3c_t mc_3c;
-    flink_scene_melsec_3e_t mc_3e;
-};
-
-struct flink_scene_s {
+struct xlink_scene_s {
     union {
-        flink_scene_melsec_t melsec;
+        xlink_scene_melsec_1c_t mc_1c;
+        xlink_scene_melsec_3c_t mc_3c;
+        xlink_scene_melsec_3e_t mc_3e;
     };
     char* restrict name;
 };
+
+extern xlink_t* xlink_create(xlink_scene_t scene);
+extern void xlink_dial(xlink_t* restrict xlink);
+extern void xlink_listen(xlink_t* restrict xlink);
+extern void xlink_destroy(xlink_t* restrict xlink);

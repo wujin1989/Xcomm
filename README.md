@@ -1,7 +1,5 @@
 # Overview
-Flink is a versatile library designed to encapsulate and support a wide range of industrial communication protocols. 
-It simplifies the integration of diverse industrial systems, enabling seamless data exchange and interoperability in automation and IoT environments. 
-By providing a unified interface, Flink streamlines application development while ensuring compatibility with various hardware and software components.
+xlink is a client toolkit that integrates multiple communication protocols, encapsulating the functionalities of different protocols into a unified and streamlined interface for developers. Whether it's industrial protocols or other general communication protocols, Xlink provides seamless support, simplifying data interaction and system integration in complex environments. With Xlink, users can efficiently achieve cross-platform and cross-protocol communication, significantly enhancing development efficiency and system compatibility.
 
 # Feature
 - Cross-platform Compatibility
