@@ -19,21 +19,27 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-time.h"
-#include "platform/platform-time.h"
+#include "xcomm-varint.h"
 
-void xcomm_time_sleep(const uint32_t ms) {
-    platform_time_sleep(ms);
-}
-
-void xcomm_time_localtime(const time_t* restrict time, struct tm* restrict tm) {
-    platform_time_localtime(time, tm);
-}
-
-uint64_t xcomm_time_now(void) {
-    struct timespec tsc;
-    if (!timespec_get(&tsc, TIME_UTC)) {
-        return 0;
+int xcomm_varint_encode(uint64_t value, char* buf) {
+    int pos = 0;
+    while (value > 0x7f) {
+        buf[pos++] = (char)((value & 0x7f) | 0x80);
+        value >>= 7;
     }
-    return (tsc.tv_sec * (1000UL) + tsc.tv_nsec / (1000000UL));
+    buf[pos++] = (char)value;
+    return pos;
+}
+
+uint64_t xcomm_varint_decode(char* buf, int* pos) {
+    uint64_t value = 0;
+    int      shift = 0;
+
+    while (buf[*pos] & 0x80) {
+        value |= (uint64_t)(buf[*pos] & 0x7f) << shift;
+        shift += 7;
+        (*pos)++;
+    }
+    value |= (uint64_t)(buf[(*pos)++]) << shift;
+    return value;
 }

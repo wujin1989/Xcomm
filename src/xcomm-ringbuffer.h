@@ -19,21 +19,16 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-time.h"
-#include "platform/platform-time.h"
+_Pragma("once")
 
-void xcomm_time_sleep(const uint32_t ms) {
-    platform_time_sleep(ms);
-}
+#include "xcomm-types.h"
 
-void xcomm_time_localtime(const time_t* restrict time, struct tm* restrict tm) {
-    platform_time_localtime(time, tm);
-}
-
-uint64_t xcomm_time_now(void) {
-    struct timespec tsc;
-    if (!timespec_get(&tsc, TIME_UTC)) {
-        return 0;
-    }
-    return (tsc.tv_sec * (1000UL) + tsc.tv_nsec / (1000000UL));
-}
+extern void     xcomm_ringbuf_create(xcomm_ringbuf_t* ring, uint32_t esize, uint32_t bufsize);
+extern void     xcomm_ringbuf_destroy(xcomm_ringbuf_t* ring);
+extern bool     xcomm_ringbuf_full(xcomm_ringbuf_t* ring);
+extern bool     xcomm_ringbuf_empty(xcomm_ringbuf_t* ring);
+extern uint32_t xcomm_ringbuf_len(xcomm_ringbuf_t* ring);
+extern uint32_t xcomm_ringbuf_cap(xcomm_ringbuf_t* ring);
+extern uint32_t xcomm_ringbuf_avail(xcomm_ringbuf_t* ring);
+extern uint32_t xcomm_ringbuf_write(xcomm_ringbuf_t* ring, const void* buf, uint32_t entry_count);
+extern uint32_t xcomm_ringbuf_read(xcomm_ringbuf_t* ring, void* buf, uint32_t entry_count);

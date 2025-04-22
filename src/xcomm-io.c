@@ -19,6 +19,7 @@
  *  IN THE SOFTWARE.
  */
 
+#include "xcomm-io.h"
 #include "platform/platform-io.h"
 
 FILE* xcomm_io_fopen(const char* restrict file, const char* restrict mode) {

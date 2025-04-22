@@ -19,21 +19,19 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-time.h"
-#include "platform/platform-time.h"
+_Pragma("once")
 
-void xcomm_time_sleep(const uint32_t ms) {
-    platform_time_sleep(ms);
-}
+#include "xcomm-types.h"
 
-void xcomm_time_localtime(const time_t* restrict time, struct tm* restrict tm) {
-    platform_time_localtime(time, tm);
-}
+#define xcomm_list_data(x, t, m) ((t *)((char *)(x) - offsetof(t, m)))
 
-uint64_t xcomm_time_now(void) {
-    struct timespec tsc;
-    if (!timespec_get(&tsc, TIME_UTC)) {
-        return 0;
-    }
-    return (tsc.tv_sec * (1000UL) + tsc.tv_nsec / (1000000UL));
-}
+extern void xcomm_list_init(xcomm_list_t* list);
+extern void xcomm_list_insert_head(xcomm_list_t* list, xcomm_list_node_t* node);
+extern void xcomm_list_insert_tail(xcomm_list_t* list, xcomm_list_node_t* node);
+extern void xcomm_list_remove(xcomm_list_node_t* node);
+extern bool xcomm_list_empty(xcomm_list_t* list);
+extern xcomm_list_node_t* xcomm_list_head(xcomm_list_t* list);
+extern xcomm_list_node_t* xcomm_list_tail(xcomm_list_t* list);
+extern xcomm_list_node_t* xcomm_list_next(xcomm_list_node_t* node);
+extern xcomm_list_node_t* xcomm_list_prev(xcomm_list_node_t* node);
+extern xcomm_list_node_t* xcomm_list_sentinel(xcomm_list_t* list);

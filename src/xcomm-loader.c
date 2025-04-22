@@ -19,21 +19,17 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-time.h"
-#include "platform/platform-time.h"
+#include "xcomm-loader.h"
+#include "platform/platform-loader.h"
 
-void xcomm_time_sleep(const uint32_t ms) {
-    platform_time_sleep(ms);
+void* xcomm_loader_create(char* restrict file) {
+    return platform_loader_create(file);
 }
 
-void xcomm_time_localtime(const time_t* restrict time, struct tm* restrict tm) {
-    platform_time_localtime(time, tm);
+void* xcomm_loader_load(void* module, const char* restrict func) {
+    return platform_loader_load(module, func);
 }
 
-uint64_t xcomm_time_now(void) {
-    struct timespec tsc;
-    if (!timespec_get(&tsc, TIME_UTC)) {
-        return 0;
-    }
-    return (tsc.tv_sec * (1000UL) + tsc.tv_nsec / (1000000UL));
+void xcomm_loader_destroy(void* module) {
+    platform_loader_destroy(module);
 }

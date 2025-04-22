@@ -33,3 +33,21 @@ xcomm_tid_t xcomm_utils_gettid(void) {
 xcomm_pid_t xcomm_utils_getpid(void) {
     return platform_utils_getpid();
 }
+
+int xcomm_utils_byteorder(void) {
+    /**
+     * 0 if the system is big-endian.
+     * 1 if the system is little-endian.
+     */
+    return (*((unsigned char*)(&(unsigned short){0x01})));
+}
+
+int xcomm_utils_rand(int min, int max) {
+    static unsigned int seed = 0;
+    if (seed == 0) {
+        seed = (unsigned int)time(NULL);
+        srand(seed);
+    }
+    return min + (int)((double)((double)(max) - (min) + 1.0) *
+                       (rand() / ((RAND_MAX) + 1.0)));
+}

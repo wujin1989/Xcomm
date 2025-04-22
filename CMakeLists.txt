@@ -17,17 +17,33 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(SRCS
-	src/xcomm.c
-	src/xcomm-logger.c
+	src/xcomm-base64.c
 	src/xcomm-event.c
+	src/xcomm-heap.c
 	src/xcomm-io.c
+	src/xcomm-list.c
+	src/xcomm-logger.c
+	src/xcomm-queue.c
+	src/xcomm-rbtree.c
+	src/xcomm-sha1.c
+	src/xcomm-sha256.c
 	src/xcomm-socket.c
 	src/xcomm-time.c
 	src/xcomm-utils.c
+	src/xcomm-varint.c
+	src/xcomm-stack.c
+	src/xcomm-loader.c
+	src/xcomm-timer.c
+	src/xcomm-rwlock.c
+	src/xcomm-spinlock.c
+	src/xcomm-wg.c
+	src/xcomm-thrdpool.c
+	src/xcomm-ringbuffer.c
+	src/xcomm.c
 
-	src/melsec/melsec-1c.c
-	src/melsec/melsec-3c.c
-	src/melsec/melsec-3e.c
+	src/modules/melsec/melsec-1c.c
+	src/modules/melsec/melsec-3c.c
+	src/modules/melsec/melsec-3e.c
 )
 
 if(WIN32)
@@ -37,6 +53,7 @@ if(WIN32)
 		src/platform/win/platform-event.c
 		src/platform/win/wepoll/wepoll.c
 		src/platform/win/platform-time.c
+		src/platform/win/platform-loader.c
 		src/platform/win/platform-io.c
 	)
 endif()
@@ -47,6 +64,7 @@ if(UNIX)
 		src/platform/unix/platform-socket.c
 		src/platform/unix/platform-event.c
 		src/platform/unix/platform-time.c
+		src/platform/unix/platform-loader.c
 		src/platform/unix/platform-io.c
 	)
 endif()

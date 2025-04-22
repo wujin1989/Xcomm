@@ -19,21 +19,9 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-time.h"
-#include "platform/platform-time.h"
+_Pragma("once")
 
-void xcomm_time_sleep(const uint32_t ms) {
-    platform_time_sleep(ms);
-}
+#include "xcomm-types.h"
 
-void xcomm_time_localtime(const time_t* restrict time, struct tm* restrict tm) {
-    platform_time_localtime(time, tm);
-}
-
-uint64_t xcomm_time_now(void) {
-    struct timespec tsc;
-    if (!timespec_get(&tsc, TIME_UTC)) {
-        return 0;
-    }
-    return (tsc.tv_sec * (1000UL) + tsc.tv_nsec / (1000000UL));
-}
+extern void xcomm_base64_encode(uint8_t* src, size_t srclen, uint8_t* dst, size_t* dstlen);
+extern void xcomm_base64_decode(uint8_t* src, size_t srclen, uint8_t* dst, size_t* dstlen);
