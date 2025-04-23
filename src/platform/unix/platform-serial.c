@@ -19,19 +19,4 @@
  *  IN THE SOFTWARE.
  */
 
-_Pragma("once")
-
-#include <stdint.h>
-
-typedef struct xcomm_sha256_s xcomm_sha256_t;
-
-struct xcomm_sha256_s {
-    uint8_t  data[64];
-    uint32_t datalen;
-    uint64_t bitlen;
-    uint32_t state[8];
-};
-
-extern void xcomm_sha256_init(xcomm_sha256_t* ctx);
-extern void xcomm_sha256_update(xcomm_sha256_t* ctx, uint8_t* data, size_t len);
-extern void xcomm_sha256_final(xcomm_sha256_t* ctx, uint8_t digest[32]);
+#include "platform/platform-serial.h"

@@ -19,6 +19,7 @@
  *  IN THE SOFTWARE.
  */
 
+#include <string.h>
 #include "xcomm-rbtree.h"
 
 #define RB_RED 0

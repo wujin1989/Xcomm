@@ -33,6 +33,7 @@
  *  IN THE SOFTWARE.
  */
 
+#include <string.h>
 #include "xcomm-sha256.h"
 
 #define ROTLEFT(a, b) (((a) << (b)) | ((a) >> (32 - (b))))

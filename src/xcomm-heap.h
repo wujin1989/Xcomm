@@ -21,9 +21,28 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 
 #define xcomm_heap_data(x, t, m) ((t*)((char*)(x) - offsetof(t, m)))
+
+typedef struct xcomm_heap_s      xcomm_heap_t;
+typedef struct xcomm_heap_node_s xcomm_heap_node_t;
+
+struct xcomm_heap_node_s {
+    struct xcomm_heap_node_s* left;
+    struct xcomm_heap_node_s* right;
+    struct xcomm_heap_node_s* parent;
+};
+
+struct xcomm_heap_s {
+    struct xcomm_heap_node_s* heap_min;
+    size_t                    heap_nelts;
+    /* a < b return positive that means min-heap */
+    /* a > b return positive, means max-heap */
+    int (*compare)(xcomm_heap_node_t* a, xcomm_heap_node_t* b);
+};
 
 extern void xcomm_heap_init(xcomm_heap_t* heap, int (*cmp)(xcomm_heap_node_t* a, xcomm_heap_node_t* b));
 extern void xcomm_heap_insert(xcomm_heap_t* heap, xcomm_heap_node_t* node);

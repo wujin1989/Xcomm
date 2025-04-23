@@ -21,7 +21,15 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include <stdint.h>
+
+typedef struct xcomm_sha1_s xcomm_sha1_t;
+
+struct xcomm_sha1_s {
+    uint32_t state[5];
+    size_t   count[2];
+    uint8_t  buffer[64];
+};
 
 extern void xcomm_sha1_init(xcomm_sha1_t* ctx);
 extern void xcomm_sha1_update(xcomm_sha1_t* ctx, uint8_t* data, size_t len);

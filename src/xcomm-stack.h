@@ -21,4 +21,14 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include "xcomm-list.h"
+
+#define xcomm_stack_data(x, t, m) ((t *)((char *)(x) - offsetof(t, m)))
+
+typedef struct xcomm_list_node_s xcomm_stack_t;
+typedef struct xcomm_list_node_s xcomm_stack_node_t;
+
+extern void xcomm_stack_init(xcomm_stack_t* stack);
+extern void xcomm_stack_push(xcomm_stack_t* stack, xcomm_stack_node_t* node);
+extern bool xcomm_stack_empty(xcomm_stack_t* stack);
+extern xcomm_stack_node_t* xcomm_stack_pop(xcomm_stack_t* stack);

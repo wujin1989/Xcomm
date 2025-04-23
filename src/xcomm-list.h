@@ -21,9 +21,19 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 
 #define xcomm_list_data(x, t, m) ((t *)((char *)(x) - offsetof(t, m)))
+
+typedef struct xcomm_list_node_s xcomm_list_node_t;
+typedef struct xcomm_list_node_s xcomm_list_t;
+
+struct xcomm_list_node_s {
+    struct xcomm_list_node_s* prev;
+    struct xcomm_list_node_s* next;
+};
 
 extern void xcomm_list_init(xcomm_list_t* list);
 extern void xcomm_list_insert_head(xcomm_list_t* list, xcomm_list_node_t* node);

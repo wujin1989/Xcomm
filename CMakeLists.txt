@@ -2,6 +2,11 @@ cmake_minimum_required(VERSION 3.16)
 
 project(Xcomm LANGUAGES C)
 
+option(BUILD_DYNAMIC_LIBRARY "Build Dynamic Library" OFF)
+option(CMAKE_EXPORT_COMPILE_COMMANDS "Export Compile-Commands" OFF)
+
+set(CMAKE_INSTALL_PREFIX "${CMAKE_BINARY_DIR}/install")
+
 set(CMAKE_POSITION_INDEPENDENT_CODE ON)
 set(CMAKE_C_STANDARD_REQUIRED ON)
 set(CMAKE_C_EXTENSIONS ON)
@@ -39,6 +44,7 @@ set(SRCS
 	src/xcomm-wg.c
 	src/xcomm-thrdpool.c
 	src/xcomm-ringbuffer.c
+	src/xcomm-serial.c
 	src/xcomm.c
 
 	src/modules/melsec/melsec-1c.c
@@ -55,6 +61,7 @@ if(WIN32)
 		src/platform/win/platform-time.c
 		src/platform/win/platform-loader.c
 		src/platform/win/platform-io.c
+		src/platform/win/platform-serial.c
 	)
 endif()
 
@@ -66,11 +73,50 @@ if(UNIX)
 		src/platform/unix/platform-time.c
 		src/platform/unix/platform-loader.c
 		src/platform/unix/platform-io.c
+		src/platform/unix/platform-serial.c
 	)
 endif()
 
-add_library(xcomm STATIC ${SRCS})
-target_link_libraries(xcomm PRIVATE ${CMAKE_DL_LIBS})
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "x86_64")
+	set(CMAKE_SYSTEM_PROCESSOR "AMD64")
+endif()
+
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "arm64")
+	set(CMAKE_SYSTEM_PROCESSOR "aarch64")
+endif()
+
+add_library(ssl IMPORTED STATIC)
+add_library(crypto IMPORTED STATIC)
+
+if(WIN32)
+	set_target_properties(ssl PROPERTIES
+		IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/third-party/openssl3/lib/${CMAKE_SYSTEM_PROCESSOR}/${CMAKE_SYSTEM_NAME}/ssl.lib"
+		INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third-party/openssl3//include")
+
+	set_target_properties(crypto PROPERTIES
+		IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/third-party/openssl3/lib/${CMAKE_SYSTEM_PROCESSOR}/${CMAKE_SYSTEM_NAME}/crypto.lib"
+		INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third-party/openssl3//include" 
+		INTERFACE_LINK_LIBRARIES "Crypt32.lib")
+endif()
+
+if(UNIX)
+	set_target_properties(ssl PROPERTIES
+		IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/third-party/openssl3/lib/${CMAKE_SYSTEM_PROCESSOR}/${CMAKE_SYSTEM_NAME}/libssl.a"
+		INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third-party/openssl3//include")
+
+	set_target_properties(crypto PROPERTIES
+		IMPORTED_LOCATION "${CMAKE_CURRENT_SOURCE_DIR}/third-party/openssl3/lib/${CMAKE_SYSTEM_PROCESSOR}/${CMAKE_SYSTEM_NAME}/libcrypto.a"
+		INTERFACE_INCLUDE_DIRECTORIES "${CMAKE_CURRENT_SOURCE_DIR}/third-party/openssl3//include")
+endif()
+
+if(BUILD_DYNAMIC_LIBRARY)
+    add_library(xcomm SHARED ${SRCS})
+	target_link_libraries(xcomm PRIVATE ssl crypto ${CMAKE_DL_LIBS})
+	set_target_properties(xcomm PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS 1)
+else()
+    add_library(xcomm STATIC ${SRCS})
+	target_link_libraries(xcomm PRIVATE ssl crypto ${CMAKE_DL_LIBS})
+endif()
 
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/include DESTINATION . FILES_MATCHING PATTERN "*")
 install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs DESTINATION . FILES_MATCHING PATTERN "*")

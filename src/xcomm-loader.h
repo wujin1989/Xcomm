@@ -21,8 +21,6 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
-
 extern void* xcomm_loader_create(char* restrict file);
 extern void* xcomm_loader_load(void* module, const char* restrict func);
 extern void  xcomm_loader_destroy(void* module);

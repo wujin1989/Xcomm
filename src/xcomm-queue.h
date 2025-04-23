@@ -21,9 +21,12 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include "xcomm-list.h"
 
-#define xcomm_queue_data ((t *)((char *)(x) - offsetof(t, m)))
+#define xcomm_queue_data(x, t, m) ((t *)((char *)(x) - offsetof(t, m)))
+
+typedef struct xcomm_list_node_s xcomm_queue_t;
+typedef struct xcomm_list_node_s xcomm_queue_node_t;
 
 extern void xcomm_queue_init(xcomm_queue_t* queue);
 extern void xcomm_queue_enqueue(xcomm_queue_t* queue, xcomm_queue_node_t* node);

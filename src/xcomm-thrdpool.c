@@ -19,3 +19,85 @@
  *  IN THE SOFTWARE.
  */
 
+#include "xcomm-thrdpool.h"
+
+typedef struct thrdpool_job_s {
+    void (*routine)(void*);
+    void*              arg;
+    xcomm_queue_node_t n;
+} thrdpool_job_t;
+
+static inline int _thrdfunc(void* arg) {
+    xcomm_thrdpool_t* pool = arg;
+    while (pool->status) {
+        mtx_lock(&pool->qmtx);
+        thrdpool_job_t* job;
+        while (pool->status && xcomm_queue_empty(&pool->queue)) {
+            cnd_wait(&pool->qcnd, &pool->qmtx);
+        }
+        xcomm_queue_node_t* node = xcomm_queue_dequeue(&pool->queue);
+        if (node) {
+            job = xcomm_queue_data(node, thrdpool_job_t, n);
+            job->routine(job->arg);
+            if (job) {
+                free(job);
+                job = NULL;
+            }
+        }
+        mtx_unlock(&pool->qmtx);
+    }
+    return 0;
+}
+
+static inline void _thrd_create(xcomm_thrdpool_t* pool) {
+    void* thrds;
+    mtx_lock(&pool->tmtx);
+    thrds = realloc(pool->thrds, (pool->thrdcnt + 1) * sizeof(thrd_t));
+    if (thrds) {
+        pool->thrds = thrds;
+        thrd_create(pool->thrds + pool->thrdcnt, _thrdfunc, pool);
+        pool->thrdcnt++;
+    }
+    mtx_unlock(&pool->tmtx);
+}
+
+void xcomm_thrdpool_init(xcomm_thrdpool_t* restrict pool, int nthrds) {
+    xcomm_queue_init(&pool->queue);
+    mtx_init(&pool->tmtx, mtx_plain);
+    mtx_init(&pool->qmtx, mtx_plain);
+    cnd_init(&pool->qcnd);
+
+    pool->thrdcnt = 0;
+    pool->status  = true;
+    pool->thrds   = NULL;
+    for (int i = 0; i < nthrds; i++) {
+        _thrd_create(pool);
+    }
+}
+
+void xcomm_thrdpool_post(
+    xcomm_thrdpool_t* restrict pool, void (*routine)(void*), void* arg) {
+    thrdpool_job_t* job = malloc(sizeof(thrdpool_job_t));
+    if (job) {
+        job->routine = routine;
+        job->arg = arg;
+
+        mtx_lock(&pool->qmtx);
+        xcomm_queue_enqueue(&pool->queue, &job->n);
+        cnd_signal(&pool->qcnd);
+        mtx_unlock(&pool->qmtx);
+    }
+}
+
+void xcomm_thrdpool_destroy(xcomm_thrdpool_t* restrict pool) {
+    pool->status = false;
+    cnd_broadcast(&pool->qcnd);
+    for (int i = 0; i < pool->thrdcnt; i++) {
+        thrd_join(pool->thrds[i], NULL);
+    }
+    mtx_destroy(&pool->qmtx);
+    mtx_destroy(&pool->tmtx);
+    cnd_destroy(&pool->qcnd);
+
+    free(pool->thrds);
+}

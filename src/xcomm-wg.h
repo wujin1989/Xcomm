@@ -21,4 +21,18 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include "deprecated/c11-threads.h"
+
+typedef struct xcomm_wg_s xcomm_wg_t;
+
+struct xcomm_wg_s {
+    int   cnt;
+    mtx_t mtx;
+    cnd_t cnd;
+};
+
+extern void xcomm_wg_init(xcomm_wg_t* restrict wg);
+extern void xcomm_wg_destroy(xcomm_wg_t* restrict wg);
+extern void xcomm_wg_add(xcomm_wg_t* restrict wg, int delta);
+extern void xcomm_wg_done(xcomm_wg_t* restrict wg);
+extern void xcomm_wg_wait(xcomm_wg_t* restrict wg);

@@ -21,4 +21,16 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include <stdatomic.h>
+
+typedef struct xcomm_rwlock_s xcomm_rwlock_t;
+
+struct xcomm_rwlock_s {
+    atomic_int  rdcnt;
+    atomic_bool wrlock;
+};
+extern void xcomm_rwlock_init(xcomm_rwlock_t* restrict rwlock);
+extern void xcomm_rwlock_rdlock(xcomm_rwlock_t* restrict rwlock);
+extern void xcomm_rwlock_wrlock(xcomm_rwlock_t* restrict rwlock);
+extern void xcomm_rwlock_rdunlock(xcomm_rwlock_t* restrict rwlock);
+extern void xcomm_rwlock_wrunlock(xcomm_rwlock_t* restrict rwlock);

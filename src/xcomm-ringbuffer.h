@@ -21,7 +21,18 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include <stdint.h>
+#include <stdbool.h>
+
+typedef struct xcomm_ringbuf_s xcomm_ringbuf_t;
+
+struct xcomm_ringbuf_s {
+    char*    buf;
+    uint32_t wpos; /* write pos */
+    uint32_t rpos; /* read pos */
+    uint32_t mask; /* mask */
+    uint32_t esz;  /* entry size */
+};
 
 extern void     xcomm_ringbuf_create(xcomm_ringbuf_t* ring, uint32_t esize, uint32_t bufsize);
 extern void     xcomm_ringbuf_destroy(xcomm_ringbuf_t* ring);

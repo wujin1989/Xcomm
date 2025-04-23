@@ -30,6 +30,8 @@
  *  IN THE SOFTWARE.
  */
 
+#include <stddef.h>
+#include <string.h>
 #include "xcomm-sha1.h"
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))

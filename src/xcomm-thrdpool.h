@@ -21,4 +21,21 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include "xcomm-queue.h"
+#include "deprecated/c11-threads.h"
+
+typedef struct xcomm_thrdpool_s xcomm_thrdpool_t;
+
+struct xcomm_thrdpool_s {
+    thrd_t*       thrds;
+    size_t        thrdcnt;
+    xcomm_queue_t queue;
+    mtx_t         tmtx;
+    mtx_t         qmtx;
+    cnd_t         qcnd;
+    bool          status;
+};
+
+extern void xcomm_thrdpool_init(xcomm_thrdpool_t* restrict pool, int nthrds);
+extern void xcomm_thrdpool_post(xcomm_thrdpool_t* restrict pool, void (*routine)(void*), void* arg);
+extern void xcomm_thrdpool_destroy(xcomm_thrdpool_t* restrict pool);

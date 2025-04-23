@@ -19,3 +19,18 @@
  *  IN THE SOFTWARE.
  */
 
+#include <stdbool.h>
+#include "xcomm-spinlock.h"
+
+void xcomm_spinlock_init(xcomm_spinlock_t* restrict lock) {
+    atomic_init(&lock->locked, false);
+}
+
+void xcomm_spinlock_lock(xcomm_spinlock_t* restrict lock) {
+    while (atomic_exchange(&lock->locked, true)) {
+    }
+}
+
+void xcomm_spinlock_unlock(xcomm_spinlock_t* restrict lock) {
+    atomic_exchange(&lock->locked, false);
+}

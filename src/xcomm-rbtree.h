@@ -21,7 +21,9 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include <stdint.h>
+#include <stddef.h>
+#include <stdbool.h>
 
 #define xcomm_builtin_keycmp(k1, k2)                                           \
     _Generic(                                                                  \
@@ -38,6 +40,36 @@ _Pragma("once")
         (xcomm_rbtree_key_t*)(k1), (xcomm_rbtree_key_t*)(k2))
 
 #define xcomm_rbtree_data ((t *)((char *)(x) - offsetof(t, m)))
+
+typedef union xcomm_rbtree_key_u   xcomm_rbtree_key_t;
+typedef struct xcomm_rbtree_node_s xcomm_rbtree_node_t;
+typedef struct xcomm_rbtree_s      xcomm_rbtree_t;
+
+union xcomm_rbtree_key_u {
+    char*    str;
+    int8_t   i8;
+    int16_t  i16;
+    int32_t  i32;
+    int64_t  i64;
+    uint8_t  u8;
+    uint16_t u16;
+    uint32_t u32;
+    uint64_t u64;
+    void*    ptr;
+};
+
+struct xcomm_rbtree_node_s {
+    xcomm_rbtree_key_t          key;
+    struct xcomm_rbtree_node_s* parent;
+    struct xcomm_rbtree_node_s* right;
+    struct xcomm_rbtree_node_s* left;
+    char                        color;
+};
+
+struct xcomm_rbtree_s {
+    xcomm_rbtree_node_t* root;
+    int (*compare)(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2);
+};
 
 extern void xcomm_rbtree_init(xcomm_rbtree_t* tree, int (*keycmp)(xcomm_rbtree_key_t*, xcomm_rbtree_key_t*));
 extern void xcomm_rbtree_insert(xcomm_rbtree_t* tree, xcomm_rbtree_node_t* node);

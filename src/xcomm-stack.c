@@ -19,3 +19,26 @@
  *  IN THE SOFTWARE.
  */
 
+#include "xcomm-list.h"
+#include "xcomm-stack.h"
+
+void xcomm_stack_init(xcomm_stack_t* stack) {
+    xcomm_list_init(stack);
+}
+
+void xcomm_stack_push(xcomm_stack_t* stack, xcomm_stack_node_t* node) {
+    xcomm_list_insert_tail(stack, node);
+}
+
+bool xcomm_stack_empty(xcomm_stack_t* stack) {
+    return xcomm_list_empty(stack);
+}
+
+xcomm_stack_node_t* xcomm_stack_pop(xcomm_stack_t* stack) {
+    if (xcomm_stack_empty(stack)) {
+        return NULL;
+    }
+    xcomm_stack_node_t* node = xcomm_list_tail(stack);
+    xcomm_list_remove(node);
+    return node;
+}

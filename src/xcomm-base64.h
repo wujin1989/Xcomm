@@ -21,7 +21,8 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include <stddef.h>
+#include <stdint.h>
 
 extern void xcomm_base64_encode(uint8_t* src, size_t srclen, uint8_t* dst, size_t* dstlen);
 extern void xcomm_base64_decode(uint8_t* src, size_t srclen, uint8_t* dst, size_t* dstlen);

@@ -21,4 +21,14 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include <stdatomic.h>
+
+typedef struct xcomm_spinlock_s xcomm_spinlock_t;
+
+struct xcomm_spinlock_s {
+    atomic_bool locked;
+};
+
+extern void xcomm_spinlock_init(xcomm_spinlock_t* restrict lock);
+extern void xcomm_spinlock_lock(xcomm_spinlock_t* restrict lock);
+extern void xcomm_spinlock_unlock(xcomm_spinlock_t* restrict lock);

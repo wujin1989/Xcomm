@@ -19,6 +19,8 @@
  *  IN THE SOFTWARE.
  */
 
+#include <stdlib.h>
+#include <string.h>
 #include "xcomm-ringbuffer.h"
 
 static inline uint32_t _rounddown_pow_of_two(uint32_t n) {
@@ -110,12 +112,12 @@ uint32_t xcomm_ringbuf_cap(xcomm_ringbuf_t* ring) {
 }
 
 uint32_t xcomm_ringbuf_avail(xcomm_ringbuf_t* ring) {
-    return cdk_ringbuf_cap(ring) - cdk_ringbuf_len(ring);
+    return xcomm_ringbuf_cap(ring) - xcomm_ringbuf_len(ring);
 }
 
 uint32_t xcomm_ringbuf_write(
     xcomm_ringbuf_t* ring, const void* buf, uint32_t entry_count) {
-    uint32_t avail = cdk_ringbuf_avail(ring);
+    uint32_t avail = xcomm_ringbuf_avail(ring);
     if (entry_count > avail) {
         entry_count = avail;
     }
