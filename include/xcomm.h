@@ -26,29 +26,29 @@ _Pragma("once")
 
 typedef struct xcomm_s                 xcomm_t;
 typedef struct xcomm_scene_s           xcomm_scene_t;
-typedef struct xcomm_scene_melsec_1c_s xcomm_scene_melsec_1c_t;
-typedef struct xcomm_scene_melsec_3c_s xcomm_scene_melsec_3c_t;
-typedef struct xcomm_scene_melsec_3e_s xcomm_scene_melsec_3e_t;
+typedef struct xcomm_melsec_1c_scene_s xcomm_melsec_1c_scene_t;
+typedef struct xcomm_melsec_3c_scene_s xcomm_melsec_3c_scene_t;
+typedef struct xcomm_melsec_3e_scene_s xcomm_melsec_3e_scene_t;
 
 const char* xcomm_scenes[] = {"melsec-1c", "melsec-3c", "melsec-3e"};
 
-struct xcomm_scene_melsec_1c_s {
+struct xcomm_melsec_1c_scene_s {
     int a;
 };
 
-struct xcomm_scene_melsec_3c_s {
+struct xcomm_melsec_3c_scene_s {
     int a;
 };
 
-struct xcomm_scene_melsec_3e_s {
+struct xcomm_melsec_3e_scene_s {
     int a;
 };
 
 struct xcomm_scene_s {
     union {
-        xcomm_scene_melsec_1c_t mc_1c;
-        xcomm_scene_melsec_3c_t mc_3c;
-        xcomm_scene_melsec_3e_t mc_3e;
+        xcomm_melsec_1c_scene_t mc_1c;
+        xcomm_melsec_3c_scene_t mc_3c;
+        xcomm_melsec_3e_scene_t mc_3e;
     };
     char* restrict name;
 };

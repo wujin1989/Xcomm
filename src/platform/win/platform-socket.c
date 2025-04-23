@@ -34,11 +34,11 @@ static void _disable_udp_connreset(platform_sock_t sock) {
 }
 
 void platform_socket_recvtimeo(platform_sock_t sock, int timeout_ms) {
-    
+    setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout_ms, sizeof(int));
 }
 
 void platform_socket_sendtimeo(platform_sock_t sock, int timeout_ms) {
-
+    setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout_ms, sizeof(int));
 }
 
 void platform_socket_setrecvbuf(platform_sock_t sock, int val) {
