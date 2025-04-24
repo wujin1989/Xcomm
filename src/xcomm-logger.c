@@ -182,7 +182,7 @@ void xcomm_logger_log(
     const char* restrict fmt,
     ...) {
     internal_logger_t* internal = logger->opaque;
-    char* p = strrchr(file, XCOMM_PATH_SEPARATOR);
+    char*              p = strrchr(file, XCOMM_PATH_SEPARATOR);
 
     if (logger->level > level) {
         return;
