@@ -21,20 +21,30 @@
 
 _Pragma("once")
 
-#define xcomm_logi(...)                                                        \
-    xcomm_logger_log(LOGGER_LEVEL_INFO, __FILE__, __LINE__, __VA_ARGS__)
-#define xcomm_logd(...)                                                        \
-    xcomm_logger_log(LOGGER_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
-#define xcomm_logw(...)                                                        \
-    xcomm_logger_log(LOGGER_LEVEL_WARN, __FILE__, __LINE__, __VA_ARGS__)
-#define xcomm_loge(...)                                                        \
-    xcomm_logger_log(LOGGER_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
+#include <stdbool.h>
 
-extern void xcomm_logger_create(const char* restrict file);
-extern void xcomm_logger_destroy(void);
-extern void xcomm_logger_log(
-    cdk_logger_level_t level,
-    const char* restrict file,
-    int line,
-    const char* restrict fmt,
-    ...);
+#define xcomm_logd(logger, ...)    xcomm_logger_log(logger, XCOMM_LOGGER_LEVEL_DEBUG, __FILE__, __LINE__, __VA_ARGS__)
+#define xcomm_logi(logger, ...)    xcomm_logger_log(logger, XCOMM_LOGGER_LEVEL_INFO,  __FILE__, __LINE__, __VA_ARGS__)
+#define xcomm_logw(logger, ...)    xcomm_logger_log(logger, XCOMM_LOGGER_LEVEL_WARN,  __FILE__, __LINE__, __VA_ARGS__)
+#define xcomm_loge(logger, ...)    xcomm_logger_log(logger, XCOMM_LOGGER_LEVEL_ERROR, __FILE__, __LINE__, __VA_ARGS__)
+
+typedef enum xcomm_logger_level_e xcomm_logger_level_t;
+typedef struct xcomm_logger_s     xcomm_logger_t;
+
+enum xcomm_logger_level_e {
+    XCOMM_LOGGER_LEVEL_DEBUG = 1,
+    XCOMM_LOGGER_LEVEL_INFO  = 2,
+    XCOMM_LOGGER_LEVEL_WARN  = 3,
+    XCOMM_LOGGER_LEVEL_ERROR = 4,
+};
+
+struct xcomm_logger_s {
+    const char* restrict filename;
+    bool                 async;
+    xcomm_logger_level_t level;
+    void*                opaque;
+};
+
+extern void xcomm_logger_init(xcomm_logger_t* logger);
+extern void xcomm_logger_destroy(xcomm_logger_t* logger);
+extern void xcomm_logger_callback(xcomm_logger_t* logger, void (*callback)(xcomm_logger_level_t level, const char* restrict msg));

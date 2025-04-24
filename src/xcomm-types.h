@@ -31,9 +31,16 @@ _Pragma("once")
 #define XCOMM_SO_ERROR_SOCKET_ERROR      PLATFORM_SO_ERROR_SOCKET_ERROR
 
 #define XCOMM_MAX_PROCESS_EVENTS         PLATFORM_MAX_PROCESS_EVENTS
+#define XCOMM_PATH_SEPARATOR             PLATFORM_PATH_SEPARATOR
 
 typedef platform_tid_t       xcomm_tid_t;
 typedef platform_pid_t       xcomm_pid_t;
 typedef platform_pollfd_t    xcomm_pollfd_t;
 typedef platform_sock_t      xcomm_sock_t;
 typedef platform_pollevent_t xcomm_pollevent_t;
+typedef enum xcomm_event_e   xcomm_event_t;
+
+enum xcomm_event_e {
+    XCOMM_EVENT_RD = 1,
+    XCOMM_EVENT_WR = 2,
+};
