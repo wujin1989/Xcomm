@@ -19,5 +19,11 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-serial.h"
-#include "platform/platform-serial.h"
+_Pragma("once")
+
+#include "platform-types.h"
+
+extern void platform_uart_close(platform_uart_t uart);
+extern int  platform_uart_read(platform_uart_t uart, uint8_t* buf, int len);
+extern int  platform_uart_write(platform_uart_t uart, uint8_t* buf, int len);
+extern platform_uart_t platform_uart_open(platform_uart_config_t* config);

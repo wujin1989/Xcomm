@@ -21,7 +21,17 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include "xcomm-socket.h"
+
+#define XCOMM_MAX_PROCESS_EVENTS PLATFORM_MAX_PROCESS_EVENTS
+
+typedef platform_pollevent_t xcomm_pollevent_t;
+typedef enum xcomm_event_e   xcomm_event_t;
+
+enum xcomm_event_e {
+    XCOMM_EVENT_RD = 1,
+    XCOMM_EVENT_WR = 2,
+};
 
 extern void xcomm_event_add(xcomm_pollfd_t pfd, xcomm_sock_t sfd, int events, void* ud);
 extern void xcomm_event_mod(xcomm_pollfd_t pfd, xcomm_sock_t sfd, int events, void* ud);

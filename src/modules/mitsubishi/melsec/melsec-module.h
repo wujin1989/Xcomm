@@ -19,4 +19,4 @@
  *  IN THE SOFTWARE.
  */
 
-#include "platform/platform-serial.h"
+_Pragma("once")

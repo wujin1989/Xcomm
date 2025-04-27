@@ -21,7 +21,12 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include "platform/platform-types.h"
+
+#define XCOMM_PATH_SEPARATOR PLATFORM_PATH_SEPARATOR
+
+typedef platform_tid_t xcomm_tid_t;
+typedef platform_pid_t xcomm_pid_t;
 
 extern int         xcomm_utils_cpus(void);
 extern int         xcomm_utils_byteorder(void);

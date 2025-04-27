@@ -27,7 +27,7 @@ typedef struct thrdpool_job_s {
     xcomm_queue_node_t n;
 } thrdpool_job_t;
 
-static inline int _thrdfunc(void* arg) {
+static int _thrdfunc(void* arg) {
     xcomm_thrdpool_t* pool = arg;
     while (pool->status) {
         mtx_lock(&pool->qmtx);
@@ -49,7 +49,7 @@ static inline int _thrdfunc(void* arg) {
     return 0;
 }
 
-static inline void _thrd_create(xcomm_thrdpool_t* pool) {
+static void _thrd_create(xcomm_thrdpool_t* pool) {
     void* thrds;
     mtx_lock(&pool->tmtx);
     thrds = realloc(pool->thrds, (pool->thrdcnt + 1) * sizeof(thrd_t));

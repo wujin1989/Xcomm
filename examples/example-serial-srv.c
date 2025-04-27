@@ -19,28 +19,35 @@
  *  IN THE SOFTWARE.
  */
 
-_Pragma("once")
+#include <stddef.h>
+#include <stdlib.h>
+#include <string.h>
+#include <stdio.h>
 
-#include "platform/platform-types.h"
+#include "xcomm.h"
 
-#define XCOMM_SO_ERROR_EAGAIN            PLATFORM_SO_ERROR_EAGAIN
-#define XCOMM_SO_ERROR_EWOULDBLOCK       PLATFORM_SO_ERROR_EWOULDBLOCK
-#define XCOMM_SO_ERROR_ECONNRESET        PLATFORM_SO_ERROR_ECONNRESET
-#define XCOMM_SO_ERROR_ETIMEDOUT         PLATFORM_SO_ERROR_ETIMEDOUT
-#define XCOMM_SO_ERROR_INVALID_SOCKET    PLATFORM_SO_ERROR_INVALID_SOCKET
-#define XCOMM_SO_ERROR_SOCKET_ERROR      PLATFORM_SO_ERROR_SOCKET_ERROR
-
-#define XCOMM_MAX_PROCESS_EVENTS         PLATFORM_MAX_PROCESS_EVENTS
-#define XCOMM_PATH_SEPARATOR             PLATFORM_PATH_SEPARATOR
-
-typedef platform_tid_t       xcomm_tid_t;
-typedef platform_pid_t       xcomm_pid_t;
-typedef platform_pollfd_t    xcomm_pollfd_t;
-typedef platform_sock_t      xcomm_sock_t;
-typedef platform_pollevent_t xcomm_pollevent_t;
-typedef enum xcomm_event_e   xcomm_event_t;
-
-enum xcomm_event_e {
-    XCOMM_EVENT_RD = 1,
-    XCOMM_EVENT_WR = 2,
-};
+int main(void) {
+    xcomm_dumper_config_t config = {
+        .mode = XCOMM_DUMPER_MODE_FILE, .filename = NULL
+    };
+    xcomm_dumper_init(&config);
+    xcomm_serial_config_t serial_config = {
+        .device    = "COM3",
+        .baudrate  = XCOMM_SERIAL_BAUDRATE_9600,
+        .parity    = XCOMM_SERIAL_PARITY_NO,
+        .databits  = XCOMM_SERIAL_DATABITS_CS8,
+        .stopbits  = XCOMM_SERIAL_STOPBITS_ONE,
+    };
+    xcomm_serial_t* serial = serial_module.xcomm_serial_open(&serial_config);
+    if (!serial) {
+        return -1;
+    }
+    uint8_t buffer[64];
+    while (true) {
+        memset(buffer, 0, sizeof(buffer));
+        serial_module.xcomm_serial_read(serial, buffer, strlen("hello world"));
+        printf("read %s from serial.\n", buffer);
+    }
+    xcomm_dumper_destroy();
+	return 0;
+}

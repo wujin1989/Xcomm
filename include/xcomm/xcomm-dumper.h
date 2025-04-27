@@ -19,4 +19,31 @@
  *  IN THE SOFTWARE.
  */
 
-#include "platform/platform-serial.h"
+_Pragma("once")
+
+typedef enum xcomm_dumper_mode_s     xcomm_dumper_mode_t;
+typedef struct xcomm_dumper_config_s xcomm_dumper_config_t;
+typedef enum xcomm_dumper_level_e    xcomm_dumper_level_t;
+
+enum xcomm_dumper_mode_s {
+    XCOMM_DUMPER_MODE_FILE,
+    XCOMM_DUMPER_MODE_CALLBACK,
+};
+
+enum xcomm_dumper_level_e {
+    XCOMM_DUMPER_LEVEL_DEBUG = 1,
+    XCOMM_DUMPER_LEVEL_INFO  = 2,
+    XCOMM_DUMPER_LEVEL_WARN  = 3,
+    XCOMM_DUMPER_LEVEL_ERROR = 4,
+};
+
+struct xcomm_dumper_config_s {
+    union {
+        const char* restrict filename;
+        void (*callback)(xcomm_dumper_level_t level, const char* restrict msg);
+    };
+    xcomm_dumper_mode_t mode;
+};
+
+extern void xcomm_dumper_init(xcomm_dumper_config_t* config);
+extern void xcomm_dumper_destroy(void);

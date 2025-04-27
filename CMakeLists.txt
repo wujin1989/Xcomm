@@ -44,12 +44,15 @@ set(SRCS
 	src/xcomm-wg.c
 	src/xcomm-thrdpool.c
 	src/xcomm-ringbuffer.c
-	src/xcomm-serial.c
-	src/xcomm.c
+	src/xcomm-uart.c
+	src/xcomm-dumper.c
 
-	src/modules/melsec/melsec-1c.c
-	src/modules/melsec/melsec-3c.c
-	src/modules/melsec/melsec-3e.c
+	src/modules/mitsubishi/melsec/a-1c.c
+	src/modules/mitsubishi/melsec/qna-3c.c
+	src/modules/mitsubishi/melsec/qna-3e.c
+	src/modules/mitsubishi/melsec/melsec-module.c
+
+	src/modules/serial/serial-module.c
 )
 
 if(WIN32)
@@ -61,7 +64,7 @@ if(WIN32)
 		src/platform/win/platform-time.c
 		src/platform/win/platform-loader.c
 		src/platform/win/platform-io.c
-		src/platform/win/platform-serial.c
+		src/platform/win/platform-uart.c
 	)
 endif()
 
@@ -73,7 +76,7 @@ if(UNIX)
 		src/platform/unix/platform-time.c
 		src/platform/unix/platform-loader.c
 		src/platform/unix/platform-io.c
-		src/platform/unix/platform-serial.c
+		src/platform/unix/platform-uart.c
 	)
 endif()
 

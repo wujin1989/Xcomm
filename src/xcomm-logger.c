@@ -23,55 +23,54 @@
 #include "xcomm-io.h"
 #include "xcomm-thrdpool.h"
 #include "xcomm-time.h"
-#include "xcomm-types.h"
 #include "xcomm-utils.h"
 
 #define BUFSIZE 4096
 
-typedef struct internal_logger_s      internal_logger_t;
-typedef struct internal_printer_ctx_s internal_printer_ctx_t;
+typedef struct builtin_logger_s       builtin_logger_t;
+typedef struct builtin_printer_ctx_s  builtin_printer_ctx_t;
 
-struct internal_printer_ctx_s {
+struct builtin_printer_ctx_s {
     xcomm_logger_level_t level;
-    internal_logger_t*   internal;
     char                 message[];
 };
 
-struct internal_logger_s {
-    FILE*            file;
-    mtx_t            mtx;
-    xcomm_thrdpool_t thrdpool;
+struct builtin_logger_s {
+    bool                 async;
+    xcomm_logger_level_t level;
+    FILE*                file;
+    mtx_t                mtx;
+    xcomm_thrdpool_t     thrdpool;
+    atomic_bool          initialized;
     void (*callback)(xcomm_logger_level_t level, const char* restrict msg);
 };
 
+static builtin_logger_t logger;
 static const char* levels[] = {"DEBUG", "INFO", "WARN", "ERROR"};
 
 static inline void _printer(void* param) {
-    internal_printer_ctx_t* ctx = param;
-    internal_logger_t*      internal = ctx->internal;
+    builtin_printer_ctx_t* ctx = param;
 
-    if (internal->callback) {
-        internal->callback(ctx->level, ctx->message);
+    if (logger.callback) {
+        logger.callback(ctx->level, ctx->message);
     } else {
-        fprintf(internal->file, "%s", ctx->message);
-        fflush(internal->file);
+        fprintf(logger.file, "%s", ctx->message);
+        fflush(logger.file);
     }
     free(ctx);
 }
 
-static inline int _buffer_marshall(
-    internal_logger_t*   internal,
-    char*                buf,
+static int _buffer_marshall(char* buf, size_t buflen,
     xcomm_logger_level_t level,
     const char* restrict file,
     int line,
     const char* restrict fmt,
     va_list v) {
-    int             ret;
+    int ret;
+    struct tm tm;
     struct timespec tsc;
-    struct tm       tm;
 
-    if (internal->callback) {
+    if (logger.callback) {
         ret = sprintf(buf, "%s:%d ", file, line);
     } else {
         timespec_get(&tsc, TIME_UTC);
@@ -91,16 +90,12 @@ static inline int _buffer_marshall(
             file,
             line);
     }
-    if (ret > sizeof(buf)) {
-        abort();
-    }
-    ret += xcomm_io_vsprintf(buf + ret, sizeof(buf) - ret, fmt, v);
+    ret += xcomm_io_vsprintf(buf + ret, buflen - ret, fmt, v);
     ret++;
     return ret;
 }
 
-static inline void _sync_log(
-    internal_logger_t*   internal,
+static void _sync_log(
     xcomm_logger_level_t level,
     const char* restrict file,
     int line,
@@ -108,20 +103,18 @@ static inline void _sync_log(
     va_list v) {
     char buf[BUFSIZE] = {0};
 
-    mtx_lock(&internal->mtx);
-    int ret = _buffer_marshall(internal, buf, level, file, line, fmt, v);
-    internal_printer_ctx_t* ctx = malloc(sizeof(internal_printer_ctx_t) + ret);
+    mtx_lock(&logger.mtx);
+    int ret = _buffer_marshall(buf, sizeof(buf), level, file, line, fmt, v);
+    builtin_printer_ctx_t* ctx = malloc(sizeof(builtin_printer_ctx_t) + ret);
     if (ctx) {
         memcpy(ctx->message, buf, ret);
-        ctx->internal = internal;
         ctx->level = level;
         _printer(ctx);
     }
-    mtx_unlock(&internal->mtx);
+    mtx_unlock(&logger.mtx);
 }
 
-static inline void _async_log(
-    internal_logger_t*   internal,
+static void _async_log(
     xcomm_logger_level_t level,
     const char* restrict file,
     int line,
@@ -129,90 +122,93 @@ static inline void _async_log(
     va_list v) {
     char buf[BUFSIZE] = {0};
 
-    mtx_lock(&internal->mtx);
-    int ret = _buffer_marshall(internal, buf, level, file, line, fmt, v);
-    internal_printer_ctx_t* ctx = malloc(sizeof(internal_printer_ctx_t) + ret);
+    mtx_lock(&logger.mtx);
+    int ret = _buffer_marshall(buf, sizeof(buf), level, file, line, fmt, v);
+    builtin_printer_ctx_t* ctx = malloc(sizeof(builtin_printer_ctx_t) + ret);
     if (ctx) {
         memcpy(ctx->message, buf, ret);
-        ctx->internal = internal;
         ctx->level = level;
-        xcomm_thrdpool_post(&internal->thrdpool, _printer, ctx);
+        xcomm_thrdpool_post(&logger.thrdpool, _printer, ctx);
     }
-    mtx_unlock(&internal->mtx);
+    mtx_unlock(&logger.mtx);
 }
 
-void xcomm_logger_init(xcomm_logger_t* logger) {
-    logger->opaque = malloc(sizeof(internal_logger_t));
-    if (!logger->opaque) {
-        return;
-    }
-    internal_logger_t* internal = logger->opaque;
+void xcomm_logger_init(
+    const char* restrict filename, xcomm_logger_level_t level, bool async) {
+    if (!atomic_load(&logger.initialized)) {
+        atomic_store(&logger.initialized, true);
 
-    if (logger->level > XCOMM_LOGGER_LEVEL_ERROR ||
-        logger->level < XCOMM_LOGGER_LEVEL_DEBUG) {
-        logger->level = XCOMM_LOGGER_LEVEL_DEBUG;
+        if (level > XCOMM_LOGGER_LEVEL_ERROR ||
+            level < XCOMM_LOGGER_LEVEL_DEBUG) {
+            logger.level = XCOMM_LOGGER_LEVEL_INFO;
+        } else {
+            logger.level = level;
+        }
+        if (filename) {
+            logger.file = xcomm_io_fopen(filename, "a+");
+        } else {
+            logger.file = stdout;
+        }
+        if (async) {
+            xcomm_thrdpool_init(&logger.thrdpool, 1);
+            logger.async = true;
+        } else {
+            logger.async = false;
+        }
+        mtx_init(&logger.mtx, mtx_plain);
     }
-    if (logger->filename) {
-        internal->file = xcomm_io_fopen(logger->filename, "a+");
-    } else {
-        internal->file = stdout;
-    }
-    if (logger->async) {
-        xcomm_thrdpool_init(&internal->thrdpool, 1);
-    }
-    mtx_init(&internal->mtx, mtx_plain);
 }
 
-void xcomm_logger_destroy(xcomm_logger_t* logger) {
-    internal_logger_t* internal = logger->opaque;
+void xcomm_logger_destroy(void) {
+    if (atomic_load(&logger.initialized)) {
+        atomic_store(&logger.initialized, false);
 
-    fclose(internal->file);
-    if (logger->async) {
-        xcomm_thrdpool_destroy(&internal->thrdpool);
+        fclose(logger.file);
+        if (logger.async) {
+            xcomm_thrdpool_destroy(&logger.thrdpool);
+        }
+        mtx_destroy(&logger.mtx);
     }
-    mtx_destroy(&internal->mtx);
-    free(internal);
 }
 
 void xcomm_logger_log(
-    xcomm_logger_t*      logger,
     xcomm_logger_level_t level,
     const char* restrict file,
     int line,
     const char* restrict fmt,
     ...) {
-    internal_logger_t* internal = logger->opaque;
-    char*              p = strrchr(file, XCOMM_PATH_SEPARATOR);
-
-    if (logger->level > level) {
+    if (!atomic_load(&logger.initialized)) {
         return;
     }
-    if (logger->async) {
+    char* p = strrchr(file, XCOMM_PATH_SEPARATOR);
+
+    if (logger.level > level) {
+        return;
+    }
+    if (logger.async) {
         va_list v;
         va_start(v, fmt);
         if (!p) {
-            _async_log(internal, level, file, line, fmt, v);
+            _async_log(level, file, line, fmt, v);
         }
         if (p) {
-            _async_log(internal, level, ++p, line, fmt, v);
+            _async_log(level, ++p, line, fmt, v);
         }
         va_end(v);
     } else {
         va_list v;
         va_start(v, fmt);
         if (!p) {
-            _sync_log(internal, level, file, line, fmt, v);
+            _sync_log(level, file, line, fmt, v);
         }
         if (p) {
-            _sync_log(internal, level, ++p, line, fmt, v);
+            _sync_log(level, ++p, line, fmt, v);
         }
         va_end(v);
     }
 }
 
-void xcomm_logger_callback(
-    xcomm_logger_t* logger,
+void xcomm_logger_set_callback(
     void (*callback)(xcomm_logger_level_t level, const char* restrict msg)) {
-    internal_logger_t* internal = logger->opaque;
-    internal->callback = callback;
+    logger.callback = callback;
 }

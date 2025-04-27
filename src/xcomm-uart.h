@@ -19,12 +19,15 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm.h"
+_Pragma("once")
 
-xcomm_t* xcomm_create(xcomm_scene_t scene) {
-    return NULL;
-}
+#include <stdint.h>
+#include "platform/platform-uart.h"
 
-void xcomm_destroy(xcomm_t* restrict xcomm) {
+typedef platform_uart_t        xcomm_uart_t;
+typedef platform_uart_config_t xcomm_uart_config_t;
 
-}
+extern void xcomm_uart_close(xcomm_uart_t uart);
+extern int  xcomm_uart_read(xcomm_uart_t uart, uint8_t* buf, int len);
+extern int  xcomm_uart_write(xcomm_uart_t uart, uint8_t* buf, int len);
+extern xcomm_uart_t xcomm_uart_open(xcomm_uart_config_t* config);

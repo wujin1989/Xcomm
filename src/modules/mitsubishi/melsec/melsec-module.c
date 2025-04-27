@@ -19,7 +19,3 @@
  *  IN THE SOFTWARE.
  */
 
-_Pragma("once")
-
-#include "xcomm/xcomm-serial.h"
-#include "xcomm/xcomm-dumper.h"

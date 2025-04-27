@@ -41,6 +41,7 @@ _Pragma("once")
 #include <sys/socket.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <termios.h>
 
 #if defined(__linux__)
 #include <linux/filter.h>
@@ -52,12 +53,14 @@ _Pragma("once")
 #include <sys/event.h>
 #endif
 
-#define PLATFORM_SO_ERROR_EAGAIN EAGAIN
-#define PLATFORM_SO_ERROR_EWOULDBLOCK EWOULDBLOCK
-#define PLATFORM_SO_ERROR_ECONNRESET ECONNRESET
-#define PLATFORM_SO_ERROR_ETIMEDOUT ETIMEDOUT
-#define PLATFORM_SO_ERROR_INVALID_SOCKET -1
-#define PLATFORM_SO_ERROR_SOCKET_ERROR -1
+#define PLATFORM_SO_ERROR_EAGAIN          EAGAIN
+#define PLATFORM_SO_ERROR_EWOULDBLOCK     EWOULDBLOCK
+#define PLATFORM_SO_ERROR_ECONNRESET      ECONNRESET
+#define PLATFORM_SO_ERROR_ETIMEDOUT       ETIMEDOUT
+#define PLATFORM_SO_ERROR_INVALID_SOCKET  -1
+#define PLATFORM_SO_ERROR_SOCKET_ERROR    -1
+
+#define PLATFORM_UART_ERROR_INVALID_VALUE -1
 
 #define PLATFORM_PATH_SEPARATOR '/'
 #endif
@@ -73,12 +76,14 @@ _Pragma("once")
 #include <process.h>
 #include <ws2ipdef.h>
 
-#define PLATFORM_SO_ERROR_EAGAIN WSAEWOULDBLOCK
-#define PLATFORM_SO_ERROR_EWOULDBLOCK WSAEWOULDBLOCK
-#define PLATFORM_SO_ERROR_ECONNRESET WSAECONNRESET
-#define PLATFORM_SO_ERROR_ETIMEDOUT WSAETIMEDOUT
-#define PLATFORM_SO_ERROR_INVALID_SOCKET INVALID_SOCKET
-#define PLATFORM_SO_ERROR_SOCKET_ERROR SOCKET_ERROR
+#define PLATFORM_SO_ERROR_EAGAIN          WSAEWOULDBLOCK
+#define PLATFORM_SO_ERROR_EWOULDBLOCK     WSAEWOULDBLOCK
+#define PLATFORM_SO_ERROR_ECONNRESET      WSAECONNRESET
+#define PLATFORM_SO_ERROR_ETIMEDOUT       WSAETIMEDOUT
+#define PLATFORM_SO_ERROR_INVALID_SOCKET  INVALID_SOCKET
+#define PLATFORM_SO_ERROR_SOCKET_ERROR    SOCKET_ERROR
+
+#define PLATFORM_UART_ERROR_INVALID_VALUE INVALID_HANDLE_VALUE
 
 #define PLATFORM_PATH_SEPARATOR '\\'
 
@@ -89,7 +94,7 @@ _Pragma("once")
 
 #if defined(__linux__) || defined(__APPLE__)
 #if defined(__APPLE__)
-    typedef uint64_t platform_tid_t;
+typedef uint64_t platform_tid_t;
 #endif
 
 #if defined(__linux__)
@@ -99,6 +104,7 @@ typedef pid_t platform_tid_t;
 typedef int   platform_sock_t;
 typedef pid_t platform_pid_t;
 typedef int   platform_pollfd_t;
+typedef int   platform_uart_t;
 #endif
 
 #if defined(_WIN32)
@@ -106,11 +112,17 @@ typedef DWORD   platform_tid_t;
 typedef DWORD   platform_pid_t;
 typedef HANDLE  platform_pollfd_t;
 typedef SOCKET  platform_sock_t;
+typedef HANDLE  platform_uart_t;
 typedef SSIZE_T ssize_t;
 #endif
 
-typedef enum platform_event_e       platform_event_t;
-typedef struct platform_pollevent_s platform_pollevent_t;
+typedef enum platform_event_e          platform_event_t;
+typedef struct platform_pollevent_s    platform_pollevent_t;
+typedef struct platform_uart_config_s  platform_uart_config_t;
+typedef enum platform_uart_baudrate_e  platform_uart_baudrate_t;
+typedef enum platform_uart_parity_e    platform_uart_parity_t;
+typedef enum platform_uart_databits_e  platform_uart_databits_t;
+typedef enum platform_uart_stopbits_e  platform_uart_stopbits_t;
 
 struct platform_pollevent_s {
     uint32_t events;
@@ -120,4 +132,36 @@ struct platform_pollevent_s {
 enum platform_event_e {
     PLATFORM_EVENT_RD = 1,
     PLATFORM_EVENT_WR = 2,
+};
+
+enum platform_uart_baudrate_e {
+    PLATFORM_UART_BAUDRATE_9600,
+    PLATFORM_UART_BAUDRATE_19200,
+    PLATFORM_UART_BAUDRATE_38400,
+    PLATFORM_UART_BAUDRATE_57600,
+    PLATFORM_UART_BAUDRATE_115200,
+};
+
+enum platform_uart_parity_e { 
+    PLATFORM_UART_PARITY_NO,
+    PLATFORM_UART_PARITY_ODD,
+    PLATFORM_UART_PARITY_EVEN,
+};
+
+enum platform_uart_databits_e { 
+    PLATFORM_UART_DATABITS_CS7,
+    PLATFORM_UART_DATABITS_CS8,
+};
+
+enum platform_uart_stopbits_e { 
+    PLATFORM_UART_STOPBITS_ONE,
+    PLATFORM_UART_STOPBITS_TWO,
+};
+
+struct platform_uart_config_s {
+    const char* restrict     device;
+    platform_uart_baudrate_t baudrate;
+    platform_uart_parity_t   parity;
+    platform_uart_databits_t databits;
+    platform_uart_stopbits_t stopbits;
 };

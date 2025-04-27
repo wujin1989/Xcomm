@@ -75,7 +75,7 @@ static inline void _rbtree_link_node(
     *rb_link = node;
 }
 
-static inline void
+static void
 _rbtree_insert_color(xcomm_rbtree_t* tree, xcomm_rbtree_node_t* node) {
     xcomm_rbtree_node_t *parent, *gparent;
 
@@ -128,7 +128,7 @@ _rbtree_insert_color(xcomm_rbtree_t* tree, xcomm_rbtree_node_t* node) {
     tree->root->color = RB_BLACK;
 }
 
-static inline void _rbtree_erase_color(
+static void _rbtree_erase_color(
     xcomm_rbtree_node_t* node,
     xcomm_rbtree_node_t* parent,
     xcomm_rbtree_t*      tree) {
