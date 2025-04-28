@@ -26,9 +26,9 @@
 static inline void _serial_close(xcomm_serial_t* serial) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
-    xcomm_uart_t* uarp = serial->opaque;
-    xcomm_uart_t  uaro = *uarp;
-    xcomm_uart_close(uaro);
+    xcomm_uart_t* uartptr = serial->opaque;
+    xcomm_uart_t  uartobj = *uartptr;
+    xcomm_uart_close(uartobj);
 
     free(serial->opaque);
     free(serial);
@@ -40,36 +40,34 @@ static xcomm_serial_t* _serial_open(xcomm_serial_config_t* config) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
     xcomm_uart_config_t* ucp = (void*)config;
-
-    xcomm_uart_t    uaro = xcomm_uart_open(ucp);
-    xcomm_serial_t* serp = malloc(sizeof(xcomm_serial_t));
-    if (!serp) {
+    xcomm_serial_t* serial = malloc(sizeof(xcomm_serial_t));
+    if (!serial) {
         xcomm_loge("no memory.\n");
         return NULL;
     }
-    serp->opaque = malloc(sizeof(xcomm_uart_t));
-    if (!serp->opaque) {
+    serial->opaque = malloc(sizeof(xcomm_uart_t));
+    if (!serial->opaque) {
         xcomm_loge("no memory.\n");
-
-        _serial_close(serp);
+        free(serial);
         return NULL;
     }
-    memcpy(serp->opaque, &uaro, sizeof(xcomm_uart_t));
+    xcomm_uart_t uart = xcomm_uart_open(ucp);
+    memcpy(serial->opaque, &uart, sizeof(xcomm_uart_t));
 
     xcomm_logi("%s leave.\n", __FUNCTION__);
-    return serp;
+    return serial;
 }
 
 static inline int _serial_read(xcomm_serial_t* serial, uint8_t* buf, int len) {
-    xcomm_serial_t* serp = serial;
-    xcomm_uart_t    uaro = (*(xcomm_uart_t*)(serp->opaque));
-    return xcomm_uart_read(uaro, buf, len);
+    xcomm_uart_t* uartptr = serial->opaque;
+    xcomm_uart_t uartobj  = *uartptr;
+    return xcomm_uart_read(uartobj, buf, len);
 }
 
 static inline int _serial_write(xcomm_serial_t* serial, uint8_t* buf, int len) {
-    xcomm_serial_t* serp = serial;
-    xcomm_uart_t    uaro = (*(xcomm_uart_t*)(serp->opaque));
-    return xcomm_uart_write(uaro, buf, len);
+    xcomm_uart_t* uartptr = serial->opaque;
+    xcomm_uart_t  uartobj = *uartptr;
+    return xcomm_uart_write(uartobj, buf, len);
 }
 
 xcomm_serial_module_t xcomm_serial_module = {
