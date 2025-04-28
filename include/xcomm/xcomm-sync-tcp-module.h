@@ -40,4 +40,4 @@ struct xcomm_sync_tcp_module_s {
     void (*xcomm_recvtimeo)(xcomm_socket_t* sock, int timeout_ms);
 };
 
-extern xcomm_sync_tcp_module_t sync_tcp_module;
+extern xcomm_sync_tcp_module_t xcomm_sync_tcp_module;

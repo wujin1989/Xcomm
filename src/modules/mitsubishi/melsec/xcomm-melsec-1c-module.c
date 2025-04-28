@@ -19,3 +19,9 @@
  *  IN THE SOFTWARE.
  */
 
+#include "xcomm/xcomm-melsec-1c-module.h"
+
+xcomm_melsec_1c_module_t xcomm_melsec_1c_module = {
+    .name = "Xcomm mitsubishi melsec 1C module",
+    
+};

@@ -19,27 +19,9 @@
  *  IN THE SOFTWARE.
  */
 
-#include <stdio.h>
-#include <string.h>
+#include "xcomm/xcomm-melsec-3c-module.h"
 
-#include "xcomm.h"
-
-int main(void) {
-    char sbuf[64] = "pong";
-    char rbuf[64] = {0};
-    xcomm_socket_t* srv = xcomm_sync_tcp_module.xcomm_listen("0.0.0.0", "1234");
-
-    while (true) {
-        xcomm_socket_t* cli = xcomm_sync_tcp_module.xcomm_accept(srv);
-
-        xcomm_sync_tcp_module.xcomm_recv(cli, rbuf, sizeof(rbuf));
-        printf("srv recv %s from cli.\n", rbuf);
-
-        xcomm_sync_tcp_module.xcomm_send(cli, sbuf, sizeof(sbuf));
-        printf("srv send %s to cli.\n", sbuf);
-
-        xcomm_sync_tcp_module.xcomm_close(cli);
-    }
-    xcomm_sync_tcp_module.xcomm_close(srv);
-    return 0;
-}
+xcomm_melsec_3c_module_t xcomm_melsec_3c_module = {
+    .name = "Xcomm mitsubishi melsec 3C module",
+    
+};

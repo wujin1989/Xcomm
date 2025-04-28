@@ -20,3 +20,12 @@
  */
 
 _Pragma("once")
+
+typedef struct xcomm_melsec_1c_module_s xcomm_melsec_1c_module_t;
+
+struct xcomm_melsec_1c_module_s {
+    const char* restrict name;
+
+};
+
+extern xcomm_melsec_1c_module_t xcomm_melsec_1c_module;

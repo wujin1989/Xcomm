@@ -34,16 +34,18 @@ int main(void) {
         .databits  = XCOMM_SERIAL_DATABITS_CS8,
         .stopbits  = XCOMM_SERIAL_STOPBITS_ONE,
     };
-    xcomm_serial_t* serial = serial_module.xcomm_serial_open(&serial_config);
+    xcomm_serial_t* serial =
+        xcomm_serial_module.xcomm_serial_open(&serial_config);
     if (!serial) {
         return -1;
     }
     uint8_t buffer[64];
     while (true) {
         memset(buffer, 0, sizeof(buffer));
-        serial_module.xcomm_serial_read(serial, buffer, strlen("hello world"));
+        xcomm_serial_module.xcomm_serial_read(
+            serial, buffer, strlen("hello world"));
         printf("read %s from serial.\n", buffer);
     }
-    serial_module.xcomm_serial_close(serial);
+    xcomm_serial_module.xcomm_serial_close(serial);
 	return 0;
 }

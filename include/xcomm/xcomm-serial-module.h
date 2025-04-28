@@ -77,4 +77,4 @@ struct xcomm_serial_module_s {
     int (*xcomm_serial_write)(xcomm_serial_t* serial, uint8_t* buf, int len);
 };
 
-extern xcomm_serial_module_t serial_module;
+extern xcomm_serial_module_t xcomm_serial_module;

@@ -19,27 +19,13 @@
  *  IN THE SOFTWARE.
  */
 
-#include <stdio.h>
-#include <string.h>
+_Pragma("once")
 
-#include "xcomm.h"
+typedef struct xcomm_melsec_3c_module_s xcomm_melsec_3c_module_t;
 
-int main(void) {
-    char sbuf[64] = "pong";
-    char rbuf[64] = {0};
-    xcomm_socket_t* srv = xcomm_sync_tcp_module.xcomm_listen("0.0.0.0", "1234");
+struct xcomm_melsec_3c_module_s {
+    const char* restrict name;
 
-    while (true) {
-        xcomm_socket_t* cli = xcomm_sync_tcp_module.xcomm_accept(srv);
+};
 
-        xcomm_sync_tcp_module.xcomm_recv(cli, rbuf, sizeof(rbuf));
-        printf("srv recv %s from cli.\n", rbuf);
-
-        xcomm_sync_tcp_module.xcomm_send(cli, sbuf, sizeof(sbuf));
-        printf("srv send %s to cli.\n", sbuf);
-
-        xcomm_sync_tcp_module.xcomm_close(cli);
-    }
-    xcomm_sync_tcp_module.xcomm_close(srv);
-    return 0;
-}
+extern xcomm_melsec_3c_module_t xcomm_melsec_3c_module;
