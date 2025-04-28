@@ -35,14 +35,14 @@ int main(void) {
         .stopbits = XCOMM_SERIAL_STOPBITS_ONE,
     };
     xcomm_serial_t* serial =
-        xcomm_serial_module.xcomm_serial_open(&serial_config);
+        xcomm_serial_module.xcomm_dial(&serial_config);
     if (!serial) {
         return -1;
     }
     char* buffer = "hello world";
-    xcomm_serial_module.xcomm_serial_write(serial, buffer, strlen(buffer));
+    xcomm_serial_module.xcomm_send(serial, buffer, strlen(buffer));
     printf("write %s to serial.\n", buffer);
 
-    xcomm_serial_module.xcomm_serial_close(serial);
+    xcomm_serial_module.xcomm_close(serial);
     return 0;
 }
