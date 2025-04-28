@@ -19,31 +19,15 @@
  *  IN THE SOFTWARE.
  */
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
-#include <stdio.h>
+_Pragma("once")
 
-#include "xcomm.h"
+#include "xcomm-socket.h"
 
-int main(void) {
-    xcomm_serial_config_t serial_config = {
-        .device    = "COM3",
-        .baudrate  = XCOMM_SERIAL_BAUDRATE_9600,
-        .parity    = XCOMM_SERIAL_PARITY_NO,
-        .databits  = XCOMM_SERIAL_DATABITS_CS8,
-        .stopbits  = XCOMM_SERIAL_STOPBITS_ONE,
-    };
-    xcomm_serial_t* serial = serial_module.xcomm_serial_open(&serial_config);
-    if (!serial) {
-        return -1;
-    }
-    uint8_t buffer[64];
-    while (true) {
-        memset(buffer, 0, sizeof(buffer));
-        serial_module.xcomm_serial_read(serial, buffer, strlen("hello world"));
-        printf("read %s from serial.\n", buffer);
-    }
-    serial_module.xcomm_serial_close(serial);
-	return 0;
-}
+xcomm_sock_t xcomm_sync_tcp_dial(const char* restrict host, const char* restrict port);
+xcomm_sock_t xcomm_sync_tcp_listen(const char* restrict host, const char* restrict port);
+xcomm_sock_t xcomm_sync_tcp_accept(xcomm_sock_t sock);
+int  xcomm_sync_tcp_send(xcomm_sock_t sock, void* buf, int len);
+int  xcomm_sync_tcp_recv(xcomm_sock_t sock, void* buf, int len);
+void xcomm_sync_tcp_close(xcomm_sock_t sock);
+void xcomm_sync_tcp_sendtimeo(xcomm_sock_t sock, int timeout_ms);
+void xcomm_sync_tcp_recvtimeo(xcomm_sock_t sock, int timeout_ms);

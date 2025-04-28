@@ -8,7 +8,15 @@ target_link_libraries(example-serial-cli PUBLIC xcomm)
 add_executable(example-serial-srv "example-serial-srv.c")
 target_link_libraries(example-serial-srv PUBLIC xcomm)
 
+add_executable(example-sync-tcp-cli "example-sync-tcp-cli.c")
+target_link_libraries(example-sync-tcp-cli PUBLIC xcomm)
+
+add_executable(example-sync-tcp-srv "example-sync-tcp-srv.c")
+target_link_libraries(example-sync-tcp-srv PUBLIC xcomm)
+
 install(TARGETS example-serial-cli DESTINATION bin)
 install(TARGETS example-serial-srv DESTINATION bin)
+install(TARGETS example-sync-tcp-cli DESTINATION bin)
+install(TARGETS example-sync-tcp-srv DESTINATION bin)
 
 #install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/certs DESTINATION bin FILES_MATCHING PATTERN "*")

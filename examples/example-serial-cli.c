@@ -27,13 +27,10 @@
 #include "xcomm.h"
 
 int main(void) {
-    xcomm_dumper_config_t config = {
-        .mode = XCOMM_DUMPER_MODE_FILE, .filename = NULL};
-    xcomm_dumper_init(&config);
     xcomm_serial_config_t serial_config = {
-        .device = "COM2",
+        .device   = "COM2",
         .baudrate = XCOMM_SERIAL_BAUDRATE_9600,
-        .parity = XCOMM_SERIAL_PARITY_NO,
+        .parity   = XCOMM_SERIAL_PARITY_NO,
         .databits = XCOMM_SERIAL_DATABITS_CS8,
         .stopbits = XCOMM_SERIAL_STOPBITS_ONE,
     };
@@ -45,6 +42,6 @@ int main(void) {
     serial_module.xcomm_serial_write(serial, buffer, strlen(buffer));
     printf("write %s to serial.\n", buffer);
 
-    xcomm_dumper_destroy();
+    serial_module.xcomm_serial_close(serial);
     return 0;
 }

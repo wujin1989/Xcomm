@@ -19,31 +19,27 @@
  *  IN THE SOFTWARE.
  */
 
-#include <stddef.h>
-#include <stdlib.h>
-#include <string.h>
 #include <stdio.h>
+#include <string.h>
 
 #include "xcomm.h"
 
 int main(void) {
-    xcomm_serial_config_t serial_config = {
-        .device    = "COM3",
-        .baudrate  = XCOMM_SERIAL_BAUDRATE_9600,
-        .parity    = XCOMM_SERIAL_PARITY_NO,
-        .databits  = XCOMM_SERIAL_DATABITS_CS8,
-        .stopbits  = XCOMM_SERIAL_STOPBITS_ONE,
-    };
-    xcomm_serial_t* serial = serial_module.xcomm_serial_open(&serial_config);
-    if (!serial) {
-        return -1;
-    }
-    uint8_t buffer[64];
+    char sbuf[64] = "pong";
+    char rbuf[64] = {0};
+    xcomm_socket_t* srv = sync_tcp_module.xcomm_listen("0.0.0.0", "1234");
+
     while (true) {
-        memset(buffer, 0, sizeof(buffer));
-        serial_module.xcomm_serial_read(serial, buffer, strlen("hello world"));
-        printf("read %s from serial.\n", buffer);
+        xcomm_socket_t* cli = sync_tcp_module.xcomm_accept(srv);
+
+        sync_tcp_module.xcomm_recv(cli, rbuf, sizeof(rbuf));
+        printf("srv recv %s from cli.\n", rbuf);
+
+        sync_tcp_module.xcomm_send(cli, sbuf, sizeof(sbuf));
+        printf("srv send %s to cli.\n", sbuf);
+
+        sync_tcp_module.xcomm_close(cli);
     }
-    serial_module.xcomm_serial_close(serial);
-	return 0;
+    sync_tcp_module.xcomm_close(srv);
+    return 0;
 }

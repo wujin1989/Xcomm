@@ -21,7 +21,7 @@
 
 #include "xcomm-logger.h"
 #include "xcomm-uart.h"
-#include "xcomm/xcomm-serial.h"
+#include "xcomm/xcomm-serial-module.h"
 
 static inline void _serial_close(xcomm_serial_t* serial) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
@@ -32,6 +32,7 @@ static inline void _serial_close(xcomm_serial_t* serial) {
 
     free(serial->opaque);
     free(serial);
+
     xcomm_logi("%s leave.\n", __FUNCTION__);
 }
 
