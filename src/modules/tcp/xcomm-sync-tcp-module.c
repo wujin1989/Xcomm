@@ -25,8 +25,6 @@
 #include "internal-sync-tcp.h"
 #include "xcomm/xcomm-sync-tcp-module.h"
 
-typedef struct sockctx_s sockctx_t;
-
 static atomic_int refcnt;
 
 static inline void _tcp_close(xcomm_socket_t* socketptr) {

@@ -47,9 +47,14 @@ set(SRCS
 	src/xcomm-uart.c
 	src/xcomm-dumper.c
 
+	src/modules/mitsubishi/melsec/internal-melsec-1c.c
 	src/modules/mitsubishi/melsec/xcomm-melsec-1c-module.c
+
+	src/modules/mitsubishi/melsec/internal-melsec-3c.c
 	src/modules/mitsubishi/melsec/xcomm-melsec-3c-module.c
+
 	src/modules/serial/xcomm-serial-module.c
+	
 	src/modules/tcp/internal-sync-tcp.c
 	src/modules/tcp/xcomm-sync-tcp-module.c
 )
