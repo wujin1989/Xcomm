@@ -19,47 +19,47 @@
  *  IN THE SOFTWARE.
  */
 
-#include "internal-sync-tcp.h"
+#include "xcomm-sync-tcp.h"
 
-void internal_sync_tcp_startup(void) {
+void xcomm_sync_tcp_startup(void) {
     xcomm_socket_startup();
 }
 
-void internal_sync_tcp_cleanup(void) {
+void xcomm_sync_tcp_cleanup(void) {
     xcomm_socket_cleanup();
 }
 
 xcomm_sock_t
-internal_sync_tcp_dial(const char* restrict host, const char* restrict port) {
+xcomm_sync_tcp_dial(const char* restrict host, const char* restrict port) {
     bool connected;
     return xcomm_socket_dial(host, port, SOCK_STREAM, &connected, false);
 }
 
 xcomm_sock_t
-internal_sync_tcp_listen(const char* restrict host, const char* restrict port) {
+xcomm_sync_tcp_listen(const char* restrict host, const char* restrict port) {
     return xcomm_socket_listen(host, port, SOCK_STREAM, 0, 0, false);
 }
 
-xcomm_sock_t internal_sync_tcp_accept(xcomm_sock_t sock) {
+xcomm_sock_t xcomm_sync_tcp_accept(xcomm_sock_t sock) {
     return xcomm_socket_accept(sock, false);
 }
 
-int internal_sync_tcp_send(xcomm_sock_t sock, void* buf, int len) {
+int xcomm_sync_tcp_send(xcomm_sock_t sock, void* buf, int len) {
     return (int)xcomm_socket_sendall(sock, buf, len);
 }
 
-int internal_sync_tcp_recv(xcomm_sock_t sock, void* buf, int len) {
+int xcomm_sync_tcp_recv(xcomm_sock_t sock, void* buf, int len) {
     return (int)xcomm_socket_recvall(sock, buf, len);
 }
 
-void internal_sync_tcp_close(xcomm_sock_t sock) {
+void xcomm_sync_tcp_close(xcomm_sock_t sock) {
     xcomm_socket_close(sock);
 }
 
-void internal_sync_tcp_sendtimeo(xcomm_sock_t sock, int timeout_ms) {
+void xcomm_sync_tcp_sendtimeo(xcomm_sock_t sock, int timeout_ms) {
     xcomm_socket_sendtimeo(sock, timeout_ms);
 }
 
-void internal_sync_tcp_recvtimeo(xcomm_sock_t sock, int timeout_ms) {
+void xcomm_sync_tcp_recvtimeo(xcomm_sock_t sock, int timeout_ms) {
     xcomm_socket_recvtimeo(sock, timeout_ms);
 }

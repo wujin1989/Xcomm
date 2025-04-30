@@ -23,16 +23,15 @@
 #include <string.h>
 
 #include "xcomm-logger.h"
-
-#include "internal-melsec-1c.h"
+#include "xcomm-melsec-1c.h"
 #include "xcomm/xcomm-serial-module.h"
 #include "xcomm/xcomm-melsec-1c-module.h"
 
-typedef struct internal_melsec_1c_device_s internal_melsec_1c_device_t;
+typedef struct melsec_1c_device_ctx_s melsec_1c_device_ctx_t;
 
-struct internal_melsec_1c_device_s {
-    char            station_no[INTERNAL_STATION_NO_LENGTH];
-    char            plc_no[INTERNAL_PLC_NO_LENGTH];
+struct melsec_1c_device_ctx_s {
+    char            station_no[FRAME_1C_STATION_NO_LENGTH];
+    char            plc_no[FRAME_1C_PLC_NO_LENGTH];
     xcomm_serial_t* serialptr;
 };
 
@@ -47,17 +46,17 @@ static xcomm_melsec_1c_device_t* _melsec_1c_dial(
         xcomm_loge("no memory.\n");
         return NULL;
     }
-    devptr->opaque = malloc(sizeof(internal_melsec_1c_device_t));
+    devptr->opaque = malloc(sizeof(melsec_1c_device_ctx_t));
     if (!devptr->opaque) {
         xcomm_loge("no memory.\n");
         free(devptr);
         return NULL;
     }
-    internal_melsec_1c_device_t* internalptr = devptr->opaque;
-    internalptr->serialptr = xcomm_serial_module.xcomm_dial(config);
+    melsec_1c_device_ctx_t* ctxptr = devptr->opaque;
+    ctxptr->serialptr = xcomm_serial_module.xcomm_dial(config);
 
-    memcpy(internalptr->station_no, station_no, INTERNAL_STATION_NO_LENGTH);
-    memcpy(internalptr->plc_no, plc_no, INTERNAL_PLC_NO_LENGTH);
+    memcpy(ctxptr->station_no, station_no, FRAME_1C_STATION_NO_LENGTH);
+    memcpy(ctxptr->plc_no, plc_no, FRAME_1C_PLC_NO_LENGTH);
 
     xcomm_logi("%s leave.\n", __FUNCTION__);
     return devptr;
@@ -66,8 +65,8 @@ static xcomm_melsec_1c_device_t* _melsec_1c_dial(
 static void _melsec_1c_close(xcomm_melsec_1c_device_t* device) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
-    internal_melsec_1c_device_t* internalptr = device->opaque;
-    xcomm_serial_module.xcomm_close(internalptr->serialptr);
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    xcomm_serial_module.xcomm_close(ctxptr->serialptr);
 
     free(device->opaque);
     free(device);
