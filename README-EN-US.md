@@ -14,7 +14,7 @@ The compiler needs to support C11.
     cmake --install out 
 
 # Documentation
-Reference docs/API-Specification.html
+Reference docs Directory.
 
 # License
 MIT License
