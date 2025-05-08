@@ -161,7 +161,7 @@ static inline void _tcp_recvtimeo(xcomm_socket_t* socketptr, int timeout_ms) {
 }
 
 xcomm_sync_tcp_module_t xcomm_sync_tcp_module = {
-    .name = "Xcomm sync tcp module",
+    .name = "Xcomm Sync Tcp Module",
     .xcomm_dial      = _tcp_dail,
     .xcomm_listen    = _tcp_listen,
     .xcomm_accept    = _tcp_accept,

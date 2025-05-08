@@ -24,7 +24,6 @@
 
 #include "xcomm-logger.h"
 #include "xcomm-melsec-1c.h"
-#include "xcomm/xcomm-serial-module.h"
 #include "xcomm/xcomm-melsec-1c-module.h"
 
 typedef struct melsec_1c_device_ctx_s melsec_1c_device_ctx_t;
@@ -77,104 +76,147 @@ static void _melsec_1c_close(xcomm_melsec_1c_device_t* device) {
 static bool _melsec_1c_bool_load(
     xcomm_melsec_1c_device_t* device, const char* restrict addr) {
     melsec_1c_device_ctx_t* ctxptr = device->opaque;
-
-    _melsec_1c_segment_marshaller();
-
-    melsec_1c_fmt01_req_t* req = malloc(sizeof(melsec_1c_fmt01_req_t) +);
-
-
-    int addrlen = strlen(addr);
-
+    return xcomm_melsec_1c_bool_load(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr);
 }
 
 static int8_t _melsec_1c_int8_load(
     xcomm_melsec_1c_device_t* device, const char* restrict addr) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_int8_load(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr);
 }
 
 static int16_t _melsec_1c_int16_load(
     xcomm_melsec_1c_device_t* device, const char* restrict addr) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_int16_load(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr);
 }
 
 static int32_t _melsec_1c_int32_load(
     xcomm_melsec_1c_device_t* device, const char* restrict addr) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_int32_load(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr);
 }
 
 static int64_t _melsec_1c_int64_load(
     xcomm_melsec_1c_device_t* device, const char* restrict addr) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_int64_load(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr);
 }
 
 static uint8_t _melsec_1c_uint8_load(
     xcomm_melsec_1c_device_t* device, const char* restrict addr) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_uint8_load(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr);
 }
 
 static uint16_t _melsec_1c_uint16_load(
     xcomm_melsec_1c_device_t* device, const char* restrict addr) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_uint16_load(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr);
 }
 
 static uint32_t _melsec_1c_uint32_load(
     xcomm_melsec_1c_device_t* device, const char* restrict addr) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_uint32_load(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr);
 }
 
 static uint64_t _melsec_1c_uint64_load(
     xcomm_melsec_1c_device_t* device, const char* restrict addr) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_uint64_load(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr);
 }
 
-static char* _melsec_1c_string_load(
+static const char* _melsec_1c_string_load(
     xcomm_melsec_1c_device_t* device, const char* restrict addr) {
-
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_string_load(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr);
 }
 
 static void _melsec_1c_bool_store(
     xcomm_melsec_1c_device_t* device, const char* restrict addr, bool val) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_bool_store(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr, val);
 }
 
 static void _melsec_1c_int8_store(
     xcomm_melsec_1c_device_t* device, const char* restrict addr, int8_t val) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_int8_store(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr, val);
 }
 
 static void _melsec_1c_int16_store(
     xcomm_melsec_1c_device_t* device, const char* restrict addr, int16_t val) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_int16_store(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr, val);
 }
 
 static void _melsec_1c_int32_store(
     xcomm_melsec_1c_device_t* device, const char* restrict addr, int32_t val) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_int32_store(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr, val);
 }
 
 static void _melsec_1c_int64_store(
     xcomm_melsec_1c_device_t* device, const char* restrict addr, int64_t val) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_int64_store(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr, val);
 }
 
 static void _melsec_1c_uint8_store(
     xcomm_melsec_1c_device_t* device, const char* restrict addr, uint8_t val) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_uint8_store(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr, val);
 }
 
 static void _melsec_1c_uint16_store(
     xcomm_melsec_1c_device_t* device, const char* restrict addr, uint16_t val) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_uint16_store(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr, val);
 }
 
 static void _melsec_1c_uint32_store(
     xcomm_melsec_1c_device_t* device, const char* restrict addr, uint32_t val) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_uint32_store(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr, val);
 }
 
 static void _melsec_1c_uint64_store(
     xcomm_melsec_1c_device_t* device, const char* restrict addr, uint64_t val) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_uint64_store(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr, val);
 }
 
 static void _melsec_1c_string_store(
     xcomm_melsec_1c_device_t* device,
     const char* restrict addr,
     const char* restrict val) {
-
-    /*
-    * 通过ASCII数据进行通信的情况下，从外部设备向可编程控制器CPU传送字符
-串，通过PR指令输出到外部时，应进行如下处理。  
-1) 将从外部设备发送的字符串展开为每个字符2字节的代码。 
-
-    */
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+    return xcomm_melsec_1c_string_store(
+        ctxptr->serialptr, ctxptr->station_no, ctxptr->plc_no, addr, val);
 }
 
 xcomm_melsec_1c_module_t xcomm_melsec_1c_module = {
-    .name = "Xcomm mitsubishi melsec 1C module",
+    .name = "Xcomm Mitsubishi Melsec 1C Module",
 
     .xcomm_dial  = _melsec_1c_dial,
     .xcomm_close = _melsec_1c_close,

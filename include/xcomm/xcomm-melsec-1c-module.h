@@ -46,7 +46,7 @@ struct xcomm_melsec_1c_module_s {
     uint16_t (*xcomm_uint16_load)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
     uint32_t (*xcomm_uint32_load)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
     uint64_t (*xcomm_uint64_load)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
-    char*    (*xcomm_string_load)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
+    const char* (*xcomm_string_load)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
 
     void (*xcomm_bool_store)(xcomm_melsec_1c_device_t* device, const char* restrict addr, bool val);
     void (*xcomm_int8_store)(xcomm_melsec_1c_device_t* device, const char* restrict addr, int8_t val);

@@ -71,7 +71,7 @@ static inline int _serial_write(xcomm_serial_t* serial, uint8_t* buf, int len) {
 }
 
 xcomm_serial_module_t xcomm_serial_module = {
-    .name = "Xcomm serial module",
+    .name = "Xcomm Serial Module",
     .xcomm_dial  = _serial_open,
     .xcomm_close = _serial_close,
     .xcomm_recv  = _serial_read,
