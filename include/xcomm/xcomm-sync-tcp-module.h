@@ -21,12 +21,9 @@
 
 _Pragma("once")
 
-typedef struct xcomm_sync_tcp_module_s xcomm_sync_tcp_module_t;
-typedef struct xcomm_socket_s          xcomm_socket_t;
+#include "xcomm-types.h"
 
-struct xcomm_socket_s {
-    void* opaque;
-};
+typedef struct xcomm_sync_tcp_module_s xcomm_sync_tcp_module_t;
 
 struct xcomm_sync_tcp_module_s {
     const char* restrict name;

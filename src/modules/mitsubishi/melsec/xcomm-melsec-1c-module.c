@@ -76,6 +76,15 @@ static void _melsec_1c_close(xcomm_melsec_1c_device_t* device) {
 
 static bool _melsec_1c_bool_load(
     xcomm_melsec_1c_device_t* device, const char* restrict addr) {
+    melsec_1c_device_ctx_t* ctxptr = device->opaque;
+
+    _melsec_1c_segment_marshaller();
+
+    melsec_1c_fmt01_req_t* req = malloc(sizeof(melsec_1c_fmt01_req_t) +);
+
+
+    int addrlen = strlen(addr);
+
 }
 
 static int8_t _melsec_1c_int8_load(
@@ -108,6 +117,11 @@ static uint32_t _melsec_1c_uint32_load(
 
 static uint64_t _melsec_1c_uint64_load(
     xcomm_melsec_1c_device_t* device, const char* restrict addr) {
+}
+
+static char* _melsec_1c_string_load(
+    xcomm_melsec_1c_device_t* device, const char* restrict addr) {
+
 }
 
 static void _melsec_1c_bool_store(
@@ -146,29 +160,44 @@ static void _melsec_1c_uint64_store(
     xcomm_melsec_1c_device_t* device, const char* restrict addr, uint64_t val) {
 }
 
+static void _melsec_1c_string_store(
+    xcomm_melsec_1c_device_t* device,
+    const char* restrict addr,
+    const char* restrict val) {
+
+    /*
+    * 通过ASCII数据进行通信的情况下，从外部设备向可编程控制器CPU传送字符
+串，通过PR指令输出到外部时，应进行如下处理。  
+1) 将从外部设备发送的字符串展开为每个字符2字节的代码。 
+
+    */
+}
+
 xcomm_melsec_1c_module_t xcomm_melsec_1c_module = {
     .name = "Xcomm mitsubishi melsec 1C module",
 
-    .xcomm_dial = _melsec_1c_dial,
+    .xcomm_dial  = _melsec_1c_dial,
     .xcomm_close = _melsec_1c_close,
 
-    .xcomm_bool_load = _melsec_1c_bool_load,
-    .xcomm_int8_load = _melsec_1c_int8_load,
-    .xcomm_int16_load = _melsec_1c_int16_load,
-    .xcomm_int32_load = _melsec_1c_int32_load,
-    .xcomm_int64_load = _melsec_1c_int64_load,
-    .xcomm_uint8_load = _melsec_1c_uint8_load,
+    .xcomm_bool_load   = _melsec_1c_bool_load,
+    .xcomm_int8_load   = _melsec_1c_int8_load,
+    .xcomm_int16_load  = _melsec_1c_int16_load,
+    .xcomm_int32_load  = _melsec_1c_int32_load,
+    .xcomm_int64_load  = _melsec_1c_int64_load,
+    .xcomm_uint8_load  = _melsec_1c_uint8_load,
     .xcomm_uint16_load = _melsec_1c_uint16_load,
     .xcomm_uint32_load = _melsec_1c_uint32_load,
     .xcomm_uint64_load = _melsec_1c_uint64_load,
+    .xcomm_string_load = _melsec_1c_string_load,
 
-    .xcomm_bool_store = _melsec_1c_bool_store,
-    .xcomm_int8_store = _melsec_1c_int8_store,
-    .xcomm_int16_store = _melsec_1c_int16_store,
-    .xcomm_int32_store = _melsec_1c_int32_store,
-    .xcomm_int64_store = _melsec_1c_int64_store,
-    .xcomm_uint8_store = _melsec_1c_uint8_store,
+    .xcomm_bool_store   = _melsec_1c_bool_store,
+    .xcomm_int8_store   = _melsec_1c_int8_store,
+    .xcomm_int16_store  = _melsec_1c_int16_store,
+    .xcomm_int32_store  = _melsec_1c_int32_store,
+    .xcomm_int64_store  = _melsec_1c_int64_store,
+    .xcomm_uint8_store  = _melsec_1c_uint8_store,
     .xcomm_uint16_store = _melsec_1c_uint16_store,
     .xcomm_uint32_store = _melsec_1c_uint32_store,
     .xcomm_uint64_store = _melsec_1c_uint64_store,
+    .xcomm_string_store = _melsec_1c_string_store,
 };
