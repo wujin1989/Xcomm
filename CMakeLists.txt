@@ -48,9 +48,9 @@ set(SRCS
 	src/xcomm-dumper.c
 
 	src/modules/mitsubishi/melsec/xcomm-melsec-1c.c
-	src/modules/mitsubishi/melsec/xcomm-melsec-1c-module.c
+	src/modules/mitsubishi/melsec/xcomm-melsec-module.c
 	src/modules/mitsubishi/melsec/xcomm-melsec-3c.c
-	src/modules/mitsubishi/melsec/xcomm-melsec-3c-module.c
+	
 
 	src/modules/serial/xcomm-serial.c
 	src/modules/serial/xcomm-serial-module.c
