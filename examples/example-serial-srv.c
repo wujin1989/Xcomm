@@ -35,17 +35,17 @@ int main(void) {
         .stopbits  = XCOMM_SERIAL_STOPBITS_ONE,
     };
     xcomm_serial_t* serial =
-        xcomm_serial_module.xcomm_dial(&serial_config);
+        xcomm_serial.dial(&serial_config);
     if (!serial) {
         return -1;
     }
     uint8_t buffer[64];
     while (true) {
         memset(buffer, 0, sizeof(buffer));
-        xcomm_serial_module.xcomm_recv(
+        xcomm_serial.recv(
             serial, buffer, strlen("hello world"));
         printf("read %s from serial.\n", buffer);
     }
-    xcomm_serial_module.xcomm_close(serial);
+    xcomm_serial.close(serial);
 	return 0;
 }

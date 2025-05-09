@@ -21,20 +21,9 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include "xcomm/xcomm-serial-module.h"
 
-typedef struct xcomm_sync_tcp_module_s xcomm_sync_tcp_module_t;
-
-struct xcomm_sync_tcp_module_s {
-    const char* restrict name;
-    xcomm_socket_t* (*xcomm_dial)(const char* restrict host, const char* restrict port);
-    xcomm_socket_t* (*xcomm_listen)(const char* restrict host, const char* restrict port);
-    xcomm_socket_t* (*xcomm_accept)(xcomm_socket_t* socket);
-    int (*xcomm_send)(xcomm_socket_t* sock, void* buf, int len);
-    int (*xcomm_recv)(xcomm_socket_t* sock, void* buf, int len);
-    void (*xcomm_close)(xcomm_socket_t* sock);
-    void (*xcomm_sendtimeo)(xcomm_socket_t* sock, int timeout_ms);
-    void (*xcomm_recvtimeo)(xcomm_socket_t* sock, int timeout_ms);
-};
-
-extern xcomm_sync_tcp_module_t xcomm_sync_tcp_module;
+extern xcomm_serial_t* xcomm_serial_open(xcomm_serial_config_t* config);
+extern void xcomm_serial_close(xcomm_serial_t* serial);
+extern int  xcomm_serial_read(xcomm_serial_t* serial, uint8_t* buf, int len);
+extern int  xcomm_serial_write(xcomm_serial_t* serial, uint8_t* buf, int len);

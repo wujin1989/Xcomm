@@ -52,10 +52,11 @@ set(SRCS
 	src/modules/mitsubishi/melsec/xcomm-melsec-3c.c
 	src/modules/mitsubishi/melsec/xcomm-melsec-3c-module.c
 
+	src/modules/serial/xcomm-serial.c
 	src/modules/serial/xcomm-serial-module.c
 	
 	src/modules/tcp/xcomm-sync-tcp.c
-	src/modules/tcp/xcomm-sync-tcp-module.c
+	src/modules/tcp/xcomm-tcp-module.c
 )
 
 if(WIN32)

@@ -19,47 +19,145 @@
  *  IN THE SOFTWARE.
  */
 
+#include <stdatomic.h>
+
+#include "xcomm-socket.h"
+#include "xcomm-logger.h"
 #include "xcomm-sync-tcp.h"
 
-void xcomm_sync_tcp_startup(void) {
-    xcomm_socket_startup();
+static atomic_int refcnt;
+
+void xcomm_sync_tcp_close(xcomm_socket_t* socketptr) {
+    xcomm_logi("%s enter.\n", __FUNCTION__);
+
+    xcomm_sock_t* sockptr = socketptr->opaque;
+    xcomm_sock_t  sockobj = *sockptr;
+
+    xcomm_socket_close(sockobj);
+    free(sockptr);
+    free(socketptr);
+
+    atomic_fetch_sub(&refcnt, 1);
+    if (!atomic_load(&refcnt)) {
+        xcomm_socket_cleanup();
+    }
+    xcomm_logi("%s leave.\n", __FUNCTION__);
 }
 
-void xcomm_sync_tcp_cleanup(void) {
-    xcomm_socket_cleanup();
+xcomm_socket_t* xcomm_sync_tcp_dail(const char* restrict host, const char* restrict port) {
+    xcomm_logi("%s enter.\n", __FUNCTION__);
+
+    xcomm_socket_t* sockptr = malloc(sizeof(xcomm_socket_t));
+    if (!sockptr) {
+        xcomm_loge("no memory.\n");
+        return NULL;
+    }
+    sockptr->opaque = malloc(sizeof(xcomm_sock_t));
+    if (!sockptr->opaque) {
+        xcomm_loge("no memory.\n");
+        free(sockptr);
+        return NULL;
+    }
+    if (!atomic_load(&refcnt)) {
+        xcomm_socket_startup();
+    }
+    bool nouse;
+    xcomm_sock_t sockobj =
+        xcomm_socket_dial(host, port, SOCK_STREAM, &nouse, false);
+    memcpy(sockptr->opaque, &sockobj, sizeof(xcomm_sock_t));
+
+    atomic_fetch_add(&refcnt, 1);
+
+    xcomm_logi("%s leave.\n", __FUNCTION__);
+    return sockptr;
 }
 
-xcomm_sock_t
-xcomm_sync_tcp_dial(const char* restrict host, const char* restrict port) {
-    bool connected;
-    return xcomm_socket_dial(host, port, SOCK_STREAM, &connected, false);
-}
-
-xcomm_sock_t
+xcomm_socket_t*
 xcomm_sync_tcp_listen(const char* restrict host, const char* restrict port) {
-    return xcomm_socket_listen(host, port, SOCK_STREAM, 0, 0, false);
+    xcomm_logi("%s enter.\n", __FUNCTION__);
+
+    xcomm_socket_t* sockptr = malloc(sizeof(xcomm_socket_t));
+    if (!sockptr) {
+        xcomm_loge("no memory.\n");
+        return NULL;
+    }
+    sockptr->opaque = malloc(sizeof(xcomm_sock_t));
+    if (!sockptr->opaque) {
+        xcomm_loge("no memory.\n");
+        free(sockptr);
+        return NULL;
+    }
+    if (!atomic_load(&refcnt)) {
+        xcomm_sync_tcp_startup();
+    }
+    xcomm_sock_t sockobj =
+        xcomm_socket_listen(host, port, SOCK_STREAM, 0, 0, false);
+    memcpy(sockptr->opaque, &sockobj, sizeof(xcomm_sock_t));
+
+    atomic_fetch_add(&refcnt, 1);
+
+    xcomm_logi("%s leave.\n", __FUNCTION__);
+    return sockptr;
 }
 
-xcomm_sock_t xcomm_sync_tcp_accept(xcomm_sock_t sock) {
-    return xcomm_socket_accept(sock, false);
+xcomm_socket_t* xcomm_sync_tcp_accept(xcomm_socket_t* socketptr) {
+    xcomm_logi("%s enter.\n", __FUNCTION__);
+
+    xcomm_sock_t* srvptr = socketptr->opaque;
+    xcomm_sock_t  srvobj = *srvptr;
+
+    xcomm_socket_t* cliptr = malloc(sizeof(xcomm_socket_t));
+    if (!cliptr) {
+        xcomm_loge("no memory.\n");
+        return NULL;
+    }
+    cliptr->opaque = malloc(sizeof(xcomm_sock_t));
+    if (!cliptr->opaque) {
+        xcomm_loge("no memory.\n");
+        free(cliptr);
+        return NULL;
+    }
+    xcomm_sock_t cliobj = xcomm_socket_accept(srvobj, false);
+    memcpy(cliptr->opaque, &cliobj, sizeof(xcomm_sock_t));
+
+    atomic_fetch_add(&refcnt, 1);
+
+    xcomm_logi("%s leave.\n", __FUNCTION__);
+    return cliptr;
 }
 
-int xcomm_sync_tcp_send(xcomm_sock_t sock, void* buf, int len) {
-    return (int)xcomm_socket_sendall(sock, buf, len);
+int xcomm_sync_tcp_send(xcomm_socket_t* socketptr, void* buf, int len) {
+    xcomm_sock_t* sockptr = socketptr->opaque;
+    xcomm_sock_t  sockobj = *sockptr;
+
+    return (int)xcomm_socket_sendall(sockobj, buf, len);
 }
 
-int xcomm_sync_tcp_recv(xcomm_sock_t sock, void* buf, int len) {
-    return (int)xcomm_socket_recvall(sock, buf, len);
+int xcomm_sync_tcp_recv(xcomm_socket_t* socketptr, void* buf, int len) {
+    xcomm_sock_t* sockptr = socketptr->opaque;
+    xcomm_sock_t  sockobj = *sockptr;
+
+    return (int)xcomm_socket_recvall(sockobj, buf, len);
 }
 
-void xcomm_sync_tcp_close(xcomm_sock_t sock) {
-    xcomm_socket_close(sock);
+void xcomm_sync_tcp_sndtimeo_setup(xcomm_socket_t* socketptr, int timeout_ms) {
+    xcomm_logi("%s enter.\n", __FUNCTION__);
+
+    xcomm_sock_t* sockptr = socketptr->opaque;
+    xcomm_sock_t  sockobj = *sockptr;
+
+    xcomm_socket_sendtimeo(sockobj, timeout_ms);
+
+    xcomm_logi("%s leave.\n", __FUNCTION__);
 }
 
-void xcomm_sync_tcp_sendtimeo(xcomm_sock_t sock, int timeout_ms) {
-    xcomm_socket_sendtimeo(sock, timeout_ms);
-}
+void xcomm_sync_tcp_rcvtimeo_setup(xcomm_socket_t* socketptr, int timeout_ms) {
+    xcomm_logi("%s enter.\n", __FUNCTION__);
 
-void xcomm_sync_tcp_recvtimeo(xcomm_sock_t sock, int timeout_ms) {
-    xcomm_socket_recvtimeo(sock, timeout_ms);
+    xcomm_sock_t* sockptr = socketptr->opaque;
+    xcomm_sock_t  sockobj = *sockptr;
+
+    xcomm_socket_recvtimeo(sockobj, timeout_ms);
+
+    xcomm_logi("%s leave.\n", __FUNCTION__);
 }

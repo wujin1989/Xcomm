@@ -19,14 +19,22 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-serial.h"
-#include "xcomm/xcomm-serial-module.h"
+#include "xcomm-sync-tcp.h"
+#include "xcomm/xcomm-tcp-module.h"
 
-xcomm_serial_module_t xcomm_serial_module = {
-    .name  = "Xcomm Serial Module",
-
-    .dial  = xcomm_serial_open,
-    .close = xcomm_serial_close,
-    .recv  = xcomm_serial_read,
-    .send  = xcomm_serial_write,
+xcomm_tcp_module_t xcomm_tcp = {
+    .sync = {
+        .name         = "Xcomm Sync TCP Module",
+        .dial         = xcomm_sync_tcp_dail,
+        .listen       = xcomm_sync_tcp_listen,
+        .accept       = xcomm_sync_tcp_accept,
+        .send         = xcomm_sync_tcp_send,
+        .recv         = xcomm_sync_tcp_recv,
+        .close        = xcomm_sync_tcp_close,
+        .set_sndtimeo = xcomm_sync_tcp_sndtimeo_setup,
+        .set_rcvtimeo = xcomm_sync_tcp_rcvtimeo_setup,
+    },
+    .async = {
+        .name = "Xcomm Async TCP Module",
+    }
 };

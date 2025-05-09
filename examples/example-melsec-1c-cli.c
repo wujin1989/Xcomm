@@ -31,11 +31,11 @@ int main(void) {
         .stopbits = XCOMM_SERIAL_STOPBITS_ONE,
     };
     xcomm_melsec_1c_device_t* mc1c 
-        = xcomm_melsec_1c_module.xcomm_dial(&serial_config, NULL, NULL);
+        = xcomm_melsec_1c.dial(&serial_config, NULL, NULL);
 
-    bool bval = xcomm_melsec_1c_module.xcomm_bool_load(mc1c, "X40");
+    bool bval = xcomm_melsec_1c.load_bool(mc1c, "X40");
     printf("X40: %s\n", bval ? "ON" : "OFF");
 
-    xcomm_melsec_1c_module.xcomm_close(mc1c);
+    xcomm_melsec_1c.close(mc1c);
 	return 0;
 }

@@ -19,14 +19,29 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-serial.h"
-#include "xcomm/xcomm-serial-module.h"
+_Pragma("once")
 
-xcomm_serial_module_t xcomm_serial_module = {
-    .name  = "Xcomm Serial Module",
+#include "xcomm-types.h"
 
-    .dial  = xcomm_serial_open,
-    .close = xcomm_serial_close,
-    .recv  = xcomm_serial_read,
-    .send  = xcomm_serial_write,
+typedef struct xcomm_tcp_module_s xcomm_tcp_module_t;
+
+struct xcomm_tcp_module_s {
+    struct {
+        const char* restrict name;
+
+        xcomm_socket_t* (*dial)(const char* restrict host, const char* restrict port);
+        xcomm_socket_t* (*listen)(const char* restrict host, const char* restrict port);
+        xcomm_socket_t* (*accept)(xcomm_socket_t* socket);
+        int  (*send)(xcomm_socket_t* sock, void* buf, int len);
+        int  (*recv)(xcomm_socket_t* sock, void* buf, int len);
+        void (*close)(xcomm_socket_t* sock);
+        void (*set_sndtimeo)(xcomm_socket_t* sock, int timeout_ms);
+        void (*set_rcvtimeo)(xcomm_socket_t* sock, int timeout_ms);
+    } sync;
+
+    struct {
+        const char* restrict name;
+    } async;
 };
+
+extern xcomm_tcp_module_t xcomm_tcp;

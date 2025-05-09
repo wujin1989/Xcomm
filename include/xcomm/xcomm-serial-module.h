@@ -28,10 +28,10 @@ typedef struct xcomm_serial_module_s xcomm_serial_module_t;
 struct xcomm_serial_module_s {
     const char* restrict name;
 
-    xcomm_serial_t* (*xcomm_dial)(xcomm_serial_config_t* config);
-    void (*xcomm_close)(xcomm_serial_t* serial);
-    int (*xcomm_recv)(xcomm_serial_t* serial, uint8_t* buf, int len);
-    int (*xcomm_send)(xcomm_serial_t* serial, uint8_t* buf, int len);
+    xcomm_serial_t* (*dial)(xcomm_serial_config_t* config);
+    void (*close)(xcomm_serial_t* serial);
+    int  (*recv)(xcomm_serial_t* serial, uint8_t* buf, int len);
+    int  (*send)(xcomm_serial_t* serial, uint8_t* buf, int len);
 };
 
-extern xcomm_serial_module_t xcomm_serial_module;
+extern xcomm_serial_module_t xcomm_serial;

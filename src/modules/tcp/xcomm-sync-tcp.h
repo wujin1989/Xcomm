@@ -21,15 +21,14 @@
 
 _Pragma("once")
 
-#include "xcomm-socket.h"
+#include "xcomm/xcomm-tcp-module.h"
 
-extern void xcomm_sync_tcp_startup(void);
-extern void xcomm_sync_tcp_cleanup(void);
-extern xcomm_sock_t xcomm_sync_tcp_dial(const char* restrict host, const char* restrict port);
-extern xcomm_sock_t xcomm_sync_tcp_listen(const char* restrict host, const char* restrict port);
-extern xcomm_sock_t xcomm_sync_tcp_accept(xcomm_sock_t sock);
-extern int  xcomm_sync_tcp_send(xcomm_sock_t sock, void* buf, int len);
-extern int  xcomm_sync_tcp_recv(xcomm_sock_t sock, void* buf, int len);
-extern void xcomm_sync_tcp_close(xcomm_sock_t sock);
-extern void xcomm_sync_tcp_sendtimeo(xcomm_sock_t sock, int timeout_ms);
-extern void xcomm_sync_tcp_recvtimeo(xcomm_sock_t sock, int timeout_ms);
+
+extern xcomm_socket_t* xcomm_sync_tcp_dail(const char* restrict host, const char* restrict port);
+extern xcomm_socket_t* xcomm_sync_tcp_listen(const char* restrict host, const char* restrict port);
+extern xcomm_socket_t* xcomm_sync_tcp_accept(xcomm_socket_t* socketptr);
+extern void xcomm_sync_tcp_close(xcomm_socket_t* socketptr);
+extern int  xcomm_sync_tcp_send(xcomm_socket_t* socketptr, void* buf, int len);
+extern int  xcomm_sync_tcp_recv(xcomm_socket_t* socketptr, void* buf, int len);
+extern void xcomm_sync_tcp_sndtimeo_setup(xcomm_socket_t* socketptr, int timeout_ms);
+extern void xcomm_sync_tcp_rcvtimeo_setup(xcomm_socket_t* socketptr, int timeout_ms);
