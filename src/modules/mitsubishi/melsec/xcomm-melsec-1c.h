@@ -23,11 +23,11 @@ _Pragma("once")
 
 #include "xcomm/xcomm-serial-module.h"
 
-#define FRAME_1C_STATION_NO_LENGTH  2
-#define FRAME_1C_PLC_NO_LENGTH      2
-#define FRAME_1C_INSTRUCTION_LENGTH 2
-#define FRAME_1C_CHECKSUM_LENGTH    2
-#define FRAME_1C_ERRCODE_LENGTH     2
+#define FRAME_1C_STATION_NO_LENGTH 2
+#define FRAME_1C_PLC_NO_LENGTH     2
+
+extern const uint16_t frame_1c_default_plc_no;
+extern const uint16_t frame_1c_default_station_no;
 
 extern bool     xcomm_melsec_1c_bool_load(xcomm_serial_t* serialptr, char* station_no, char* plc_no, const char* restrict addr);
 extern int8_t   xcomm_melsec_1c_int8_load(xcomm_serial_t* serialptr, char* station_no, char* plc_no, const char* restrict addr);

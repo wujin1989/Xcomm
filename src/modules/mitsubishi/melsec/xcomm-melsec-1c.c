@@ -19,61 +19,187 @@
  *  IN THE SOFTWARE.
  */
 
+#include <ctype.h>
+#include <stdio.h>
+#include <stdlib.h>
+
+#include "xcomm-logger.h"
 #include "xcomm-melsec-1c.h"
 
-typedef struct melsec_1c_fmt01_req_s            melsec_1c_fmt01_req_t;
-typedef union melsec_1c_fmt01_rsp_u             melsec_1c_fmt01_rsp_t;
+#define COMPONENT_TYPE_INDEX                  0
+#define COMPONENT_SUBTYPE_INDEX               1
 
-typedef union melsec_1c_fmt01_success_rsp_u     melsec_1c_fmt01_success_rsp_t;
-typedef struct melsec_1c_fmt01_failure_rsp_s    melsec_1c_fmt01_failure_rsp_t;
+#define FRAME_1C_MAX_COMPONENT_ADDRESS_LENGTH 5
+#define FRAME_1C_POINT_CNT_LENGTH             2
+#define FRAME_1C_CHARS_PER_BIT_POINT          1
+#define FRAME_1C_CHARS_PER_WORD_POINT         4
+#define FRAME_1C_MAX_COMPONENT_NAME_LENGTH    2
+#define FRAME_1C_MAX_REQUEST_LENGTH           64
+#define FRAME_1C_MAX_RESPONSE_LENGTH          64
+#define FRAME_1C_INSTRUCTION_LENGTH           2
+#define FRAME_1C_TIMEWAIT_LENGTH              1
+#define FRAME_1C_ENQ_LENGTH                   1
 
-typedef struct melsec_1c_fmt01_rd_success_rsp_s melsec_1c_fmt01_rd_success_rsp_t;
-typedef struct melsec_1c_fmt01_wr_success_rsp_s melsec_1c_fmt01_wr_success_rsp_t;
+const uint8_t  frame_1c_enq                    = 0x05;
+const uint8_t  frame_1c_stx                    = 0x02;
+const uint8_t  frame_1c_etx                    = 0x03;
+const uint8_t  frame_1c_nak                    = 0x15;
+const uint8_t  frame_1c_timewait               = 0x46;
+const uint8_t  frame_1c_default_plc_no[]       = {0x46, 0x46};
+const uint8_t  frame_1c_default_station_no[]   = {0x30, 0x30};
+const uint8_t  frame_1c_batch_br_instruction[] = {0x45, 0x52};
+const uint8_t  frame_1c_batch_wr_instruction[] = {0x57, 0x52};
+const uint8_t  frame_1c_batch_bw_instruction[] = {0x42, 0x57};
+const uint8_t  frame_1c_batch_ww_instruction[] = {0x57, 0x57};
 
-struct melsec_1c_fmt01_req_s {
-    char enq;
-    char station_no[FRAME_1C_STATION_NO_LENGTH];
-    char plc_no[FRAME_1C_PLC_NO_LENGTH];
-    char instruction[FRAME_1C_INSTRUCTION_LENGTH];
-    char timeout;
-    char checksum[FRAME_1C_CHECKSUM_LENGTH];
-    char segment[];
+typedef enum melsec_1c_operate_type_e   melsec_1c_operate_type_t;
+typedef enum melsec_1c_component_type_e melsec_1c_component_type_t;
+
+enum melsec_1c_component_type_e {
+    MELSEC_1C_U_COMP_TYPE,
+    MELSEC_1C_B_COMP_TYPE,
+    MELSEC_1C_W_COMP_TYPE,
 };
 
-struct melsec_1c_fmt01_failure_rsp_s {
-    char nak;
-    char station_no[FRAME_1C_STATION_NO_LENGTH];
-    char plc_no[FRAME_1C_PLC_NO_LENGTH];
-    char errcode[FRAME_1C_ERRCODE_LENGTH];
+enum melsec_1c_operate_type_e {
+    MELSEC_1C_U_OP_TYPE,
+    MELSEC_1C_L_OP_TYPE,
+    MELSEC_1C_S_OP_TYPE,
 };
 
-struct melsec_1c_fmt01_rd_success_rsp_s {
-    char stx;
-    char station_no[FRAME_1C_STATION_NO_LENGTH];
-    char plc_no[FRAME_1C_PLC_NO_LENGTH];
-    char etx;
-    char checksum[FRAME_1C_CHECKSUM_LENGTH];
-    char segment[];
-};
+static inline void
+_melsec_1c_address_convert(const char* restrict input, char* output) {
+    int plen = 0;
+    while (isalpha(input[plen])) {
+        plen++;
+    }
+    if (plen > FRAME_1C_MAX_COMPONENT_NAME_LENGTH) {
+        xcomm_loge("unknown component.\n");
+        return;
+    }
+    int number = atoi(input + plen);
+    int tlen = FRAME_1C_MAX_COMPONENT_ADDRESS_LENGTH;
+    int num_digits = tlen - plen;
 
-struct melsec_1c_fmt01_wr_success_rsp_s {
-    char ack;
-    char station_no[FRAME_1C_STATION_NO_LENGTH];
-    char plc_no[FRAME_1C_PLC_NO_LENGTH];
-};
+    snprintf(
+        output, tlen + 1,
+        "%.*s%0*d",
+        plen,
+        input,
+        num_digits,
+        number);
+}
 
-union melsec_1c_fmt01_success_rsp_u {
-    melsec_1c_fmt01_rd_success_rsp_t rd;
-    melsec_1c_fmt01_wr_success_rsp_t wr;
-};
+static inline char*
+_melsec_1c_segment_a_build(const char* restrict addr, int points) {
 
-union melsec_1c_fmt01_rsp_u {
-    melsec_1c_fmt01_success_rsp_t success;
-    melsec_1c_fmt01_failure_rsp_t failure;
-};
+}
 
-static int _melsec_1c_segment_length_detect() {
+static inline char* _melsec_1c_segment_c_build(const char* restrict addr) {
+}
 
+static inline char* _melsec_1c_segment_b_build(const char* restrict addr) {
+}
+
+static inline char* _melsec_1c_message_marshalling(
+    char*           station_no,
+    char*           plc_no,
+    char*           instruction,
+    const char* restrict addr,
+    melsec_1c_component_type_t component_type,
+    melsec_1c_operate_type_t operate_type,
+    int points) {
+    char* message = malloc(FRAME_1C_MAX_REQUEST_LENGTH);
+    if (!message) {
+        xcomm_loge("no memory.\n");
+        return NULL;
+    }
+    int offset = 0;
+    message[offset] = frame_1c_enq;
+    
+    memcpy(message + offset, &frame_1c_enq, FRAME_1C_ENQ_LENGTH);
+    offset += FRAME_1C_ENQ_LENGTH;
+
+    memcpy(
+        message + offset,
+        station_no,
+        FRAME_1C_STATION_NO_LENGTH);
+    offset += FRAME_1C_STATION_NO_LENGTH;
+
+    memcpy(
+        message + offset, 
+        plc_no,
+        FRAME_1C_PLC_NO_LENGTH);
+    offset += FRAME_1C_PLC_NO_LENGTH;
+
+    memcpy(
+        message + offset,
+        instruction,
+        FRAME_1C_INSTRUCTION_LENGTH);
+    offset += FRAME_1C_INSTRUCTION_LENGTH;
+
+    memcpy(
+        message + offset,
+        &frame_1c_timewait,
+        FRAME_1C_TIMEWAIT_LENGTH);
+    offset += FRAME_1C_TIMEWAIT_LENGTH;
+
+    if (operate_type == MELSEC_1C_L_OP_TYPE) {
+
+    }
+    if (operate_type == MELSEC_1C_S_OP_TYPE) {
+
+    }
+}
+
+static inline melsec_1c_component_type_t
+_melsec_1c_two_character_component_type_detect(const char subtype) {
+    melsec_1c_component_type_t type = MELSEC_1C_U_COMP_TYPE;
+    switch (subtype) {
+    case 'S':
+    case 'C':
+        type = MELSEC_1C_B_COMP_TYPE;
+        break;
+    case 'N':
+        type = MELSEC_1C_W_COMP_TYPE;
+        break;
+    }
+    return type;
+}
+
+static inline melsec_1c_component_type_t
+_melsec_1c_component_type_detect(const char* restrict addr) {
+    xcomm_logi("%s enter, address: %s\n", __FUNCTION__, addr);
+
+    melsec_1c_component_type_t type = MELSEC_1C_U_COMP_TYPE;
+    switch (addr[COMPONENT_TYPE_INDEX]) {
+    case 'X':
+    case 'Y':
+    case 'M':
+    case 'L':
+    case 'F':
+    case 'B':
+    case 'S':
+        type = MELSEC_1C_B_COMP_TYPE;
+        break;
+    case 'D':
+    case 'W':
+    case 'R':
+        type = MELSEC_1C_W_COMP_TYPE;
+        break;
+    case 'T':
+    case 'C':
+        type = _melsec_1c_two_character_component_type_detect(
+            addr[COMPONENT_SUBTYPE_INDEX]);
+        break;
+    }
+    xcomm_logi(
+        "%s leave, component type is %s.\n",
+        __FUNCTION__,
+        (type == MELSEC_1C_U_COMP_TYPE)
+            ? "unknown"
+            : ((type == MELSEC_1C_B_COMP_TYPE) ? "bit" : "word"));
+    return type;
 }
 
 bool xcomm_melsec_1c_bool_load(
@@ -81,7 +207,24 @@ bool xcomm_melsec_1c_bool_load(
     char*           station_no,
     char*           plc_no,
     const char* restrict addr) {
+    melsec_1c_component_type_t component_type =
+        _melsec_1c_component_type_detect(addr);
 
+    char* req = _melsec_1c_message_marshalling(
+        station_no,
+        plc_no,
+        frame_1c_batch_br_instruction,
+        addr,
+        component_type,
+        MELSEC_1C_L_OP_TYPE,
+        1);
+    xcomm_serial_module.xcomm_send(serialptr, req, strlen(req));
+
+    char rsp[FRAME_1C_MAX_RESPONSE_LENGTH] = {0};
+    xcomm_serial_module.xcomm_recv(
+        serialptr, rsp, FRAME_1C_MAX_RESPONSE_LENGTH);
+
+    return false;
 }
 
 int8_t xcomm_melsec_1c_int8_load(
@@ -89,7 +232,6 @@ int8_t xcomm_melsec_1c_int8_load(
     char*           station_no,
     char*           plc_no,
     const char* restrict addr) {
-
 }
 
 uint8_t xcomm_melsec_1c_uint8_load(
@@ -97,7 +239,6 @@ uint8_t xcomm_melsec_1c_uint8_load(
     char*           station_no,
     char*           plc_no,
     const char* restrict addr) {
-
 }
 
 int16_t xcomm_melsec_1c_int16_load(
@@ -113,7 +254,6 @@ uint16_t xcomm_melsec_1c_uint16_load(
     char*           station_no,
     char*           plc_no,
     const char* restrict addr) {
-
 }
 
 int32_t xcomm_melsec_1c_int32_load(
@@ -121,7 +261,6 @@ int32_t xcomm_melsec_1c_int32_load(
     char*           station_no,
     char*           plc_no,
     const char* restrict addr) {
-
 }
 
 uint32_t xcomm_melsec_1c_uint32_load(
@@ -129,7 +268,6 @@ uint32_t xcomm_melsec_1c_uint32_load(
     char*           station_no,
     char*           plc_no,
     const char* restrict addr) {
-
 }
 
 int64_t xcomm_melsec_1c_int64_load(
@@ -137,7 +275,6 @@ int64_t xcomm_melsec_1c_int64_load(
     char*           station_no,
     char*           plc_no,
     const char* restrict addr) {
-
 }
 
 uint64_t xcomm_melsec_1c_uint64_load(
@@ -145,7 +282,6 @@ uint64_t xcomm_melsec_1c_uint64_load(
     char*           station_no,
     char*           plc_no,
     const char* restrict addr) {
-
 }
 
 const char* xcomm_melsec_1c_string_load(
@@ -153,7 +289,6 @@ const char* xcomm_melsec_1c_string_load(
     char*           station_no,
     char*           plc_no,
     const char* restrict addr) {
-
 }
 
 void xcomm_melsec_1c_bool_store(
@@ -162,7 +297,6 @@ void xcomm_melsec_1c_bool_store(
     char*           plc_no,
     const char* restrict addr,
     bool val) {
-
 }
 
 void xcomm_melsec_1c_int8_store(
@@ -171,7 +305,6 @@ void xcomm_melsec_1c_int8_store(
     char*           plc_no,
     const char* restrict addr,
     int8_t val) {
-
 }
 
 void xcomm_melsec_1c_uint8_store(
@@ -180,7 +313,6 @@ void xcomm_melsec_1c_uint8_store(
     char*           plc_no,
     const char* restrict addr,
     uint8_t val) {
-
 }
 
 void xcomm_melsec_1c_int16_store(
@@ -189,7 +321,6 @@ void xcomm_melsec_1c_int16_store(
     char*           plc_no,
     const char* restrict addr,
     int16_t val) {
-
 }
 
 void xcomm_melsec_1c_uint16_store(
@@ -198,7 +329,6 @@ void xcomm_melsec_1c_uint16_store(
     char*           plc_no,
     const char* restrict addr,
     uint16_t val) {
-
 }
 
 void xcomm_melsec_1c_int32_store(
@@ -207,7 +337,6 @@ void xcomm_melsec_1c_int32_store(
     char*           plc_no,
     const char* restrict addr,
     int32_t val) {
-
 }
 
 void xcomm_melsec_1c_uint32_store(
@@ -216,7 +345,6 @@ void xcomm_melsec_1c_uint32_store(
     char*           plc_no,
     const char* restrict addr,
     uint32_t val) {
-
 }
 
 void xcomm_melsec_1c_int64_store(
@@ -225,7 +353,6 @@ void xcomm_melsec_1c_int64_store(
     char*           plc_no,
     const char* restrict addr,
     int64_t val) {
-
 }
 
 void xcomm_melsec_1c_uint64_store(
@@ -234,7 +361,6 @@ void xcomm_melsec_1c_uint64_store(
     char*           plc_no,
     const char* restrict addr,
     uint64_t val) {
-
 }
 
 void xcomm_melsec_1c_string_store(
@@ -243,5 +369,4 @@ void xcomm_melsec_1c_string_store(
     char*           plc_no,
     const char* restrict addr,
     const char* val) {
-
 }

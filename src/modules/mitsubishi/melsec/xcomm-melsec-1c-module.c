@@ -54,9 +54,20 @@ static xcomm_melsec_1c_device_t* _melsec_1c_dial(
     melsec_1c_device_ctx_t* ctxptr = devptr->opaque;
     ctxptr->serialptr = xcomm_serial_module.xcomm_dial(config);
 
-    memcpy(ctxptr->station_no, station_no, FRAME_1C_STATION_NO_LENGTH);
-    memcpy(ctxptr->plc_no, plc_no, FRAME_1C_PLC_NO_LENGTH);
-
+    if (!station_no) {
+        memcpy(
+            ctxptr->station_no,
+            &frame_1c_default_station_no,
+            FRAME_1C_STATION_NO_LENGTH);
+    }
+    if (!plc_no) {
+        memcpy(
+            ctxptr->plc_no, &frame_1c_default_plc_no, FRAME_1C_PLC_NO_LENGTH);
+    }
+    if (station_no && plc_no) {
+        memcpy(ctxptr->station_no, station_no, FRAME_1C_STATION_NO_LENGTH);
+        memcpy(ctxptr->plc_no, plc_no, FRAME_1C_PLC_NO_LENGTH);
+    }
     xcomm_logi("%s leave.\n", __FUNCTION__);
     return devptr;
 }
