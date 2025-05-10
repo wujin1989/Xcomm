@@ -24,19 +24,23 @@
 #define TCPv4_MSS 536
 #define TCPv6_MSS 1220
 
-void platform_socket_nonblock(platform_sock_t sock) {
+void platform_socket_enable_nonblocking(platform_sock_t sock, bool on) {
     int flag = fcntl(sock, F_GETFL, 0);
     if (flag == -1) {
         return;
     }
-    fcntl(sock, F_SETFL, flag | O_NONBLOCK);
+    if (on) {
+        fcntl(sock, F_SETFL, flag | O_NONBLOCK);
+    } else {
+        fcntl(sock, F_SETFL, flag & ~O_NONBLOCK);
+    }
 }
 
-void platform_socket_setrecvbuf(platform_sock_t sock, int val) {
+void platform_socket_set_rcvbuf(platform_sock_t sock, int val) {
     setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (const void*)&val, sizeof(int));
 }
 
-void platform_socket_setsendbuf(platform_sock_t sock, int val) {
+void platform_socket_set_sndbuf(platform_sock_t sock, int val) {
     setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (const void*)&val, sizeof(int));
 }
 
@@ -52,28 +56,26 @@ platform_sock_t platform_socket_accept(platform_sock_t sock, bool nonblocking) {
     if (cli == PLATFORM_SO_ERROR_INVALID_SOCKET) {
         return PLATFORM_SO_ERROR_INVALID_SOCKET;
     }
-    if (nonblocking) {
-        platform_socket_nonblock(cli);
-    }
+    platform_socket_enable_nonblocking(cli, nonblocking);
     return cli;
 }
 
-void platform_socket_nodelay(platform_sock_t sock, bool on) {
+void platform_socket_enable_nodelay(platform_sock_t sock, bool on) {
     int val = on ? 1 : 0;
     setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const void*)&val, sizeof(val));
 }
 
-void platform_socket_reuse_addr(platform_sock_t sock) {
-    int on = 1;
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const void*)&on, sizeof(on));
-}
-
-void platform_socket_v6only(platform_sock_t sock, bool on) {
+void platform_socket_enable_reuseaddr(platform_sock_t sock, bool on) {
     int val = on ? 1 : 0;
-    setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (const void*)&val, sizeof(int));
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const void*)&val, sizeof(val));
 }
 
-void platform_socket_recvtimeo(platform_sock_t sock, int timeout_ms) {
+void platform_socket_enable_v6only(platform_sock_t sock, bool on) {
+    int val = on ? 1 : 0;
+    setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (const void*)&val, sizeof(val));
+}
+
+void platform_socket_set_rcvtimeout(platform_sock_t sock, int timeout_ms) {
     struct timeval tv = {
         .tv_sec = timeout_ms / 1000, .tv_usec = (timeout_ms % 1000) * 1000};
     setsockopt(
@@ -84,7 +86,7 @@ void platform_socket_recvtimeo(platform_sock_t sock, int timeout_ms) {
         sizeof(struct timeval));
 }
 
-void platform_socket_sendtimeo(platform_sock_t sock, int timeout_ms) {
+void platform_socket_set_sndtimeout(platform_sock_t sock, int timeout_ms) {
     struct timeval tv = {
         .tv_sec = timeout_ms / 1000, .tv_usec = (timeout_ms % 1000) * 1000};
     setsockopt(
@@ -95,13 +97,9 @@ void platform_socket_sendtimeo(platform_sock_t sock, int timeout_ms) {
         sizeof(struct timeval));
 }
 
-void platform_socket_pollfd_destroy(platform_pollfd_t pfd) {
-    close(pfd);
-}
-
-void platform_socket_reuse_port(platform_sock_t sock) {
-    int on = 1;
-    setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (const void*)&on, sizeof(on));
+void platform_socket_enable_reuseport(platform_sock_t sock, bool on) {
+    int val = on ? 1 : 0;
+    setsockopt(sock, SOL_SOCKET, SO_REUSEPORT, (const void*)&val, sizeof(val));
 }
 
 platform_sock_t platform_socket_listen(
@@ -134,14 +132,14 @@ platform_sock_t platform_socket_listen(
             continue;
         }
         if (rp->ai_family == AF_INET6) {
-            platform_socket_v6only(sock, false);
+            platform_socket_enable_v6only(sock, false);
         }
-        platform_socket_reuse_addr(sock);
-        platform_socket_reuse_port(sock);
+        platform_socket_enable_reuseaddr(sock, true);
+        platform_socket_enable_reuseport(sock, true);
         if (protocol == SOCK_DGRAM) {
-            platform_socket_setrecvbuf(sock, INT32_MAX);
+            platform_socket_set_rcvbuf(sock, INT32_MAX);
             if (nonblocking) {
-                platform_socket_rss(sock, idx, cores);
+                platform_socket_set_rss(sock, idx, cores);
             }
         }
         if (bind(sock, rp->ai_addr, rp->ai_addrlen) ==
@@ -157,20 +155,18 @@ platform_sock_t platform_socket_listen(
                 platform_socket_close(sock);
                 continue;
             }
-            platform_socket_maxseg(sock);
+            platform_socket_enable_maxseg(sock, true);
             /**
-             * must be after _tcp_maxseg. due to _tcp_maxseg set TCP_NOOPT on
+             * must be after enable maxseg. due to enable maxseg set TCP_NOOPT on
              * macos.
              */
-            platform_socket_nodelay(sock, true);
-            platform_socket_keepalive(sock);
+            platform_socket_enable_nodelay(sock, true);
+            platform_socket_enable_keepalive(sock, true);
         }
         /**
          * this option not inherited by connection-socket.
          */
-        if (nonblocking) {
-            platform_socket_nonblock(sock);
-        }
+        platform_socket_enable_nonblocking(sock, nonblocking);
         break;
     }
     if (rp == NULL) {
@@ -182,11 +178,9 @@ platform_sock_t platform_socket_listen(
 }
 
 void platform_socket_startup(void) {
-
 }
 
 void platform_socket_cleanup(void) {
-
 }
 
 platform_sock_t platform_socket_dial(
@@ -217,13 +211,12 @@ platform_sock_t platform_socket_dial(
         if (sock == PLATFORM_SO_ERROR_INVALID_SOCKET) {
             continue;
         }
-        if (nonblocking) {
-            platform_socket_nonblock(sock);
-        }
+        platform_socket_enable_nonblocking(sock, nonblocking);
+
         if (protocol == SOCK_STREAM) {
-            platform_socket_maxseg(sock);
-            platform_socket_nodelay(sock, true);
-            platform_socket_keepalive(sock);
+            platform_socket_enable_maxseg(sock, true);
+            platform_socket_enable_nodelay(sock, true);
+            platform_socket_enable_keepalive(sock, true);
         }
         do {
             ret = connect(sock, rp->ai_addr, rp->ai_addrlen);
@@ -249,7 +242,7 @@ platform_sock_t platform_socket_dial(
     return sock;
 }
 
-int platform_socket_getsocktype(platform_sock_t sock) {
+int platform_socket_get_socktype(platform_sock_t sock) {
     int       type;
     socklen_t len;
 
@@ -350,16 +343,16 @@ int platform_socket_socketpair(
     return socketpair(AF_LOCAL, type, protocol, socks);
 }
 
-char* platform_socket_error2string(int error) {
+char* platform_socket_tostring(int error) {
     return strerror(error);
 }
 
-int platform_socket_lasterror(void) {
+int platform_socket_get_lasterror(void) {
     return errno;
 }
 
 #if defined(__linux__)
-void platform_socket_rss(platform_sock_t sock, uint16_t idx, int cores) {
+void platform_socket_set_rss(platform_sock_t sock, uint16_t idx, int cores) {
     (void)(idx);
     struct sock_filter bpf_code[] = {
         {BPF_LD | BPF_W | BPF_ABS, 0, 0, SKF_AD_OFF | SKF_AD_CPU},
@@ -378,7 +371,7 @@ void platform_socket_rss(platform_sock_t sock, uint16_t idx, int cores) {
         sizeof(bpf_config));
 }
 
-int platform_socket_getaddrfamily(platform_sock_t sock) {
+int platform_socket_get_addressfamily(platform_sock_t sock) {
     int       af;
     socklen_t len;
     len = sizeof(int);
@@ -386,47 +379,40 @@ int platform_socket_getaddrfamily(platform_sock_t sock) {
     return af;
 }
 
-void platform_socket_keepalive(platform_sock_t sock) {
-    int on = 1;
+void platform_socket_enable_keepalive(platform_sock_t sock, bool on) {
+    if (!on) {
+        return;
+    }
+    int val = on ? 1 : 0;
     int d = 60;
     int i = 1;  /** 1 second; same as default on win32 */
     int c = 10; /** 10 retries; same as hardcoded on win32 since vista */
 
-    setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (const void*)&on, sizeof(on));
+    setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (const void*)&val, sizeof(val));
     setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, (const void*)&d, sizeof(d));
     setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, (const void*)&i, sizeof(i));
     setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, (const void*)&c, sizeof(c));
 }
 
-void platform_socket_maxseg(platform_sock_t sock) {
-    int af = platform_socket_getaddrfamily(sock);
+void platform_socket_enable_maxseg(platform_sock_t sock, bool on) {
+    if (!on) {
+        return;
+    }
+    int af = platform_socket_get_addressfamily(sock);
     int mss = af == AF_INET ? TCPv4_MSS : TCPv6_MSS;
 
     setsockopt(sock, IPPROTO_TCP, TCP_MAXSEG, (const void*)&mss, sizeof(int));
 }
-
-platform_pollfd_t platform_socket_pollfd_create(void) {
-    return epoll_create1(0);
-}
-
-int platform_socket_extract_family(platform_sock_t sock) {
-    int       af;
-    socklen_t len;
-
-    len = sizeof(int);
-    getsockopt(sock, SOL_SOCKET, SO_DOMAIN, &af, &len);
-    return af;
-}
 #endif
 
 #if defined(__APPLE__)
-void platform_socket_rss(platform_sock_t sock, uint16_t idx, int cores) {
+void platform_socket_set_rss(platform_sock_t sock, uint16_t idx, int cores) {
     (void)(sock);
     (void)(idx);
     (void)(cores);
 }
 
-int platform_socket_getaddrfamily(platform_sock_t sock) {
+int platform_socket_get_addressfamily(platform_sock_t sock) {
     struct sockaddr_storage ss;
     socklen_t               len;
 
@@ -435,19 +421,25 @@ int platform_socket_getaddrfamily(platform_sock_t sock) {
     return ss.ss_family;
 }
 
-void platform_socket_keepalive(platform_sock_t sock) {
-    int on = 1;
+void platform_socket_enable_keepalive(platform_sock_t sock, bool on) {
+    if (!on) {
+        return;
+    }
+    int val = on ? 1 : 0;
     int d = 60;
     int i = 1;  /* 1 second; same as default on win32 */
     int c = 10; /* 10 retries; same as hardcoded on win32 since vista */
 
-    setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (const void*)&on, sizeof(on));
+    setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (const void*)&val, sizeof(val));
     setsockopt(sock, IPPROTO_TCP, TCP_KEEPALIVE, (const void*)&d, sizeof(d));
     setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, (const void*)&i, sizeof(i));
     setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, (const void*)&c, sizeof(c));
 }
 
-void platform_socket_maxseg(platform_sock_t sock) {
+void platform_socket_enable_maxseg(platform_sock_t sock, bool on) {
+    if (!on) {
+        return;
+    }
     /**
      * on macos, TCP_NOOPT seems to be the only way to restrict MSS to the
      * minimum. it strips all options out of the SYN packet which forces the
@@ -456,19 +448,5 @@ void platform_socket_maxseg(platform_sock_t sock) {
      */
     int val = 1;
     setsockopt(sock, IPPROTO_TCP, TCP_NOOPT, (const void*)&val, sizeof(int));
-}
-
-platform_pollfd_t platform_socket_pollfd_create(void) {
-    return kqueue();
-}
-
-int platform_socket_extract_family(platform_sock_t sock) {
-    struct sockaddr_storage ss;
-    socklen_t               len;
-
-    len = sizeof(struct sockaddr_storage);
-    getsockname(sock, (struct sockaddr*)&ss, &len);
-
-    return ss.ss_family;
 }
 #endif

@@ -22,19 +22,18 @@
 #include "xcomm-sync-tcp.h"
 #include "xcomm/xcomm-tcp-module.h"
 
-xcomm_tcp_module_t xcomm_tcp = {
-    .sync = {
-        .name         = "Xcomm Sync TCP Module",
-        .dial         = xcomm_sync_tcp_dail,
-        .listen       = xcomm_sync_tcp_listen,
-        .accept       = xcomm_sync_tcp_accept,
-        .send         = xcomm_sync_tcp_send,
-        .recv         = xcomm_sync_tcp_recv,
-        .close        = xcomm_sync_tcp_close,
-        .set_sndtimeo = xcomm_sync_tcp_sndtimeo_setup,
-        .set_rcvtimeo = xcomm_sync_tcp_rcvtimeo_setup,
-    },
-    .async = {
-        .name = "Xcomm Async TCP Module",
-    }
+xcomm_sync_tcp_module_t xcomm_sync_tcp = {
+    .name         = "Xcomm Sync TCP Module",
+    .dial         = xcomm_sync_tcp_dail,
+    .listen       = xcomm_sync_tcp_listen,
+    .accept       = xcomm_sync_tcp_accept,
+    .send         = xcomm_sync_tcp_send,
+    .recv         = xcomm_sync_tcp_recv,
+    .close        = xcomm_sync_tcp_close,
+    .set_sndtimeo = xcomm_sync_tcp_set_sndtimeout,
+    .set_rcvtimeo = xcomm_sync_tcp_set_rcvtimeout,
+};
+
+xcomm_async_tcp_module_t xcomm_async_tcp = {
+    .name = "Xcomm Async TCP Module",
 };

@@ -23,12 +23,11 @@ _Pragma("once")
 
 #include "xcomm/xcomm-tcp-module.h"
 
-
 extern xcomm_socket_t* xcomm_sync_tcp_dail(const char* restrict host, const char* restrict port);
 extern xcomm_socket_t* xcomm_sync_tcp_listen(const char* restrict host, const char* restrict port);
 extern xcomm_socket_t* xcomm_sync_tcp_accept(xcomm_socket_t* socketptr);
 extern void xcomm_sync_tcp_close(xcomm_socket_t* socketptr);
 extern int  xcomm_sync_tcp_send(xcomm_socket_t* socketptr, void* buf, int len);
 extern int  xcomm_sync_tcp_recv(xcomm_socket_t* socketptr, void* buf, int len);
-extern void xcomm_sync_tcp_sndtimeo_setup(xcomm_socket_t* socketptr, int timeout_ms);
-extern void xcomm_sync_tcp_rcvtimeo_setup(xcomm_socket_t* socketptr, int timeout_ms);
+extern void xcomm_sync_tcp_set_sndtimeout(xcomm_socket_t* socketptr, int timeout_ms);
+extern void xcomm_sync_tcp_set_rcvtimeout(xcomm_socket_t* socketptr, int timeout_ms);

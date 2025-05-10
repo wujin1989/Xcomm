@@ -19,16 +19,16 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-uart.h"
 #include "xcomm-serial.h"
 #include "xcomm-logger.h"
+#include "platform/platform-uart.h"
 
 void xcomm_serial_close(xcomm_serial_t* serial) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
-    xcomm_uart_t* uartptr = serial->opaque;
-    xcomm_uart_t  uartobj = *uartptr;
-    xcomm_uart_close(uartobj);
+    platform_uart_t* uartptr = serial->opaque;
+    platform_uart_t  uartobj = *uartptr;
+    platform_uart_close(uartobj);
 
     free(serial->opaque);
     free(serial);
@@ -39,33 +39,33 @@ void xcomm_serial_close(xcomm_serial_t* serial) {
 xcomm_serial_t* xcomm_serial_open(xcomm_serial_config_t* config) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
-    xcomm_uart_config_t* ucp = (void*)config;
+    platform_uart_config_t* ucptr = (void*)config;
     xcomm_serial_t* serial   = malloc(sizeof(xcomm_serial_t));
     if (!serial) {
         xcomm_loge("no memory.\n");
         return NULL;
     }
-    serial->opaque = malloc(sizeof(xcomm_uart_t));
+    serial->opaque = malloc(sizeof(platform_uart_t));
     if (!serial->opaque) {
         xcomm_loge("no memory.\n");
         free(serial);
         return NULL;
     }
-    xcomm_uart_t uart = xcomm_uart_open(ucp);
-    memcpy(serial->opaque, &uart, sizeof(xcomm_uart_t));
+    platform_uart_t uartobj = platform_uart_open(ucptr);
+    memcpy(serial->opaque, &uartobj, sizeof(platform_uart_t));
 
     xcomm_logi("%s leave.\n", __FUNCTION__);
     return serial;
 }
 
 int xcomm_serial_read(xcomm_serial_t* serial, uint8_t* buf, int len) {
-    xcomm_uart_t* uartptr = serial->opaque;
-    xcomm_uart_t  uartobj = *uartptr;
-    return xcomm_uart_read(uartobj, buf, len);
+    platform_uart_t* uartptr = serial->opaque;
+    platform_uart_t  uartobj = *uartptr;
+    return platform_uart_read(uartobj, buf, len);
 }
 
 int xcomm_serial_write(xcomm_serial_t* serial, uint8_t* buf, int len) {
-    xcomm_uart_t* uartptr = serial->opaque;
-    xcomm_uart_t  uartobj = *uartptr;
-    return xcomm_uart_write(uartobj, buf, len);
+    platform_uart_t* uartptr = serial->opaque;
+    platform_uart_t  uartobj = *uartptr;
+    return platform_uart_write(uartobj, buf, len);
 }

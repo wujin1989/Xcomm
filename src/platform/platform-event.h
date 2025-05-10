@@ -23,7 +23,9 @@ _Pragma("once")
 
 #include "platform-types.h"
 
-extern void platform_event_add(platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud);
-extern void platform_event_mod(platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud);
-extern void platform_event_del(platform_pollfd_t pfd, platform_sock_t sfd);
-extern int  platform_event_wait(platform_pollfd_t pfd, platform_pollevent_t* events, int timeout);
+extern void platform_event_monitor_init(platform_event_monitor_t* monitor);
+extern void platform_event_monitor_destroy(platform_event_monitor_t* monitor);
+extern void platform_event_add(platform_event_monitor_t* monitor, platform_sock_t sock, int events, void* ud);
+extern void platform_event_mod(platform_event_monitor_t* monitor, platform_sock_t sock, int events, void* ud);
+extern void platform_event_del(platform_event_monitor_t* monitor, platform_sock_t sock);
+extern int  platform_event_wait(platform_event_monitor_t* monitor, platform_event_notification_t* notifies, int timeout);

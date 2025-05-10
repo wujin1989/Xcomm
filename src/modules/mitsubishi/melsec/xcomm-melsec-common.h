@@ -21,6 +21,15 @@
 
 _Pragma("once")
 
-extern void* xcomm_loader_create(char* restrict file);
-extern void* xcomm_loader_load(void* module, const char* restrict func);
-extern void  xcomm_loader_destroy(void* module);
+#include "xcomm-logger.h"
+
+enum {
+    XCOMM_MELSEC_1_BYTE = 1,
+    XCOMM_MELSEC_2_BYTE = 2,
+    XCOMM_MELSEC_3_BYTE = 3,
+    XCOMM_MELSEC_4_BYTE = 4,
+    XCOMM_MELSEC_5_BYTE = 5,
+    XCOMM_MELSEC_6_BYTE = 6,
+    XCOMM_MELSEC_7_BYTE = 7,
+    XCOMM_MELSEC_8_BYTE = 8,
+};

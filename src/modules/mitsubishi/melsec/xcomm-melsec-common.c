@@ -19,14 +19,4 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-io.h"
-#include "platform/platform-io.h"
-
-FILE* xcomm_io_fopen(const char* restrict file, const char* restrict mode) {
-    return platform_io_fopen(file, mode);
-}
-
-int xcomm_io_vsprintf(
-    char* str, size_t size, const char* restrict format, va_list ap) {
-    return platform_io_vsprintf(str, size, format, ap);
-}
+#include "xcomm-melsec-common.h"

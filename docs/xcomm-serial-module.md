@@ -23,25 +23,32 @@
 
 * 当前版本暂不支持非阻塞I/O模式。如果您需要非阻塞操作的支持，请考虑使用其他库或者关注未来的更新。
 
-## API接口
+## 模块
 ```c
-struct xcomm_serial_module_s {
-    /**
-     * @brief 模块的名称。
-     * 
-     * 用于标识该模块的名称字符串。例如："Xcomm Serial Module"。
-     */
-    const char* restrict name;
+extern xcomm_serial_module_t xcomm_serial;
+```
 
-    /**
-     * @brief 创建一个新的串行连接。
-     * 
-     * 根据提供的配置信息创建一个新的串行连接，并返回一个指向该连接的对象。
-     * 
-     * @param config 连接配置信息，包括设备路径、波特率等。
-     * @return 成功时返回新建的串行对象指针，失败时返回NULL。
-     */
-    xcomm_serial_t* (*xcomm_dial)(xcomm_serial_config_t* config);
+## 属性
+```c
+/**
+ * @brief 模块的名称。
+ * 
+ * 用于标识该模块的名称字符串。例如："Xcomm Serial Module"。
+ */
+const char* restrict name;
+```
+
+## 方法
+```c
+/**
+ * @brief 创建一个新的串行连接。
+ * 
+ * 根据提供的配置信息创建一个新的串行连接，并返回一个指向该连接的对象。
+ * 
+ * @param config 连接配置信息，包括设备路径、波特率等。
+ * @return 成功时返回新建的串行对象指针，失败时返回NULL。
+ */
+xcomm_serial_t* (*xcomm_dial)(xcomm_serial_config_t* config);
 
     /**
      * @brief 关闭指定的串行连接。
@@ -75,7 +82,6 @@ struct xcomm_serial_module_s {
      * @return 成功时返回实际发送的数据字节数，失败时返回负数。
      */
     int (*xcomm_send)(xcomm_serial_t* serial, uint8_t* buf, int len);
-};
 ```
 
 ## 示例代码
@@ -88,7 +94,7 @@ struct xcomm_serial_module_s {
 #include "xcomm.h"
 
 int main(void) {
-    xcomm_serial_config_t serial_config = {
+    xcomm_serial_config_t config = {
         .device   = "COM2",
         .baudrate = XCOMM_SERIAL_BAUDRATE_9600,
         .parity   = XCOMM_SERIAL_PARITY_NO,
@@ -96,15 +102,15 @@ int main(void) {
         .stopbits = XCOMM_SERIAL_STOPBITS_ONE,
     };
     xcomm_serial_t* serial =
-        xcomm_serial_module.xcomm_dial(&serial_config);
+        xcomm_serial.dial(&config);
     if (!serial) {
         return -1;
     }
     char* buffer = "hello world";
-    xcomm_serial_module.xcomm_send(serial, buffer, strlen(buffer));
+    xcomm_serial.send(serial, buffer, strlen(buffer));
     printf("write %s to serial.\n", buffer);
 
-    xcomm_serial_module.xcomm_close(serial);
+    xcomm_serial.close(serial);
     return 0;
 }
 ```

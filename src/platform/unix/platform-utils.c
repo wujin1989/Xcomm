@@ -35,7 +35,7 @@ platform_tid_t platform_utils_gettid(void) {
 }
 #endif
 
-int platform_utils_cpus(void) {
+int platform_utils_getcpus(void) {
     return (int)sysconf(_SC_NPROCESSORS_ONLN);
 }
 

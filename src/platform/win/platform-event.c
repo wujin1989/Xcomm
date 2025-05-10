@@ -19,59 +19,81 @@
  *  IN THE SOFTWARE.
  */
 
-#include "wepoll/wepoll.h"
 #include "platform/platform-event.h"
+#include "wepoll/wepoll.h"
+
+void platform_event_monitor_init(platform_event_monitor_t* monitor) {
+    *monitor = epoll_create1(0);
+}
+
+void platform_event_monitor_destroy(platform_event_monitor_t* monitor) {
+    epoll_close(*monitor);
+}
 
 void platform_event_add(
-    platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud) {
+    platform_event_monitor_t* monitor,
+    platform_sock_t           sock,
+    int                       events,
+    void*                     ud) {
     struct epoll_event ee = {0};
-    if (events & PLATFORM_EVENT_RD) {
+
+    if (events & PLATFORM_EVENT_RD_FLAG) {
         ee.events |= EPOLLIN;
     }
-    if (events & PLATFORM_EVENT_WR) {
+    if (events & PLATFORM_EVENT_WR_FLAG) {
         ee.events |= EPOLLOUT;
     }
     ee.data.ptr = ud;
-    epoll_ctl(pfd, EPOLL_CTL_ADD, sfd, (struct epoll_event*)&ee);
+    epoll_ctl(*monitor, EPOLL_CTL_ADD, sock, (struct epoll_event*)&ee);
 }
 
 void platform_event_mod(
-    platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud) {
+    platform_event_monitor_t* monitor,
+    platform_sock_t           sock,
+    int                       events,
+    void*                     ud) {
     struct epoll_event ee = {0};
-    if (events & PLATFORM_EVENT_RD) {
+
+    if (events & PLATFORM_EVENT_RD_FLAG) {
         ee.events |= EPOLLIN;
     }
-    if (events & PLATFORM_EVENT_WR) {
+    if (events & PLATFORM_EVENT_WR_FLAG) {
         ee.events |= EPOLLOUT;
     }
     ee.data.ptr = ud;
-    epoll_ctl(pfd, EPOLL_CTL_MOD, sfd, (struct epoll_event*)&ee);
+    epoll_ctl(*monitor, EPOLL_CTL_MOD, sock, (struct epoll_event*)&ee);
 }
 
-void platform_event_del(platform_pollfd_t pfd, platform_sock_t sfd) {
-    epoll_ctl(pfd, EPOLL_CTL_DEL, sfd, NULL);
+void platform_event_del(
+    platform_event_monitor_t* monitor, platform_sock_t sock) {
+    epoll_ctl(*monitor, EPOLL_CTL_DEL, sock, NULL);
 }
 
 int platform_event_wait(
-    platform_pollfd_t pfd, platform_pollevent_t* events, int timeout) {
+    platform_event_monitor_t*      monitor,
+    platform_event_notification_t* notifies,
+    int                            timeout) {
     int                n;
-    struct epoll_event __events[PLATFORM_MAX_PROCESS_EVENTS] = {0};
+    struct epoll_event epoll_events[PLATFORM_MAX_PROCESS_EVENTS] = {0};
     memset(
-        events, 0, sizeof(platform_pollevent_t) * PLATFORM_MAX_PROCESS_EVENTS);
+        notifies,
+        0,
+        sizeof(platform_event_notification_t) * PLATFORM_MAX_PROCESS_EVENTS);
     do {
-        n = epoll_wait(pfd, __events, PLATFORM_MAX_PROCESS_EVENTS, timeout);
+        n = epoll_wait(
+            *monitor, epoll_events, PLATFORM_MAX_PROCESS_EVENTS, timeout);
     } while (n == -1 && errno == EINTR);
 
     if (n < 0) {
         return 0;
     }
     for (int i = 0; i < n; i++) {
-        events[i].ptr = __events[i].data.ptr;
-        if (__events[i].events & (EPOLLIN | EPOLLHUP | EPOLLERR)) {
-            events[i].events |= PLATFORM_EVENT_RD;
+        notifies[i].ptr = epoll_events[i].data.ptr;
+        if (epoll_events[i].events & (EPOLLIN | EPOLLHUP | EPOLLERR)) {
+            notifies[i].events |= PLATFORM_EVENT_RD_FLAG;
         }
-        if (__events[i].events & (EPOLLOUT | EPOLLHUP | EPOLLERR)) {
-            events[i].events |= PLATFORM_EVENT_WR;
+        if (epoll_events[i].events & (EPOLLOUT | EPOLLHUP | EPOLLERR)) {
+            notifies[i].events |= PLATFORM_EVENT_WR_FLAG;
         }
     }
     return n;

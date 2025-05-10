@@ -24,40 +24,60 @@ _Pragma("once")
 #include <stdint.h>
 #include <stdbool.h>
 
-typedef struct xcomm_melsec_1c_module_s xcomm_melsec_1c_module_t;
-typedef struct xcomm_melsec_1c_device_s xcomm_melsec_1c_device_t;
+#include "xcomm-serial-module.h"
 
-struct xcomm_melsec_1c_device_s {
+typedef struct xcomm_melsec_device_s      xcomm_melsec_device_t;
+typedef struct xcomm_melsec_1c_module_s   xcomm_melsec_1c_module_t;
+typedef struct xcomm_melsec_1e_module_s   xcomm_melsec_1e_module_t;
+typedef struct xcomm_melsec_3c_module_s   xcomm_melsec_3c_module_t;
+typedef struct xcomm_melsec_3e_module_s   xcomm_melsec_3e_module_t;
+
+struct xcomm_melsec_device_s {
     void* opaque;
 };
 
 struct xcomm_melsec_1c_module_s {
     const char* restrict name;
-    
-    xcomm_melsec_1c_device_t* (*dial)(xcomm_serial_config_t* config, const char* restrict station_no, const char* restrict plc_no);
-    void (*close)(xcomm_melsec_1c_device_t* device);
 
-    bool        (*load_bool)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
-    int8_t      (*load_int8)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
-    int16_t     (*load_int16)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
-    int32_t     (*load_int32)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
-    int64_t     (*load_int64)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
-    uint8_t     (*load_uint8)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
-    uint16_t    (*load_uint16)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
-    uint32_t    (*load_uint32)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
-    uint64_t    (*load_uint64)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
-    const char* (*load_string)(xcomm_melsec_1c_device_t* device, const char* restrict addr);
+    void (*close)(xcomm_melsec_device_t* device);
+    xcomm_melsec_device_t* (*dial)(xcomm_serial_config_t* config, const char* restrict stn_no, const char* restrict plc_no);
 
-    void (*store_bool)(xcomm_melsec_1c_device_t* device, const char* restrict addr, bool val);
-    void (*store_int8)(xcomm_melsec_1c_device_t* device, const char* restrict addr, int8_t val);
-    void (*store_int16)(xcomm_melsec_1c_device_t* device, const char* restrict addr, int16_t val);
-    void (*store_int32)(xcomm_melsec_1c_device_t* device, const char* restrict addr, int32_t val);
-    void (*store_int64)(xcomm_melsec_1c_device_t* device, const char* restrict addr, int64_t val);
-    void (*store_uint8)(xcomm_melsec_1c_device_t* device, const char* restrict addr, uint8_t val);
-    void (*store_uint16)(xcomm_melsec_1c_device_t* device, const char* restrict addr, uint16_t val);
-    void (*store_uint32)(xcomm_melsec_1c_device_t* device, const char* restrict addr, uint32_t val);
-    void (*store_uint64)(xcomm_melsec_1c_device_t* device, const char* restrict addr, uint64_t val);
-    void (*store_string)(xcomm_melsec_1c_device_t* device, const char* restrict addr, const char* restrict val);
+    bool     (*load_bool)(xcomm_melsec_device_t* device, const char* restrict addr);
+    int8_t   (*load_int8)(xcomm_melsec_device_t* device, const char* restrict addr);
+    int16_t  (*load_int16)(xcomm_melsec_device_t* device, const char* restrict addr);
+    int32_t  (*load_int32)(xcomm_melsec_device_t* device, const char* restrict addr);
+    int64_t  (*load_int64)(xcomm_melsec_device_t* device, const char* restrict addr);
+    uint8_t  (*load_uint8)(xcomm_melsec_device_t* device, const char* restrict addr);
+    uint16_t (*load_uint16)(xcomm_melsec_device_t* device, const char* restrict addr);
+    uint32_t (*load_uint32)(xcomm_melsec_device_t* device, const char* restrict addr);
+    uint64_t (*load_uint64)(xcomm_melsec_device_t* device, const char* restrict addr);
+    char*    (*load_string)(xcomm_melsec_device_t* device, const char* restrict addr);
+
+    void (*store_bool)(xcomm_melsec_device_t* device, const char* restrict addr, bool val);
+    void (*store_int8)(xcomm_melsec_device_t* device, const char* restrict addr, int8_t val);
+    void (*store_int16)(xcomm_melsec_device_t* device, const char* restrict addr, int16_t val);
+    void (*store_int32)(xcomm_melsec_device_t* device, const char* restrict addr, int32_t val);
+    void (*store_int64)(xcomm_melsec_device_t* device, const char* restrict addr, int64_t val);
+    void (*store_uint8)(xcomm_melsec_device_t* device, const char* restrict addr, uint8_t val);
+    void (*store_uint16)(xcomm_melsec_device_t* device, const char* restrict addr, uint16_t val);
+    void (*store_uint32)(xcomm_melsec_device_t* device, const char* restrict addr, uint32_t val);
+    void (*store_uint64)(xcomm_melsec_device_t* device, const char* restrict addr, uint64_t val);
+    void (*store_string)(xcomm_melsec_device_t* device, const char* restrict addr, char* val);
+};
+
+struct xcomm_melsec_1e_module_s {
+    const char* restrict name;
+};
+
+struct xcomm_melsec_3c_module_s {
+    const char* restrict name;
+};
+
+struct xcomm_melsec_3e_module_s {
+    const char* restrict name;
 };
 
 extern xcomm_melsec_1c_module_t xcomm_melsec_1c;
+extern xcomm_melsec_1e_module_t xcomm_melsec_1e;
+extern xcomm_melsec_3c_module_t xcomm_melsec_3c;
+extern xcomm_melsec_3e_module_t xcomm_melsec_3e;

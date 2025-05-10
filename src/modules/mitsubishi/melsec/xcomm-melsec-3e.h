@@ -19,21 +19,4 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-uart.h"
-#include "platform/platform-uart.h"
-
-void xcomm_uart_close(xcomm_uart_t uart) {
-    platform_uart_close((platform_uart_t)uart);
-}
-
-int xcomm_uart_read(xcomm_uart_t uart, uint8_t* buf, int len) {
-    return platform_uart_read((platform_uart_t)uart, buf, len);
-}
-
-int xcomm_uart_write(xcomm_uart_t uart, uint8_t* buf, int len) {
-    return platform_uart_write((platform_uart_t)uart, buf, len);
-}
-
-xcomm_uart_t xcomm_uart_open(xcomm_uart_config_t* config) {
-    return platform_uart_open((platform_uart_config_t*)config);
-}
+_Pragma("once")

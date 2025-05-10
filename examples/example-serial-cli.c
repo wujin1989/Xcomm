@@ -34,8 +34,7 @@ int main(void) {
         .databits = XCOMM_SERIAL_DATABITS_CS8,
         .stopbits = XCOMM_SERIAL_STOPBITS_ONE,
     };
-    xcomm_serial_t* serial =
-        xcomm_serial.dial(&serial_config);
+    xcomm_serial_t* serial = xcomm_serial.dial(&serial_config);
     if (!serial) {
         return -1;
     }

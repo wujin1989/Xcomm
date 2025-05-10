@@ -22,9 +22,8 @@
 #include "xcomm-serial.h"
 #include "xcomm/xcomm-serial-module.h"
 
-xcomm_serial_module_t xcomm_serial_module = {
+xcomm_serial_module_t xcomm_serial = {
     .name  = "Xcomm Serial Module",
-
     .dial  = xcomm_serial_open,
     .close = xcomm_serial_close,
     .recv  = xcomm_serial_read,

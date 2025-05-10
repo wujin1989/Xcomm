@@ -19,23 +19,23 @@
  *  IN THE SOFTWARE.
  */
 
-#include <stdio.h>
 #include "xcomm.h"
+#include <stdio.h>
 
 int main(void) {
-    xcomm_serial_config_t serial_config = {
+    xcomm_serial_config_t config = {
         .device   = "COM2",
         .baudrate = XCOMM_SERIAL_BAUDRATE_9600,
         .parity   = XCOMM_SERIAL_PARITY_NO,
         .databits = XCOMM_SERIAL_DATABITS_CS8,
         .stopbits = XCOMM_SERIAL_STOPBITS_ONE,
     };
-    xcomm_melsec_1c_device_t* mc1c 
-        = xcomm_melsec_1c.dial(&serial_config, NULL, NULL);
+    xcomm_melsec_device_t* device = 
+        xcomm_melsec_1c.dial(&config, NULL, NULL);
 
-    bool bval = xcomm_melsec_1c.load_bool(mc1c, "X40");
+    bool bval = xcomm_melsec_1c.load_bool(device, "X40");
     printf("X40: %s\n", bval ? "ON" : "OFF");
 
-    xcomm_melsec_1c.close(mc1c);
-	return 0;
+    xcomm_melsec_1c.close(device);
+    return 0;
 }

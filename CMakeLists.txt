@@ -23,40 +23,37 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(SRCS
 	src/xcomm-base64.c
-	src/xcomm-event.c
 	src/xcomm-heap.c
-	src/xcomm-io.c
 	src/xcomm-list.c
 	src/xcomm-logger.c
 	src/xcomm-queue.c
 	src/xcomm-rbtree.c
 	src/xcomm-sha1.c
 	src/xcomm-sha256.c
-	src/xcomm-socket.c
-	src/xcomm-time.c
 	src/xcomm-utils.c
 	src/xcomm-varint.c
 	src/xcomm-stack.c
-	src/xcomm-loader.c
 	src/xcomm-timer.c
+	src/xcomm-time.c
 	src/xcomm-rwlock.c
 	src/xcomm-spinlock.c
 	src/xcomm-wg.c
 	src/xcomm-thrdpool.c
 	src/xcomm-ringbuffer.c
-	src/xcomm-uart.c
 	src/xcomm-dumper.c
-
-	src/modules/mitsubishi/melsec/xcomm-melsec-1c.c
-	src/modules/mitsubishi/melsec/xcomm-melsec-module.c
-	src/modules/mitsubishi/melsec/xcomm-melsec-3c.c
-	
 
 	src/modules/serial/xcomm-serial.c
 	src/modules/serial/xcomm-serial-module.c
 	
 	src/modules/tcp/xcomm-sync-tcp.c
 	src/modules/tcp/xcomm-tcp-module.c
+
+	src/modules/mitsubishi/melsec/xcomm-melsec-1c.c
+	src/modules/mitsubishi/melsec/xcomm-melsec-1e.c
+	src/modules/mitsubishi/melsec/xcomm-melsec-3c.c
+	src/modules/mitsubishi/melsec/xcomm-melsec-3e.c
+	src/modules/mitsubishi/melsec/xcomm-melsec-common.c
+	src/modules/mitsubishi/melsec/xcomm-melsec-module.c
 )
 
 if(WIN32)

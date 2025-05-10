@@ -21,57 +21,75 @@
 
 #include "platform/platform-event.h"
 
+void platform_event_monitor_destroy(platform_event_monitor_t* monitor) {
+    close(*monitor);
+}
+
 #if defined(__linux__)
+void platform_event_monitor_init(platform_event_monitor_t* monitor) {
+    *monitor = epoll_create1(0);
+}
+
 void platform_event_add(
-    platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud) {
+    platform_event_monitor_t* monitor,
+    platform_sock_t            sock,
+    int                        events,
+    void*                      ud) {
     struct epoll_event ee = {0};
-    if (events & PLATFORM_EVENT_RD) {
+
+    if (events & PLATFORM_EVENT_RD_FLAG) {
         ee.events |= EPOLLIN;
     }
-    if (events & PLATFORM_EVENT_WR) {
+    if (events & PLATFORM_EVENT_WR_FLAG) {
         ee.events |= EPOLLOUT;
     }
     ee.data.ptr = ud;
-    epoll_ctl(pfd, EPOLL_CTL_ADD, sfd, (struct epoll_event*)&ee);
+    epoll_ctl(*monitor, EPOLL_CTL_ADD, sock, (struct epoll_event*)&ee);
 }
 
 void platform_event_mod(
-    platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud) {
+    platform_event_monitor_t* monitor,
+    platform_sock_t            sock,
+    int                        events,
+    void*                      ud) {
     struct epoll_event ee = {0};
-    if (events & PLATFORM_EVENT_RD) {
+
+    if (events & PLATFORM_EVENT_RD_FLAG) {
         ee.events |= EPOLLIN;
     }
-    if (events & PLATFORM_EVENT_WR) {
+    if (events & PLATFORM_EVENT_WR_FLAG) {
         ee.events |= EPOLLOUT;
     }
     ee.data.ptr = ud;
-    epoll_ctl(pfd, EPOLL_CTL_MOD, sfd, (struct epoll_event*)&ee);
+    epoll_ctl(*monitor, EPOLL_CTL_MOD, sock, (struct epoll_event*)&ee);
 }
 
-void platform_event_del(platform_pollfd_t pfd, platform_sock_t sfd) {
-    epoll_ctl(pfd, EPOLL_CTL_DEL, sfd, NULL);
+void platform_event_del(
+    platform_event_monitor_t* monitor, platform_sock_t sock) {
+    epoll_ctl(*monitor, EPOLL_CTL_DEL, sock, NULL);
 }
 
 int platform_event_wait(
-    platform_pollfd_t pfd, platform_pollevent_t* events, int timeout) {
+    platform_event_monitor_t*      monitor,
+    platform_event_notification_t* notifies,
+    int                            timeout) {
     int                n;
-    struct epoll_event __events[PLATFORM_MAX_PROCESS_EVENTS] = {0};
-    memset(
-        events, 0, sizeof(platform_pollevent_t) * PLATFORM_MAX_PROCESS_EVENTS);
+    struct epoll_event epoll_events[PLATFORM_MAX_PROCESS_EVENTS] = {0};
+    memset(notifies, 0, sizeof(platform_event_notification_t) * PLATFORM_MAX_PROCESS_EVENTS);
     do {
-        n = epoll_wait(pfd, __events, PLATFORM_MAX_PROCESS_EVENTS, timeout);
+        n = epoll_wait(*monitor, epoll_events, PLATFORM_MAX_PROCESS_EVENTS, timeout);
     } while (n == -1 && errno == EINTR);
 
     if (n < 0) {
         return 0;
     }
     for (int i = 0; i < n; i++) {
-        events[i].ptr = __events[i].data.ptr;
-        if (__events[i].events & (EPOLLIN | EPOLLHUP | EPOLLERR)) {
-            events[i].events |= PLATFORM_EVENT_RD;
+        notifies[i].ptr = epoll_events[i].data.ptr;
+        if (epoll_events[i].events & (EPOLLIN | EPOLLHUP | EPOLLERR)) {
+            notifies[i].events |= PLATFORM_EVENT_RD_FLAG;
         }
-        if (__events[i].events & (EPOLLOUT | EPOLLHUP | EPOLLERR)) {
-            events[i].events |= PLATFORM_EVENT_WR;
+        if (epoll_events[i].events & (EPOLLOUT | EPOLLHUP | EPOLLERR)) {
+            notifies[i].events |= PLATFORM_EVENT_WR_FLAG;
         }
     }
     return n;
@@ -79,52 +97,72 @@ int platform_event_wait(
 #endif
 
 #if defined(__APPLE__)
+
+void platform_event_monitor_init(platform_event_monitor_t* monitor) {
+    *monitor = kqueue();
+}
+
 void platform_event_add(
-    platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud) {
+    platform_event_monitor_t* monitor,
+    platform_sock_t            sock,
+    int                        events,
+    void*                      ud) {
     struct kevent ke = {0};
-    if (events & PLATFORM_EVENT_RD) {
-        EV_SET(&ke, sfd, EVFILT_READ, EV_ADD, 0, 0, ud);
-        kevent(pfd, &ke, 1, NULL, 0, NULL);
+
+    if (events & PLATFORM_EVENT_RD_FLAG) {
+        EV_SET(&ke, sock, EVFILT_READ, EV_ADD, 0, 0, ud);
+        kevent(*monitor, &ke, 1, NULL, 0, NULL);
     }
-    if (events & PLATFORM_EVENT_WR) {
-        EV_SET(&ke, sfd, EVFILT_WRITE, EV_ADD, 0, 0, ud);
-        kevent(pfd, &ke, 1, NULL, 0, NULL);
+    if (events & PLATFORM_EVENT_WR_FLAG) {
+        EV_SET(&ke, sock, EVFILT_WRITE, EV_ADD, 0, 0, ud);
+        kevent(*monitor, &ke, 1, NULL, 0, NULL);
     }
 }
 
 void platform_event_mod(
-    platform_pollfd_t pfd, platform_sock_t sfd, int events, void* ud) {
+    platform_event_monitor_t* monitor,
+    platform_sock_t            sock,
+    int                        events,
+    void*                      ud) {
     struct kevent ke = {0};
-    if (events & PLATFORM_EVENT_RD) {
-        EV_SET(&ke, sfd, EVFILT_READ, EV_ADD, 0, 0, ud);
-        kevent(pfd, &ke, 1, NULL, 0, NULL);
+
+    if (events & PLATFORM_EVENT_RD_FLAG) {
+        EV_SET(&ke, sock, EVFILT_READ, EV_ADD, 0, 0, ud);
+        kevent(*monitor, &ke, 1, NULL, 0, NULL);
     }
-    if (events & PLATFORM_EVENT_WR) {
-        EV_SET(&ke, sfd, EVFILT_WRITE, EV_ADD, 0, 0, ud);
-        kevent(pfd, &ke, 1, NULL, 0, NULL);
+    if (events & PLATFORM_EVENT_WR_FLAG) {
+        EV_SET(&ke, sock, EVFILT_WRITE, EV_ADD, 0, 0, ud);
+        kevent(*monitor, &ke, 1, NULL, 0, NULL);
     }
 }
 
-void platform_event_del(platform_pollfd_t pfd, platform_sock_t sfd) {
+void platform_event_del(
+    platform_event_monitor_t* monitor, platform_sock_t sock) {
     struct kevent ke = {0};
-    EV_SET(&ke, sfd, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-    kevent(pfd, &ke, 1, NULL, 0, NULL);
 
-    EV_SET(&ke, sfd, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-    kevent(pfd, &ke, 1, NULL, 0, NULL);
+    EV_SET(&ke, sock, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+    kevent(*monitor, &ke, 1, NULL, 0, NULL);
+
+    EV_SET(&ke, sock, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+    kevent(*monitor, &ke, 1, NULL, 0, NULL);
 }
 
 int platform_event_wait(
-    platform_pollfd_t pfd, platform_pollevent_t* events, int timeout) {
-    struct kevent __events[PLATFORM_MAX_PROCESS_EVENTS];
+    platform_event_monitor_t*      monitor,
+    platform_event_notification_t* notifies,
+    int                            timeout) {
+    struct kevent epoll_events[PLATFORM_MAX_PROCESS_EVENTS];
 
     memset(
-        events, 0, sizeof(platform_pollevent_t) * PLATFORM_MAX_PROCESS_EVENTS);
+        notifies,
+        0,
+        sizeof(platform_event_notification_t) * PLATFORM_MAX_PROCESS_EVENTS);
     struct timespec ts = {0, 0};
     ts.tv_sec = (timeout / 1000UL);
     ts.tv_nsec = ((timeout % 1000UL) * 1000000UL);
 
-    int n = kevent(pfd, NULL, 0, __events, PLATFORM_MAX_PROCESS_EVENTS, &ts);
+    int n =
+        kevent(*monitor, NULL, 0, epoll_events, PLATFORM_MAX_PROCESS_EVENTS, &ts);
     /**
      * In systems utilizing the kqueue mechanism, read and write events are
      * handled independently, differing from the behavior of epoll. With epoll,
@@ -141,12 +179,12 @@ int platform_event_wait(
      * employing bitwise operations within a single event mask.
      */
     for (int i = 0; i < n; i++) {
-        events[i].ptr = __events[i].udata;
-        if (__events[i].filter == EVFILT_READ) {
-            events[i].events |= PLATFORM_EVENT_RD;
+        notifies[i].ptr = epoll_events[i].udata;
+        if (epoll_events[i].filter == EVFILT_READ) {
+            notifies[i].events |= PLATFORM_EVENT_RD_FLAG;
         }
-        if (__events[i].filter == EVFILT_WRITE) {
-            events[i].events |= PLATFORM_EVENT_WR;
+        if (epoll_events[i].filter == EVFILT_WRITE) {
+            notifies[i].events |= PLATFORM_EVENT_WR_FLAG;
         }
     }
     return n;

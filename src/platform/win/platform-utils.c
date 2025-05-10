@@ -21,7 +21,7 @@
 
 #include "platform/platform-utils.h"
 
-int platform_utils_cpus(void) {
+int platform_utils_getcpus(void) {
     SYSTEM_INFO si;
     GetSystemInfo(&si);
     return (int)si.dwNumberOfProcessors;

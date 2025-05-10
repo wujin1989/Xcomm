@@ -27,19 +27,19 @@
 int main(void) {
     char sbuf[64] = "pong";
     char rbuf[64] = {0};
-    xcomm_socket_t* srv = xcomm_tcp.sync.listen("0.0.0.0", "1234");
+    xcomm_socket_t* srv = xcomm_sync_tcp.listen("0.0.0.0", "1234");
 
     while (true) {
-        xcomm_socket_t* cli = xcomm_tcp.sync.accept(srv);
+        xcomm_socket_t* cli = xcomm_sync_tcp.accept(srv);
 
-        xcomm_tcp.sync.recv(cli, rbuf, sizeof(rbuf));
+        xcomm_sync_tcp.recv(cli, rbuf, sizeof(rbuf));
         printf("srv recv %s from cli.\n", rbuf);
 
-        xcomm_tcp.sync.send(cli, sbuf, sizeof(sbuf));
+        xcomm_sync_tcp.send(cli, sbuf, sizeof(sbuf));
         printf("srv send %s to cli.\n", sbuf);
 
-        xcomm_tcp.sync.close(cli);
+        xcomm_sync_tcp.close(cli);
     }
-    xcomm_tcp.sync.close(srv);
+    xcomm_sync_tcp.close(srv);
     return 0;
 }

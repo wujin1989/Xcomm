@@ -26,40 +26,40 @@
 
 static atomic_flag initialized = ATOMIC_FLAG_INIT;
 
-static void _disable_udp_connreset(platform_sock_t sock) {
+static inline void _disable_udp_connreset(platform_sock_t sock) {
     int   on = 0;
-    DWORD nouse;
+    DWORD noused;
     WSAIoctl(
-        sock, SIO_UDP_CONNRESET, &on, sizeof(int), NULL, 0, &nouse, NULL, NULL);
+        sock, SIO_UDP_CONNRESET, &on, sizeof(int), NULL, 0, &noused, NULL, NULL);
 }
 
-void platform_socket_recvtimeo(platform_sock_t sock, int timeout_ms) {
+void platform_socket_set_rcvtimeout(platform_sock_t sock, int timeout_ms) {
     setsockopt(sock, SOL_SOCKET, SO_RCVTIMEO, (char*)&timeout_ms, sizeof(int));
 }
 
-void platform_socket_sendtimeo(platform_sock_t sock, int timeout_ms) {
+void platform_socket_set_sndtimeout(platform_sock_t sock, int timeout_ms) {
     setsockopt(sock, SOL_SOCKET, SO_SNDTIMEO, (char*)&timeout_ms, sizeof(int));
 }
 
-void platform_socket_setrecvbuf(platform_sock_t sock, int val) {
+void platform_socket_set_rcvbuf(platform_sock_t sock, int val) {
     setsockopt(sock, SOL_SOCKET, SO_RCVBUF, (const char*)&val, sizeof(int));
 }
 
-void platform_socket_setsendbuf(platform_sock_t sock, int val) {
+void platform_socket_set_sndbuf(platform_sock_t sock, int val) {
     setsockopt(sock, SOL_SOCKET, SO_SNDBUF, (const char*)&val, sizeof(int));
 }
 
-void platform_socket_nodelay(platform_sock_t sock, bool on) {
+void platform_socket_enable_nodelay(platform_sock_t sock, bool on) {
     int val = on ? 1 : 0;
     setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (const char*)&val, sizeof(val));
 }
 
-void platform_socket_v6only(platform_sock_t sock, bool on) {
+void platform_socket_enable_v6only(platform_sock_t sock, bool on) {
     int val = on ? 1 : 0;
     setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, (const char*)&val, sizeof(int));
 }
 
-void platform_socket_rss(platform_sock_t sock, uint16_t idx, int cores) {
+void platform_socket_set_rss(platform_sock_t sock, uint16_t idx, int cores) {
     (void)(cores);
     DWORD nouse;
     WSAIoctl(
@@ -74,20 +74,26 @@ void platform_socket_rss(platform_sock_t sock, uint16_t idx, int cores) {
         NULL);
 }
 
-void platform_socket_keepalive(platform_sock_t sock) {
-    int on = 1;
+void platform_socket_enable_keepalive(platform_sock_t sock, bool on) {
+    if (!on) {
+        return;
+    }
+    int val = on ? 1 : 0;
     int d = 60;
     int i = 1;  /* 1 second; same as default on win32 */
     int c = 10; /* 10 retries; same as hardcoded on win32 since vista */
 
-    setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (const char*)&on, sizeof(on));
+    setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, (const char*)&val, sizeof(val));
     setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE, (const char*)&d, sizeof(d));
     setsockopt(sock, IPPROTO_TCP, TCP_KEEPINTVL, (const char*)&i, sizeof(i));
     setsockopt(sock, IPPROTO_TCP, TCP_KEEPCNT, (const char*)&c, sizeof(c));
 }
 
-void platform_socket_maxseg(platform_sock_t sock) {
-    int af = platform_socket_getaddrfamily(sock);
+void platform_socket_enable_maxseg(platform_sock_t sock, bool on) {
+    if (!on) {
+        return;
+    }
+    int af = platform_socket_get_addressfamily(sock);
     /**
      * windows doesn't support setting TCP_MAXSEG but IP_PMTUDISC_DONT forces
      * the MSS to the protocol minimum which is what we want here. linux doesn't
@@ -109,21 +115,22 @@ void platform_socket_maxseg(platform_sock_t sock) {
     }
 }
 
-void platform_socket_nonblock(platform_sock_t sock) {
-    u_long on = 1;
-    ioctlsocket(sock, FIONBIO, &on);
+void platform_socket_enable_nonblocking(platform_sock_t sock, bool on) {
+    u_long val = on ? 1 : 0;
+    ioctlsocket(sock, FIONBIO, &val);
 }
 
-void platform_socket_reuse_addr(platform_sock_t sock) {
-    int on = 1;
-    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&on, sizeof(on));
+void platform_socket_enable_reuseaddr(platform_sock_t sock, bool on) {
+    int val = on ? 1 : 0;
+    setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (const char*)&val, sizeof(val));
 }
 
-void platform_socket_reuse_port(platform_sock_t sock) {
+void platform_socket_enable_reuseport(platform_sock_t sock, bool on) {
     (void)sock;
+    (void)on;
 }
 
-int platform_socket_extract_family(platform_sock_t sock) {
+int platform_socket_get_addressfamily(platform_sock_t sock) {
     WSAPROTOCOL_INFOW
     info; /* using unicode name to avoiding ninja build warning */
     socklen_t len;
@@ -151,16 +158,7 @@ void platform_socket_close(platform_sock_t sock) {
     closesocket(sock);
 }
 
-int platform_socket_getaddrfamily(platform_sock_t sock) {
-    WSAPROTOCOL_INFOW info;
-    socklen_t len;
-
-    len = sizeof(WSAPROTOCOL_INFOW);
-    getsockopt(sock, SOL_SOCKET, SO_PROTOCOL_INFO, (char*)&info, &len);
-    return info.iAddressFamily;
-}
-
-int platform_socket_getsocktype(platform_sock_t sock) {
+int platform_socket_get_socktype(platform_sock_t sock) {
     int type;
     int len = sizeof(int);
     getsockopt(sock, SOL_SOCKET, SO_TYPE, (char*)&type, &len);
@@ -274,7 +272,7 @@ int platform_socket_socketpair(
     return 0;
 }
 
-char* platform_socket_error2string(int error) {
+char* platform_socket_tostring(int error) {
     static char buffer[512];
     FormatMessage(
         FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
@@ -287,16 +285,8 @@ char* platform_socket_error2string(int error) {
     return buffer;
 }
 
-int platform_socket_lasterror(void) {
+int platform_socket_get_lasterror(void) {
     return WSAGetLastError();
-}
-
-void platform_socket_pollfd_destroy(platform_pollfd_t pfd) {
-    epoll_close(pfd);
-}
-
-platform_pollfd_t platform_socket_pollfd_create(void) {
-    return epoll_create1(0);
 }
 
 platform_sock_t platform_socket_accept(platform_sock_t sock, bool nonblocking) {
@@ -304,9 +294,7 @@ platform_sock_t platform_socket_accept(platform_sock_t sock, bool nonblocking) {
     if (cli == PLATFORM_SO_ERROR_INVALID_SOCKET) {
         return PLATFORM_SO_ERROR_INVALID_SOCKET;
     }
-    if (nonblocking) {
-        platform_socket_nonblock(cli);
-    }
+    platform_socket_enable_nonblocking(cli, nonblocking);
     return cli;
 }
 
@@ -339,16 +327,16 @@ platform_sock_t platform_socket_listen(
         if (sock == PLATFORM_SO_ERROR_INVALID_SOCKET) {
             continue;
         }
-        platform_socket_v6only(sock, false);
+        platform_socket_enable_v6only(sock, false);
         if (protocol == SOCK_STREAM) {
-            platform_socket_reuse_addr(sock);
-            platform_socket_reuse_port(sock);
+            platform_socket_enable_reuseaddr(sock, true);
+            platform_socket_enable_reuseport(sock, true);
         }
         if (protocol == SOCK_DGRAM) {
             _disable_udp_connreset(sock);
-            platform_socket_setrecvbuf(sock, INT32_MAX);
+            platform_socket_set_rcvbuf(sock, INT32_MAX);
             if (nonblocking) {
-                platform_socket_rss(sock, (uint16_t)idx, cores);
+                platform_socket_set_rss(sock, (uint16_t)idx, cores);
             }
         }
         if (bind(sock, rp->ai_addr, (int)rp->ai_addrlen) ==
@@ -361,13 +349,11 @@ platform_sock_t platform_socket_listen(
                 platform_socket_close(sock);
                 continue;
             }
-            platform_socket_maxseg(sock);
-            platform_socket_nodelay(sock, true);
-            platform_socket_keepalive(sock);
+            platform_socket_enable_maxseg(sock, true);
+            platform_socket_enable_nodelay(sock, true);
+            platform_socket_enable_keepalive(sock, true);
         }
-        if (nonblocking) {
-            platform_socket_nonblock(sock);
-        }
+        platform_socket_enable_nonblocking(sock, nonblocking);
         break;
     }
     if (rp == NULL) {
@@ -405,13 +391,12 @@ platform_sock_t platform_socket_dial(
         if (sock == PLATFORM_SO_ERROR_INVALID_SOCKET) {
             continue;
         }
-        if (nonblocking) {
-            platform_socket_nonblock(sock);
-        }
+        platform_socket_enable_nonblocking(sock, nonblocking);
+
         if (protocol == SOCK_STREAM) {
-            platform_socket_maxseg(sock);
-            platform_socket_nodelay(sock, true);
-            platform_socket_keepalive(sock);
+            platform_socket_enable_maxseg(sock, true);
+            platform_socket_enable_nodelay(sock, true);
+            platform_socket_enable_keepalive(sock, true);
         }
         if (protocol == SOCK_DGRAM) {
             _disable_udp_connreset(sock);

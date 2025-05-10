@@ -23,25 +23,25 @@ _Pragma("once")
 
 #include "xcomm-types.h"
 
-typedef struct xcomm_tcp_module_s xcomm_tcp_module_t;
+typedef struct xcomm_sync_tcp_module_s  xcomm_sync_tcp_module_t;
+typedef struct xcomm_async_tcp_module_s xcomm_async_tcp_module_t;
 
-struct xcomm_tcp_module_s {
-    struct {
-        const char* restrict name;
+struct xcomm_sync_tcp_module_s {
+    const char* restrict name;
 
-        xcomm_socket_t* (*dial)(const char* restrict host, const char* restrict port);
-        xcomm_socket_t* (*listen)(const char* restrict host, const char* restrict port);
-        xcomm_socket_t* (*accept)(xcomm_socket_t* socket);
-        int  (*send)(xcomm_socket_t* sock, void* buf, int len);
-        int  (*recv)(xcomm_socket_t* sock, void* buf, int len);
-        void (*close)(xcomm_socket_t* sock);
-        void (*set_sndtimeo)(xcomm_socket_t* sock, int timeout_ms);
-        void (*set_rcvtimeo)(xcomm_socket_t* sock, int timeout_ms);
-    } sync;
-
-    struct {
-        const char* restrict name;
-    } async;
+    xcomm_socket_t* (*dial)(const char* restrict host, const char* restrict port);
+    xcomm_socket_t* (*listen)(const char* restrict host, const char* restrict port);
+    xcomm_socket_t* (*accept)(xcomm_socket_t* socket);
+    int  (*send)(xcomm_socket_t* sock, void* buf, int len);
+    int  (*recv)(xcomm_socket_t* sock, void* buf, int len);
+    void (*close)(xcomm_socket_t* sock);
+    void (*set_sndtimeo)(xcomm_socket_t* sock, int timeout_ms);
+    void (*set_rcvtimeo)(xcomm_socket_t* sock, int timeout_ms);
 };
 
-extern xcomm_tcp_module_t xcomm_tcp;
+struct xcomm_async_tcp_module_s {
+    const char* restrict name;
+};
+
+extern xcomm_sync_tcp_module_t  xcomm_sync_tcp;
+extern xcomm_async_tcp_module_t xcomm_async_tcp;

@@ -23,7 +23,7 @@
 #include "platform/platform-utils.h"
 
 int xcomm_utils_cpus(void) {
-    return platform_utils_cpus();
+    return platform_utils_getcpus();
 }
 
 xcomm_tid_t xcomm_utils_gettid(void) {

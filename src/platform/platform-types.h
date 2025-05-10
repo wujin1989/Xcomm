@@ -103,35 +103,35 @@ typedef pid_t platform_tid_t;
 
 typedef int   platform_sock_t;
 typedef pid_t platform_pid_t;
-typedef int   platform_pollfd_t;
+typedef int   platform_event_monitor_t;
 typedef int   platform_uart_t;
 #endif
 
 #if defined(_WIN32)
 typedef DWORD   platform_tid_t;
 typedef DWORD   platform_pid_t;
-typedef HANDLE  platform_pollfd_t;
+typedef HANDLE  platform_event_monitor_t;
 typedef SOCKET  platform_sock_t;
 typedef HANDLE  platform_uart_t;
 typedef SSIZE_T ssize_t;
 #endif
 
-typedef enum platform_event_e          platform_event_t;
-typedef struct platform_pollevent_s    platform_pollevent_t;
-typedef struct platform_uart_config_s  platform_uart_config_t;
-typedef enum platform_uart_baudrate_e  platform_uart_baudrate_t;
-typedef enum platform_uart_parity_e    platform_uart_parity_t;
-typedef enum platform_uart_databits_e  platform_uart_databits_t;
-typedef enum platform_uart_stopbits_e  platform_uart_stopbits_t;
+typedef enum platform_event_flag_e           platform_event_flag_t;
+typedef struct platform_event_notification_s platform_event_notification_t;
+typedef struct platform_uart_config_s        platform_uart_config_t;
+typedef enum platform_uart_baudrate_e        platform_uart_baudrate_t;
+typedef enum platform_uart_parity_e          platform_uart_parity_t;
+typedef enum platform_uart_databits_e        platform_uart_databits_t;
+typedef enum platform_uart_stopbits_e        platform_uart_stopbits_t;
 
-struct platform_pollevent_s {
+struct platform_event_notification_s {
     uint32_t events;
     void*    ptr;
 };
 
-enum platform_event_e {
-    PLATFORM_EVENT_RD = 1,
-    PLATFORM_EVENT_WR = 2,
+enum platform_event_flag_e {
+    PLATFORM_EVENT_RD_FLAG = 1,
+    PLATFORM_EVENT_WR_FLAG = 2,
 };
 
 enum platform_uart_baudrate_e {
