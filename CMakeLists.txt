@@ -48,12 +48,12 @@ set(SRCS
 	src/modules/tcp/xcomm-sync-tcp.c
 	src/modules/tcp/xcomm-tcp-module.c
 
-	src/modules/mitsubishi/melsec/xcomm-melsec-1c.c
-	src/modules/mitsubishi/melsec/xcomm-melsec-1e.c
-	src/modules/mitsubishi/melsec/xcomm-melsec-3c.c
-	src/modules/mitsubishi/melsec/xcomm-melsec-3e.c
-	src/modules/mitsubishi/melsec/xcomm-melsec-common.c
-	src/modules/mitsubishi/melsec/xcomm-melsec-module.c
+	src/modules/melsec/xcomm-melsec-1c.c
+	src/modules/melsec/xcomm-melsec-1e.c
+	src/modules/melsec/xcomm-melsec-3c.c
+	src/modules/melsec/xcomm-melsec-3e.c
+	src/modules/melsec/xcomm-melsec-common.c
+	src/modules/melsec/xcomm-melsec-module.c
 )
 
 if(WIN32)

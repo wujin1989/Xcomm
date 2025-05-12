@@ -21,9 +21,51 @@
 
 _Pragma("once")
 
-#include "xcomm-types.h"
+#include <stdint.h>
 
 typedef struct xcomm_serial_module_s xcomm_serial_module_t;
+typedef struct xcomm_serial_config_s xcomm_serial_config_t;
+typedef enum xcomm_serial_baudrate_e xcomm_serial_baudrate_t;
+typedef enum xcomm_serial_parity_e   xcomm_serial_parity_t;
+typedef enum xcomm_serial_databits_e xcomm_serial_databits_t;
+typedef enum xcomm_serial_stopbits_e xcomm_serial_stopbits_t;
+typedef struct xcomm_serial_s        xcomm_serial_t;
+
+struct xcomm_serial_s {
+    void* opaque;
+};
+
+enum xcomm_serial_baudrate_e {
+    XCOMM_SERIAL_BAUDRATE_9600,
+    XCOMM_SERIAL_BAUDRATE_19200,
+    XCOMM_SERIAL_BAUDRATE_38400,
+    XCOMM_SERIAL_BAUDRATE_57600,
+    XCOMM_SERIAL_BAUDRATE_115200,
+};
+
+enum xcomm_serial_parity_e {
+    XCOMM_SERIAL_PARITY_NO,
+    XCOMM_SERIAL_PARITY_ODD,
+    XCOMM_SERIAL_PARITY_EVEN,
+};
+
+enum xcomm_serial_databits_e {
+    XCOMM_SERIAL_DATABITS_CS7,
+    XCOMM_SERIAL_DATABITS_CS8,
+};
+
+enum xcomm_serial_stopbits_e {
+    XCOMM_SERIAL_STOPBITS_ONE,
+    XCOMM_SERIAL_STOPBITS_TWO,
+};
+
+struct xcomm_serial_config_s {
+    const char* restrict device;
+    xcomm_serial_baudrate_t baudrate;
+    xcomm_serial_parity_t   parity;
+    xcomm_serial_databits_t databits;
+    xcomm_serial_stopbits_t stopbits;
+};
 
 struct xcomm_serial_module_s {
     const char* restrict name;
