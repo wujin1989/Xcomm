@@ -23,6 +23,14 @@ _Pragma("once")
 
 #include "xcomm-logger.h"
 
+#define XCOMM_MELSEC_CHARS_PER_B_POINT    1
+#define XCOMM_MELSEC_CHARS_PER_W_POINT    4
+#define XCOMM_MELSEC_MAX_MESSAGE_SIZE     64
+#define XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE 256
+
+typedef struct xcomm_melsec_bytes_s  xcomm_melsec_bytes_t;
+typedef enum xcomm_melsec_operate_e  xcomm_melsec_operate_t;
+
 enum {
     XCOMM_MELSEC_1_BYTE = 1,
     XCOMM_MELSEC_2_BYTE = 2,
@@ -33,3 +41,16 @@ enum {
     XCOMM_MELSEC_7_BYTE = 7,
     XCOMM_MELSEC_8_BYTE = 8,
 };
+
+enum xcomm_melsec_operate_e{
+    XCOMM_MELSEC_B_OP, 
+    XCOMM_MELSEC_W_OP,
+};
+
+struct xcomm_melsec_bytes_s {
+    uint8_t* data;
+    size_t   size;
+};
+
+extern void xcomm_melsec_byte2ascii(uint8_t byte, uint8_t* ascii);
+extern void xcomm_melsec_bytes2string(xcomm_melsec_bytes_t bytes, char* tostring, size_t size);

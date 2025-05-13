@@ -19,4 +19,24 @@
  *  IN THE SOFTWARE.
  */
 
+#include <stdio.h>
+#include <stdint.h>
 #include "xcomm-melsec-common.h"
+
+void xcomm_melsec_byte2ascii(uint8_t byte, uint8_t* ascii) {
+    const char hex_chars[] = "0123456789ABCDEF";
+
+    ascii[0] = hex_chars[(byte >> 4) & 0x0F];
+    ascii[1] = hex_chars[byte & 0x0F];
+}
+
+void xcomm_melsec_bytes2string(xcomm_melsec_bytes_t bytes, char* tostring, size_t size) {
+    size_t offset = 0;
+
+    for (size_t i = 0; i < bytes.size; i++) {
+        offset += snprintf(
+            tostring + offset, size - offset,
+            "%02X ",
+            bytes.data[i]);
+    }
+}

@@ -19,10 +19,15 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm.h"
 #include <stdio.h>
+#include "xcomm.h"
 
 int main(void) {
+    xcomm_dumper_config_t dumper_config = {
+        .filename = NULL, 
+        .mode = XCOMM_DUMPER_MODE_FILE
+    };
+    xcomm_dumper_init(&dumper_config);
     xcomm_serial_config_t config = {
         .device   = "COM2",
         .baudrate = XCOMM_SERIAL_BAUDRATE_9600,
@@ -33,8 +38,8 @@ int main(void) {
     xcomm_melsec_device_t* device = 
         xcomm_melsec_1c.dial(&config, NULL, NULL);
 
-    bool bval = xcomm_melsec_1c.load_bool(device, "X40");
-    printf("X40: %s\n", bval ? "ON" : "OFF");
+    bool bval = xcomm_melsec_1c.load_bool(device, "X0040");
+    printf("X0040: %s\n", bval ? "ON" : "OFF");
 
     xcomm_melsec_1c.close(device);
     return 0;
