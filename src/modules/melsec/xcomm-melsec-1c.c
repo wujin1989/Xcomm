@@ -69,7 +69,7 @@ static inline xcomm_melsec_bytes_t _rd_request_marshalling(
         return result;
     }
     uint8_t num_points_ascii[XCOMM_MELSEC_2_BYTE];
-    xcomm_melsec_byte2ascii(num_points, num_points_ascii);
+    xcomm_melsec_byte_to_ascii(num_points, num_points_ascii);
 
     result.data[0]  = enq;
     result.data[1]  = stn_no[0];
@@ -94,7 +94,7 @@ static inline xcomm_melsec_bytes_t _rd_request_marshalling(
         checksum += result.data[i];
     }
     uint8_t checksum_ascii[XCOMM_MELSEC_2_BYTE];
-    xcomm_melsec_byte2ascii(checksum, checksum_ascii);
+    xcomm_melsec_byte_to_ascii(checksum, checksum_ascii);
 
     result.data[15] = checksum_ascii[0];
     result.data[16] = checksum_ascii[1];
@@ -109,7 +109,7 @@ static inline xcomm_melsec_bytes_t _rd_response_retrieve(
     
     uint8_t fst;
     xcomm_serial.recv(serial, &fst, 1);
-    if (fst == stx) {
+    if (fst == nak) {
         /**
          * | 1  |    2    |  2  |      2     |
          * |NAK | STATION | PLC | ERROR_CODE |
@@ -119,7 +119,7 @@ static inline xcomm_melsec_bytes_t _rd_response_retrieve(
     } else {
         /**
          * | 1  |    2    |  2  | X |  1  |     2    |
-         * |STX | STATION | PLC | B | EXT | CHECKSUM |
+         * |STX | STATION | PLC | B | ETX | CHECKSUM |
          */
         result.size = XCOMM_MELSEC_1_BYTE + XCOMM_MELSEC_2_BYTE +
                       XCOMM_MELSEC_2_BYTE +
@@ -141,6 +141,100 @@ static inline xcomm_melsec_bytes_t _rd_response_retrieve(
         free(result.data);
         result.size = 0;
         return result;
+    }
+    return result;
+}
+
+static inline xcomm_melsec_flexible_value_t _normal_rd_response_unmarshalling(
+    xcomm_melsec_bytes_t   bytes,
+    xcomm_melsec_operate_t op_code,
+    uint8_t                num_points) {
+    size_t offset = 0;
+    offset += XCOMM_MELSEC_1_BYTE + XCOMM_MELSEC_2_BYTE + XCOMM_MELSEC_2_BYTE;
+
+    size_t segment_size = (op_code == XCOMM_MELSEC_B_OP)
+                              ? num_points * XCOMM_MELSEC_CHARS_PER_B_POINT
+                              : num_points * XCOMM_MELSEC_CHARS_PER_W_POINT;
+    if (bytes.size <
+        offset + segment_size + XCOMM_MELSEC_1_BYTE + XCOMM_MELSEC_2_BYTE) {
+        xcomm_loge(
+            "Invalid response size. bytes.size=%zu, expected=%zu\n",
+            bytes.size,
+            offset + segment_size + XCOMM_MELSEC_1_BYTE + XCOMM_MELSEC_2_BYTE);
+        return (xcomm_melsec_flexible_value_t){0};
+    }
+
+    xcomm_melsec_bytes_t segment = {
+        .size = segment_size, .data = malloc(segment_size)};
+    if (!segment.data) {
+        xcomm_loge("No memory for segment allocation.\n");
+        return (xcomm_melsec_flexible_value_t){0};
+    }
+    memcpy(segment.data, bytes.data + offset, segment.size);
+    offset += segment.size + XCOMM_MELSEC_1_BYTE;
+
+    uint8_t checksum = 0;
+    uint8_t checksum_ascii[XCOMM_MELSEC_2_BYTE] = {0};
+
+    for (size_t i = 1; i < bytes.size - XCOMM_MELSEC_2_BYTE; i++) {
+        checksum += bytes.data[i];
+    }
+    xcomm_melsec_byte_to_ascii(checksum, checksum_ascii);
+
+    if (checksum_ascii[0] != bytes.data[offset] ||
+        checksum_ascii[1] != bytes.data[offset + 1]) {
+        xcomm_loge(
+            "Checksum error. Calculated=%02X%02X, Received=%02X%02X\n",
+            checksum_ascii[0],
+            checksum_ascii[1],
+            bytes.data[offset],
+            bytes.data[offset + 1]);
+        free(segment.data);
+        return (xcomm_melsec_flexible_value_t){0};
+    }
+
+    char ascii_str[XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE] = {0};
+    xcomm_melsec_bytes_to_ascii_string(
+        segment, ascii_str, sizeof(ascii_str), "");
+    free(segment.data);
+
+    int64_t val = (op_code == XCOMM_MELSEC_B_OP) ? strtoll(ascii_str, NULL, 2)
+                                                 : strtoll(ascii_str, NULL, 16);
+    return (xcomm_melsec_flexible_value_t){.i64 = val};
+}
+
+static inline void
+_abnormal_rd_response_unmarshalling(xcomm_melsec_bytes_t bytes) {
+    char   errstr[XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE] = {0};
+    size_t offset =
+        XCOMM_MELSEC_1_BYTE + XCOMM_MELSEC_2_BYTE + XCOMM_MELSEC_2_BYTE;
+
+    xcomm_melsec_bytes_t errcode = {
+        .size = XCOMM_MELSEC_2_BYTE, .data = malloc(XCOMM_MELSEC_2_BYTE)};
+    if (!errcode.data) {
+        xcomm_loge("No memory.\n");
+        return;
+    }
+    memcpy(errcode.data, bytes.data + offset, XCOMM_MELSEC_2_BYTE);
+    xcomm_melsec_bytes_to_ascii_string(
+        errcode, errstr, XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE, "");
+
+    xcomm_loge("[%s] Error Code: %s\n", __FUNCTION__, errstr);
+}
+
+static inline xcomm_melsec_flexible_value_t _rd_response_unmarshalling(
+    xcomm_melsec_bytes_t   bytes,
+    xcomm_melsec_operate_t op_code,
+    uint8_t                num_points) {
+    size_t                        offset = 0;
+    xcomm_melsec_flexible_value_t result = {0};
+
+    if (bytes.data[offset] == stx) {
+        result = _normal_rd_response_unmarshalling(bytes, op_code, num_points);
+    } else if (bytes.data[offset] == nak) {
+        _abnormal_rd_response_unmarshalling(bytes);
+    } else {
+        xcomm_loge("Unknown Frame Error.\n");
     }
     return result;
 }
@@ -199,8 +293,8 @@ bool xcomm_melsec_1c_load_bool(
         ctx->stn_no, ctx->plc_no, addr, XCOMM_MELSEC_B_OP, 1);
 
     char reqstr[XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE] = {0};
-    xcomm_melsec_bytes2string(req, reqstr, sizeof(reqstr));
-    xcomm_logi("[%s] REQUEST FRAME: %s\n", __FUNCTION__, reqstr);
+    xcomm_melsec_bytes_to_hex_string(req, reqstr, sizeof(reqstr), " ");
+    xcomm_logi("[%s] REQUEST FRAME(Hex String): %s\n", __FUNCTION__, reqstr);
 
     xcomm_serial.send(ctx->serial, req.data, req.size);
     free(req.data);
@@ -209,12 +303,13 @@ bool xcomm_melsec_1c_load_bool(
         _rd_response_retrieve(ctx->serial, XCOMM_MELSEC_B_OP, 1);
 
     char rspstr[XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE] = {0};
-    xcomm_melsec_bytes2string(rsp, rspstr, sizeof(rspstr));
-    xcomm_logi("[%s] RESPONSE FRAME: %s\n", __FUNCTION__, rspstr);
+    xcomm_melsec_bytes_to_hex_string(rsp, rspstr, sizeof(rspstr), " ");
+    xcomm_logi("[%s] RESPONSE FRAME(Hex String): %s\n", __FUNCTION__, rspstr);
 
-    _rd_response_unmarshalling(rsp, XCOMM_MELSEC_B_OP, 1);
+    xcomm_melsec_flexible_value_t val =
+        _rd_response_unmarshalling(rsp, XCOMM_MELSEC_B_OP, 1);
     free(rsp.data);
-    return false;
+    return val.b;
 }
 
 int8_t xcomm_melsec_1c_load_int8(

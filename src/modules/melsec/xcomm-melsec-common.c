@@ -23,20 +23,36 @@
 #include <stdint.h>
 #include "xcomm-melsec-common.h"
 
-void xcomm_melsec_byte2ascii(uint8_t byte, uint8_t* ascii) {
+void xcomm_melsec_byte_to_ascii(uint8_t byte, uint8_t ascii[2]) {
     const char hex_chars[] = "0123456789ABCDEF";
 
     ascii[0] = hex_chars[(byte >> 4) & 0x0F];
     ascii[1] = hex_chars[byte & 0x0F];
 }
 
-void xcomm_melsec_bytes2string(xcomm_melsec_bytes_t bytes, char* tostring, size_t size) {
+void xcomm_melsec_bytes_to_ascii_string(
+    xcomm_melsec_bytes_t bytes, char* ascii_str, size_t ascii_strlen, const char* delimiter) {
     size_t offset = 0;
 
     for (size_t i = 0; i < bytes.size; i++) {
         offset += snprintf(
-            tostring + offset, size - offset,
-            "%02X ",
-            bytes.data[i]);
+            ascii_str + offset,
+            ascii_strlen - offset,
+            "%c%s",
+            bytes.data[i],
+            (i < bytes.size - 1) ? delimiter : "");
     }
+}
+
+void xcomm_melsec_bytes_to_hex_string(
+   xcomm_melsec_bytes_t bytes, char* hex_str, size_t hex_strlen, const char* delimiter) {  
+  size_t offset = 0;  
+
+  for (size_t i = 0; i < bytes.size; i++) {  
+      offset += snprintf(  
+          hex_str + offset,
+          hex_strlen - offset,  
+          "%02X%s",  
+          bytes.data[i], (i < bytes.size - 1) ? delimiter : "");  
+  }
 }

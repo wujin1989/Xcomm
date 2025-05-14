@@ -31,10 +31,10 @@ _Pragma("once")
 typedef enum xcomm_logger_level_e xcomm_logger_level_t;
 
 enum xcomm_logger_level_e {
-    XCOMM_LOGGER_LEVEL_DEBUG = 1,
-    XCOMM_LOGGER_LEVEL_INFO  = 2,
-    XCOMM_LOGGER_LEVEL_WARN  = 3,
-    XCOMM_LOGGER_LEVEL_ERROR = 4,
+    XCOMM_LOGGER_LEVEL_DEBUG,
+    XCOMM_LOGGER_LEVEL_INFO,
+    XCOMM_LOGGER_LEVEL_WARN,
+    XCOMM_LOGGER_LEVEL_ERROR,
 };
 
 extern void xcomm_logger_init(const char* restrict filename, xcomm_logger_level_t level, bool async);

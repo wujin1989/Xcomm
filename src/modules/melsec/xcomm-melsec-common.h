@@ -28,8 +28,9 @@ _Pragma("once")
 #define XCOMM_MELSEC_MAX_MESSAGE_SIZE     64
 #define XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE 256
 
-typedef struct xcomm_melsec_bytes_s  xcomm_melsec_bytes_t;
-typedef enum xcomm_melsec_operate_e  xcomm_melsec_operate_t;
+typedef struct xcomm_melsec_bytes_s         xcomm_melsec_bytes_t;
+typedef enum xcomm_melsec_operate_e         xcomm_melsec_operate_t;
+typedef union xcomm_melsec_flexible_value_u xcomm_melsec_flexible_value_t;
 
 enum {
     XCOMM_MELSEC_1_BYTE = 1,
@@ -52,5 +53,19 @@ struct xcomm_melsec_bytes_s {
     size_t   size;
 };
 
-extern void xcomm_melsec_byte2ascii(uint8_t byte, uint8_t* ascii);
-extern void xcomm_melsec_bytes2string(xcomm_melsec_bytes_t bytes, char* tostring, size_t size);
+union xcomm_melsec_flexible_value_u {
+    bool     b;
+    int8_t   i8;
+    int16_t  i16;
+    int32_t  i32;
+    int64_t  i64;
+    uint8_t  u8;
+    uint16_t u16;
+    uint32_t u32;
+    uint64_t u64;
+    char*    str;
+};
+
+extern void xcomm_melsec_byte_to_ascii(uint8_t byte, uint8_t ascii[2]);
+extern void xcomm_melsec_bytes_to_ascii_string(xcomm_melsec_bytes_t bytes, char* ascii_str, size_t ascii_strlen, const char* delimiter);
+extern void xcomm_melsec_bytes_to_hex_string(xcomm_melsec_bytes_t bytes, char* hex_str, size_t hex_strlen, const char* delimiter);
