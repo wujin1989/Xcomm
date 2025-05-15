@@ -36,7 +36,7 @@ extern int xcomm_melsec_1c_load_int64(xcomm_melsec_device_t* device, const char*
 extern int xcomm_melsec_1c_load_uint64(xcomm_melsec_device_t* device, const char* restrict addr, uint64_t* dst);
 extern int xcomm_melsec_1c_load_float(xcomm_melsec_device_t* device, const char* restrict addr, float* dst);
 extern int xcomm_melsec_1c_load_double(xcomm_melsec_device_t* device, const char* restrict addr, double* dst);
-extern int xcomm_melsec_1c_load_string(xcomm_melsec_device_t* device, const char* restrict addr, char* dst, int dstlen);
+extern int xcomm_melsec_1c_load_string(xcomm_melsec_device_t* device, const char* restrict addr, char** dst, uint64_t dstlen);
 
 extern int xcomm_melsec_1c_store_bool(xcomm_melsec_device_t* device, const char* restrict addr, bool src);
 extern int xcomm_melsec_1c_store_int16(xcomm_melsec_device_t* device, const char* restrict addr, int16_t src);

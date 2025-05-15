@@ -20,6 +20,7 @@
  */
 
 #include <stdio.h>
+#include <assert.h>
 #include "xcomm.h"
 
 int main(void) {
@@ -38,9 +39,19 @@ int main(void) {
     xcomm_melsec_device_t* device = 
         xcomm_melsec_1c.dial(&config, NULL, NULL);
 
-    bool val;
-    xcomm_melsec_1c.load_bool(device, "X0040", &val);
-    printf("X0040: %s\n", val ? "ON" : "OFF");
+    float wf = 0.75f;
+    xcomm_melsec_1c.store_float(device, "D0000", wf);
+
+    float rf;
+    xcomm_melsec_1c.load_float(device, "D0000", &rf);
+    assert(rf == wf);
+
+    char wstr[5] = "12AB";
+    xcomm_melsec_1c.store_string(device, "D0000", wstr, sizeof(wstr));
+
+    char* rd;
+    xcomm_melsec_1c.load_string(device, "D0000", &rd, sizeof(wstr));
+    assert(strcmp(rd, wstr) == 0);
 
     xcomm_melsec_1c.close(device);
     return 0;
