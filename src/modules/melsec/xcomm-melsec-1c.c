@@ -288,9 +288,9 @@ static int _melsec_1c_load_value(
     const char* restrict           addr,
     xcomm_melsec_operate_t         op_code,
     uint64_t                       npoints,
-    xcomm_melsec_flexible_value_t* val,
     bool                           is_string,
-    uint64_t                       str_length) {
+    uint64_t                       str_length,
+    xcomm_melsec_flexible_value_t* val) {
     xcomm_melsec_bytes_t    req = {0};
     xcomm_melsec_bytes_t    rsp = {0};
     melsec_1c_device_ctx_t* ctx = device->opaque;
@@ -473,8 +473,16 @@ int xcomm_melsec_1c_load_string(
     char**                 dst,
     uint64_t               dstlen) {
     xcomm_melsec_flexible_value_t val = {0};
+
     int ret = _melsec_1c_load_value(
-        device, addr, XCOMM_MELSEC_W_OP, (uint64_t)ceil(dstlen / 2.0), &val, true, dstlen);
+        device,
+        addr,
+        XCOMM_MELSEC_W_OP,
+        (uint64_t)ceil(dstlen / 2.0),
+        true,
+        dstlen,
+        &val);
+
     if (!ret) {
         *dst = val.str;
     }
