@@ -324,29 +324,12 @@ int xcomm_melsec_1c_load_bool(
         xcomm_loge("Unknown Frame Error.\n");
         goto fail;
     }
-    free(req.data);
-    free(rsp.data);
-
-    *dst = val.b;
+    free(req.data); free(rsp.data); *dst = val.b;
     return 0;
 fail:
-    if (req.data) {
-        free(req.data);
-    }
-    if (rsp.data) {
-        free(rsp.data);
-    }
+    if (req.data) { free(req.data); }
+    if (rsp.data) { free(rsp.data); }
     return -1;
-}
-
-int xcomm_melsec_1c_load_int8(
-    xcomm_melsec_device_t* device, const char* restrict addr, int8_t* dst) {
-
-}
-
-int xcomm_melsec_1c_load_uint8(
-    xcomm_melsec_device_t* device, const char* restrict addr, uint8_t* dst) {
-
 }
 
 int xcomm_melsec_1c_load_int16(
@@ -392,14 +375,6 @@ int xcomm_melsec_1c_load_string(
 int xcomm_melsec_1c_store_bool(
     xcomm_melsec_device_t* device, const char* restrict addr, bool src) {
 
-}
-
-int xcomm_melsec_1c_store_int8(
-    xcomm_melsec_device_t* device, const char* restrict addr, int8_t src) {
-}
-
-int xcomm_melsec_1c_store_uint8(
-    xcomm_melsec_device_t* device, const char* restrict addr, uint8_t src) {
 }
 
 int xcomm_melsec_1c_store_int16(

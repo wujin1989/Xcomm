@@ -28,8 +28,6 @@ extern void xcomm_melsec_1c_close(xcomm_melsec_device_t* device);
 extern xcomm_melsec_device_t* xcomm_melsec_1c_dial(xcomm_serial_config_t* config, const char* restrict stn_no, const char* restrict plc_no);
 
 extern int xcomm_melsec_1c_load_bool(xcomm_melsec_device_t* device, const char* restrict addr, bool* dst);
-extern int xcomm_melsec_1c_load_int8(xcomm_melsec_device_t* device, const char* restrict addr, int8_t* dst);
-extern int xcomm_melsec_1c_load_uint8(xcomm_melsec_device_t* device, const char* restrict addr, uint8_t* dst);
 extern int xcomm_melsec_1c_load_int16(xcomm_melsec_device_t* device, const char* restrict addr, int16_t* dst);
 extern int xcomm_melsec_1c_load_uint16(xcomm_melsec_device_t* device, const char* restrict addr, uint16_t* dst);
 extern int xcomm_melsec_1c_load_int32(xcomm_melsec_device_t* device, const char* restrict addr, int32_t* dst);
@@ -41,8 +39,6 @@ extern int xcomm_melsec_1c_load_double(xcomm_melsec_device_t* device, const char
 extern int xcomm_melsec_1c_load_string(xcomm_melsec_device_t* device, const char* restrict addr, char* dst, int dstlen);
 
 extern int xcomm_melsec_1c_store_bool(xcomm_melsec_device_t* device, const char* restrict addr, bool src);
-extern int xcomm_melsec_1c_store_int8(xcomm_melsec_device_t* device, const char* restrict addr, int8_t src);
-extern int xcomm_melsec_1c_store_uint8(xcomm_melsec_device_t* device, const char* restrict addr, uint8_t src);
 extern int xcomm_melsec_1c_store_int16(xcomm_melsec_device_t* device, const char* restrict addr, int16_t src);
 extern int xcomm_melsec_1c_store_uint16(xcomm_melsec_device_t* device, const char* restrict addr, uint16_t src);
 extern int xcomm_melsec_1c_store_int32(xcomm_melsec_device_t* device, const char* restrict addr, int32_t src);

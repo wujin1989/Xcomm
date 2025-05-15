@@ -43,11 +43,9 @@ struct xcomm_melsec_1c_module_s {
     xcomm_melsec_device_t* (*dial)(xcomm_serial_config_t* config, const char* restrict stn_no, const char* restrict plc_no);
 
     int (*load_bool)(xcomm_melsec_device_t* device, const char* restrict addr, bool* dst);
-    int (*load_int8)(xcomm_melsec_device_t* device, const char* restrict addr, int8_t* dst);
     int (*load_int16)(xcomm_melsec_device_t* device, const char* restrict addr, int16_t* dst);
     int (*load_int32)(xcomm_melsec_device_t* device, const char* restrict addr, int32_t* dst);
     int (*load_int64)(xcomm_melsec_device_t* device, const char* restrict addr, int64_t* dst);
-    int (*load_uint8)(xcomm_melsec_device_t* device, const char* restrict addr, uint8_t* dst);
     int (*load_uint16)(xcomm_melsec_device_t* device, const char* restrict addr, uint16_t* dst);
     int (*load_uint32)(xcomm_melsec_device_t* device, const char* restrict addr, uint32_t* dst);
     int (*load_uint64)(xcomm_melsec_device_t* device, const char* restrict addr, uint64_t* dst);
@@ -56,11 +54,9 @@ struct xcomm_melsec_1c_module_s {
     int (*load_string)(xcomm_melsec_device_t* device, const char* restrict addr, char* dst, int dlen);
 
     int (*store_bool)(xcomm_melsec_device_t* device, const char* restrict addr, bool src);
-    int (*store_int8)(xcomm_melsec_device_t* device, const char* restrict addr, int8_t src);
     int (*store_int16)(xcomm_melsec_device_t* device, const char* restrict addr, int16_t src);
     int (*store_int32)(xcomm_melsec_device_t* device, const char* restrict addr, int32_t src);
     int (*store_int64)(xcomm_melsec_device_t* device, const char* restrict addr, int64_t src);
-    int (*store_uint8)(xcomm_melsec_device_t* device, const char* restrict addr, uint8_t src);
     int (*store_uint16)(xcomm_melsec_device_t* device, const char* restrict addr, uint16_t src);
     int (*store_uint32)(xcomm_melsec_device_t* device, const char* restrict addr, uint32_t src);
     int (*store_uint64)(xcomm_melsec_device_t* device, const char* restrict addr, uint64_t src);
