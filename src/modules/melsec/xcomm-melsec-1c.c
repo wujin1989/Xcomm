@@ -513,9 +513,8 @@ int xcomm_melsec_1c_load_string(
         XCOMM_MELSEC_W_OP,
         (uint64_t)ceil(dstlen / 2.0),
         true,
-        dstlen,
-        &val);
-
+        dstlen, &val);
+    
     if (!ret) {
         *dst = val.str;
     }
