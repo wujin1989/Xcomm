@@ -35,6 +35,8 @@ xcomm_melsec_1c_module_t xcomm_melsec_1c = {
     .load_uint16  = xcomm_melsec_1c_load_uint16,
     .load_uint32  = xcomm_melsec_1c_load_uint32,
     .load_uint64  = xcomm_melsec_1c_load_uint64,
+    .load_float   = xcomm_melsec_1c_load_float,
+    .load_double  = xcomm_melsec_1c_load_double,
     .load_string  = xcomm_melsec_1c_load_string,
     .store_bool   = xcomm_melsec_1c_store_bool,
     .store_int8   = xcomm_melsec_1c_store_int8,
@@ -45,5 +47,7 @@ xcomm_melsec_1c_module_t xcomm_melsec_1c = {
     .store_uint16 = xcomm_melsec_1c_store_uint16,
     .store_uint32 = xcomm_melsec_1c_store_uint32,
     .store_uint64 = xcomm_melsec_1c_store_uint64,
+    .store_float  = xcomm_melsec_1c_store_float,
+    .store_double = xcomm_melsec_1c_store_double,
     .store_string = xcomm_melsec_1c_store_string,
 };

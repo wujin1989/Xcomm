@@ -67,5 +67,7 @@ union xcomm_melsec_flexible_value_u {
 };
 
 extern void xcomm_melsec_byte_to_ascii(uint8_t byte, uint8_t ascii[2]);
-extern void xcomm_melsec_bytes_to_ascii_string(xcomm_melsec_bytes_t bytes, char* ascii_str, size_t ascii_strlen, const char* delimiter);
-extern void xcomm_melsec_bytes_to_hex_string(xcomm_melsec_bytes_t bytes, char* hex_str, size_t hex_strlen, const char* delimiter);
+extern void xcomm_melsec_bytes_to_ascii_string(uint8_t* src, size_t slen, char* dst, size_t dlen, const char* delimiter);
+extern void xcomm_melsec_bytes_to_hex_string(uint8_t* src, size_t slen, char* dst, size_t dlen, const char* delimiter);
+extern void xcomm_melsec_ascii_checksum_calc(uint8_t* data, size_t len, uint8_t checksum[XCOMM_MELSEC_2_BYTE]);
+extern void xcomm_melsec_binary_checksum_calc(uint8_t* data, size_t len, uint8_t* checksum);

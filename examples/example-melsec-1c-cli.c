@@ -38,8 +38,9 @@ int main(void) {
     xcomm_melsec_device_t* device = 
         xcomm_melsec_1c.dial(&config, NULL, NULL);
 
-    bool bval = xcomm_melsec_1c.load_bool(device, "X0040");
-    printf("X0040: %s\n", bval ? "ON" : "OFF");
+    bool val;
+    xcomm_melsec_1c.load_bool(device, "X0040", &val);
+    printf("X0040: %s\n", val ? "ON" : "OFF");
 
     xcomm_melsec_1c.close(device);
     return 0;

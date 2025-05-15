@@ -31,28 +31,43 @@ void xcomm_melsec_byte_to_ascii(uint8_t byte, uint8_t ascii[2]) {
 }
 
 void xcomm_melsec_bytes_to_ascii_string(
-    xcomm_melsec_bytes_t bytes, char* ascii_str, size_t ascii_strlen, const char* delimiter) {
+    uint8_t* src, size_t slen, char* dst, size_t dlen, const char* delimiter) {
     size_t offset = 0;
 
-    for (size_t i = 0; i < bytes.size; i++) {
+    for (size_t i = 0; i < slen; i++) {
         offset += snprintf(
-            ascii_str + offset,
-            ascii_strlen - offset,
+            dst + offset,
+            dlen - offset,
             "%c%s",
-            bytes.data[i],
-            (i < bytes.size - 1) ? delimiter : "");
+            src[i],
+            (i < slen - 1) ? delimiter : "");
     }
 }
 
 void xcomm_melsec_bytes_to_hex_string(
-   xcomm_melsec_bytes_t bytes, char* hex_str, size_t hex_strlen, const char* delimiter) {  
-  size_t offset = 0;  
+    uint8_t* src, size_t slen, char* dst, size_t dlen, const char* delimiter) {
+    size_t offset = 0;
 
-  for (size_t i = 0; i < bytes.size; i++) {  
-      offset += snprintf(  
-          hex_str + offset,
-          hex_strlen - offset,  
-          "%02X%s",  
-          bytes.data[i], (i < bytes.size - 1) ? delimiter : "");  
-  }
+    for (size_t i = 0; i < slen; i++) {
+        offset += snprintf(
+            dst + offset,
+            dlen - offset,
+            "%02X%s",
+            src[i],
+            (i < slen - 1) ? delimiter : "");
+    }
+}
+
+void xcomm_melsec_ascii_checksum_calc(
+    uint8_t* data, size_t len, uint8_t checksum[XCOMM_MELSEC_2_BYTE]) {
+    uint8_t sum = 0;
+    for (size_t i = 0; i < len; i++) {
+        sum += data[i];
+    }
+    xcomm_melsec_byte_to_ascii(sum, checksum);
+}
+
+void xcomm_melsec_binary_checksum_calc(
+    uint8_t* data, size_t len, uint8_t* checksum) {
+
 }
