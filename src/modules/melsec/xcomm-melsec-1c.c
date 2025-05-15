@@ -131,24 +131,34 @@ static inline xcomm_melsec_bytes_t _rd_response_recv(
          * | 1  |    2    |  2  |      2     |
          * |NAK | STATION | PLC | ERROR_CODE |
          */
-        result.size = XCOMM_MELSEC_1_BYTE + XCOMM_MELSEC_2_BYTE +
-                      XCOMM_MELSEC_2_BYTE + XCOMM_MELSEC_2_BYTE;
+        result.size = 
+            XCOMM_MELSEC_1_BYTE + 
+            XCOMM_MELSEC_2_BYTE +
+            XCOMM_MELSEC_2_BYTE + 
+            XCOMM_MELSEC_2_BYTE;
     } else {
         /**
          * | 1  |    2    |  2  | X |  1  |     2    |
          * |STX | STATION | PLC | B | ETX | CHECKSUM |
          */
         if (is_string) {
-            result.size = XCOMM_MELSEC_1_BYTE + XCOMM_MELSEC_2_BYTE +
-                          XCOMM_MELSEC_2_BYTE + str_length +
-                          XCOMM_MELSEC_1_BYTE + XCOMM_MELSEC_2_BYTE;
+            result.size = 
+                XCOMM_MELSEC_1_BYTE + 
+                XCOMM_MELSEC_2_BYTE +
+                XCOMM_MELSEC_2_BYTE + 
+                str_length +
+                XCOMM_MELSEC_1_BYTE + 
+                XCOMM_MELSEC_2_BYTE;
         } else {
-            result.size = XCOMM_MELSEC_1_BYTE + XCOMM_MELSEC_2_BYTE +
-                          XCOMM_MELSEC_2_BYTE +
-                          ((op_code == XCOMM_MELSEC_B_OP)
-                               ? npoints * XCOMM_MELSEC_CHARS_PER_B_POINT
-                               : npoints * XCOMM_MELSEC_CHARS_PER_W_POINT) +
-                          XCOMM_MELSEC_1_BYTE + XCOMM_MELSEC_2_BYTE;
+            result.size = 
+                XCOMM_MELSEC_1_BYTE + 
+                XCOMM_MELSEC_2_BYTE +
+                XCOMM_MELSEC_2_BYTE +
+                ((op_code == XCOMM_MELSEC_B_OP)
+                ? npoints * XCOMM_MELSEC_CHARS_PER_B_POINT
+                : npoints * XCOMM_MELSEC_CHARS_PER_W_POINT) +
+                XCOMM_MELSEC_1_BYTE + 
+                XCOMM_MELSEC_2_BYTE;
         }
     }
     result.data = malloc(result.size);
@@ -206,7 +216,8 @@ _normal_rd_response_unmarshalling(
         xcomm_loge(
             "Invalid response size. bytes.size=%zu, expected=%zu\n",
             rsp.size,
-            data_offset + data_length + 
+            data_offset + 
+            data_length + 
             XCOMM_MELSEC_1_BYTE + 
             XCOMM_MELSEC_2_BYTE);
         return result;
@@ -272,10 +283,14 @@ _normal_rd_response_unmarshalling(
 static inline void
 _abnormal_rd_response_unmarshalling(xcomm_melsec_bytes_t rsp) {
     size_t offset =
-        XCOMM_MELSEC_1_BYTE + XCOMM_MELSEC_2_BYTE + XCOMM_MELSEC_2_BYTE;
+        XCOMM_MELSEC_1_BYTE + 
+        XCOMM_MELSEC_2_BYTE + 
+        XCOMM_MELSEC_2_BYTE;
 
     xcomm_melsec_bytes_t code = {
-        .size = XCOMM_MELSEC_2_BYTE, .data = malloc(XCOMM_MELSEC_2_BYTE)};
+        .size = XCOMM_MELSEC_2_BYTE, 
+        .data = malloc(XCOMM_MELSEC_2_BYTE)
+    };
     if (!code.data) {
         xcomm_loge("No memory.\n");
         return;
@@ -284,9 +299,12 @@ _abnormal_rd_response_unmarshalling(xcomm_melsec_bytes_t rsp) {
 
     char codestr[XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE] = {0};
     xcomm_melsec_bytes_to_ascii_string(
-        code.data, code.size, codestr, XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE, "");
-
-    xcomm_loge("[%s] Error Code: %s\n", __FUNCTION__, codestr);
+        code.data, 
+        code.size, 
+        codestr, 
+        XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE, 
+        "");
+    xcomm_loge("Received Error Code: %s\n", codestr);
 }
 
 static int _melsec_1c_load_value(
@@ -302,12 +320,21 @@ static int _melsec_1c_load_value(
     melsec_1c_device_ctx_t* ctx = device->opaque;
 
     req = _rd_request_marshalling(
-        ctx->stn_no, ctx->plc_no, addr, op_code, npoints);
+            ctx->stn_no, 
+            ctx->plc_no, 
+            addr, 
+            op_code, npoints);
     if (!req.data) {
         goto fail;
     }
     _rd_request_send(ctx->serial, req.data, req.size);
-    rsp = _rd_response_recv(ctx->serial, op_code, npoints, is_string, str_length);
+
+    rsp = _rd_response_recv(
+        ctx->serial, 
+        op_code, 
+        npoints, 
+        is_string, str_length);
+
     if (!rsp.data) {
         goto fail;
     }
