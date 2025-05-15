@@ -49,9 +49,9 @@ int main(void) {
     char wstr[5] = "12AB";
     xcomm_melsec_1c.store_string(device, "D0000", wstr, sizeof(wstr));
 
-    char* rd;
-    xcomm_melsec_1c.load_string(device, "D0000", &rd, sizeof(wstr));
-    assert(strcmp(rd, wstr) == 0);
+    char* rstr;
+    xcomm_melsec_1c.load_string(device, "D0000", &rstr, sizeof(wstr));
+    assert(strcmp(rstr, wstr) == 0);
 
     xcomm_melsec_1c.close(device);
     return 0;

@@ -195,12 +195,11 @@ _normal_rd_response_unmarshalling(
     if (is_string) {
         data_length = str_length;
     } else {
-        data_length = (op_code == XCOMM_MELSEC_B_OP)
-                    ? npoints * XCOMM_MELSEC_CHARS_PER_B_POINT
-                    : npoints * XCOMM_MELSEC_CHARS_PER_W_POINT;
+        data_length = 
+            (op_code == XCOMM_MELSEC_B_OP)
+            ? npoints * XCOMM_MELSEC_CHARS_PER_B_POINT
+            : npoints * XCOMM_MELSEC_CHARS_PER_W_POINT;
     }
-    
-
     if (rsp.size < data_offset + data_length + 
         XCOMM_MELSEC_1_BYTE + 
         XCOMM_MELSEC_2_BYTE) {
@@ -220,16 +219,21 @@ _normal_rd_response_unmarshalling(
         xcomm_loge("No memory.\n");
         return result;
     }
-    memcpy(data_segment.data, rsp.data + data_offset, data_segment.size);
-    data_offset += data_segment.size + XCOMM_MELSEC_1_BYTE;
+    memcpy(
+        data_segment.data, 
+        rsp.data + data_offset, 
+        data_segment.size);
+
+    data_offset += 
+        data_segment.size + XCOMM_MELSEC_1_BYTE;
 
     xcomm_melsec_ascii_checksum_calc(
         (rsp.data + 1), 
         rsp.size - XCOMM_MELSEC_3_BYTE, 
         calc_checksum);
 
-    if (calc_checksum[0] != rsp.data[data_offset] ||
-        calc_checksum[1] != rsp.data[data_offset + 1]) {
+    if (calc_checksum[0] != rsp.data[data_offset] 
+        || calc_checksum[1] != rsp.data[data_offset + 1]) {
         xcomm_loge(
             "Checksum error. Calculated=%02X%02X, Received=%02X%02X\n",
             calc_checksum[0],
@@ -241,7 +245,8 @@ _normal_rd_response_unmarshalling(
         return result;
     }
     if (is_string) {
-        result.str = malloc(data_segment.size);
+        result.str = 
+            malloc(data_segment.size);
         if (!result.str) {
             xcomm_loge("No memory.\n");
             return result;
@@ -255,9 +260,10 @@ _normal_rd_response_unmarshalling(
             ascii_buffer,
             sizeof(ascii_buffer),
             "");
-        result.i64 = (op_code == XCOMM_MELSEC_B_OP) 
-                   ? strtoll(ascii_buffer, NULL, 2)
-                   : strtoll(ascii_buffer, NULL, 16);
+        result.i64 = 
+            (op_code == XCOMM_MELSEC_B_OP) 
+            ? strtoll(ascii_buffer, NULL, 2)
+            : strtoll(ascii_buffer, NULL, 16);
     }
     free(data_segment.data);
     return result;
@@ -371,8 +377,8 @@ void xcomm_melsec_1c_close(xcomm_melsec_device_t* device) {
 int xcomm_melsec_1c_load_bool(
     xcomm_melsec_device_t* device, const char* restrict addr, bool* dst) {
     xcomm_melsec_flexible_value_t val = {0};
-    int ret =
-        _melsec_1c_load_value(device, addr, XCOMM_MELSEC_B_OP, 1, &val, false, 0);
+    int ret = _melsec_1c_load_value(
+        device, addr, XCOMM_MELSEC_B_OP, 1, false, 0, &val);
     if (!ret) {
         *dst = val.b;
     }
@@ -383,7 +389,7 @@ int xcomm_melsec_1c_load_int16(
     xcomm_melsec_device_t* device, const char* restrict addr, int16_t* dst) {
     xcomm_melsec_flexible_value_t val = {0};
     int ret = _melsec_1c_load_value(
-        device, addr, XCOMM_MELSEC_W_OP, 1, &val, false, 0);
+        device, addr, XCOMM_MELSEC_W_OP, 1, false, 0, &val);
     if (!ret) {
         *dst = val.i16;
     }
@@ -394,7 +400,7 @@ int xcomm_melsec_1c_load_uint16(
     xcomm_melsec_device_t* device, const char* restrict addr, uint16_t* dst) {
     xcomm_melsec_flexible_value_t val = {0};
     int ret = _melsec_1c_load_value(
-        device, addr, XCOMM_MELSEC_W_OP, 1, &val, false, 0);
+        device, addr, XCOMM_MELSEC_W_OP, 1, false, 0, &val);
     if (!ret) {
         *dst = val.u16;
     }
@@ -405,7 +411,7 @@ int xcomm_melsec_1c_load_int32(
     xcomm_melsec_device_t* device, const char* restrict addr, int32_t* dst) {
     xcomm_melsec_flexible_value_t val = {0};
     int ret = _melsec_1c_load_value(
-        device, addr, XCOMM_MELSEC_W_OP, 2, &val, false, 0);
+        device, addr, XCOMM_MELSEC_W_OP, 2, false, 0, &val);
     if (!ret) {
         *dst = val.i32;
     }
@@ -416,7 +422,7 @@ int xcomm_melsec_1c_load_uint32(
     xcomm_melsec_device_t* device, const char* restrict addr, uint32_t* dst) {
     xcomm_melsec_flexible_value_t val = {0};
     int ret = _melsec_1c_load_value(
-        device, addr, XCOMM_MELSEC_W_OP, 2, &val, false, 0);
+        device, addr, XCOMM_MELSEC_W_OP, 2, false, 0, &val);
     if (!ret) {
         *dst = val.u32;
     }
@@ -427,7 +433,7 @@ int xcomm_melsec_1c_load_int64(
     xcomm_melsec_device_t* device, const char* restrict addr, int64_t* dst) {
     xcomm_melsec_flexible_value_t val = {0};
     int ret = _melsec_1c_load_value(
-        device, addr, XCOMM_MELSEC_W_OP, 4, &val, false, 0);
+        device, addr, XCOMM_MELSEC_W_OP, 4, false, 0, &val);
     if (!ret) {
         *dst = val.i64;
     }
@@ -438,7 +444,7 @@ int xcomm_melsec_1c_load_uint64(
     xcomm_melsec_device_t* device, const char* restrict addr, uint64_t* dst) {
     xcomm_melsec_flexible_value_t val = {0};
     int ret = _melsec_1c_load_value(
-        device, addr, XCOMM_MELSEC_W_OP, 4, &val, false, 0);
+        device, addr, XCOMM_MELSEC_W_OP, 4, false, 0, &val);
     if (!ret) {
         *dst = val.u64;
     }
@@ -449,7 +455,7 @@ int xcomm_melsec_1c_load_float(
     xcomm_melsec_device_t* device, const char* restrict addr, float* dst) {
     xcomm_melsec_flexible_value_t val = {0};
     int ret = _melsec_1c_load_value(
-        device, addr, XCOMM_MELSEC_W_OP, 2, &val, false, 0);
+        device, addr, XCOMM_MELSEC_W_OP, 2, false, 0, &val);
     if (!ret) {
         *dst = val.f32;
     }
@@ -460,7 +466,7 @@ int xcomm_melsec_1c_load_double(
     xcomm_melsec_device_t* device, const char* restrict addr, double* dst) {
     xcomm_melsec_flexible_value_t val = {0};
     int ret = _melsec_1c_load_value(
-        device, addr, XCOMM_MELSEC_W_OP, 4, &val, false, 0);
+        device, addr, XCOMM_MELSEC_W_OP, 4, false, 0, &val);
     if (!ret) {
         *dst = val.f64;
     }
