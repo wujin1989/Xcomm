@@ -300,34 +300,43 @@ void xcomm_melsec_1c_close(xcomm_melsec_device_t* device) {
 
 int xcomm_melsec_1c_load_bool(
     xcomm_melsec_device_t* device, const char* restrict addr, bool* dst) {
-    melsec_1c_device_ctx_t* ctx = device->opaque;
+    xcomm_melsec_flexible_value_t val = {0};
+    xcomm_melsec_bytes_t          req = {0};
+    xcomm_melsec_bytes_t          rsp = {0};
+    melsec_1c_device_ctx_t*       ctx = device->opaque;
 
-    xcomm_melsec_bytes_t req = _rd_request_marshalling(
+    req = _rd_request_marshalling(
         ctx->stn_no, ctx->plc_no, addr, XCOMM_MELSEC_B_OP, 1);
     if (!req.data) {
-        return -1;
+        goto fail;
     }
     _rd_request_send(ctx->serial, req.data, req.size);
-    free(req.data);
-
-    xcomm_melsec_bytes_t rsp =
-        _rd_response_recv(ctx->serial, XCOMM_MELSEC_B_OP, 1);
+    rsp = _rd_response_recv(ctx->serial, XCOMM_MELSEC_B_OP, 1);
     if (!req.data) {
-        return -1;
+        goto fail;
     }
-    xcomm_melsec_flexible_value_t val = {0};
-
-    if (rsp.data[0] == nak) {
-        _abnormal_rd_response_unmarshalling(rsp);
-    } else if (rsp.data[0] == stx) {
+    if (rsp.data[0] == stx) {
         val = _normal_rd_response_unmarshalling(rsp, XCOMM_MELSEC_B_OP, 1);
+    } else if (rsp.data[0] == nak) {
+        _abnormal_rd_response_unmarshalling(rsp);
+        goto fail;
     } else {
         xcomm_loge("Unknown Frame Error.\n");
+        goto fail;
     }
+    free(req.data);
     free(rsp.data);
 
     *dst = val.b;
     return 0;
+fail:
+    if (req.data) {
+        free(req.data);
+    }
+    if (rsp.data) {
+        free(rsp.data);
+    }
+    return -1;
 }
 
 int xcomm_melsec_1c_load_int8(
