@@ -30,7 +30,7 @@
 
 typedef struct melsec_1c_device_ctx_s     melsec_1c_device_ctx_t;
 typedef struct melsec_1c_read_request_s   melsec_1c_read_request_t;
-typedef struct melsec_1c_data_a_s 	      melsec_1c_data_a_t;
+typedef struct melsec_1c_data_a_s         melsec_1c_data_a_t;
 typedef struct melsec_1c_read_response_s  melsec_1c_read_response_t;
 typedef struct melsec_1c_error_response_s melsec_1c_error_response_t;
 typedef struct melsec_1c_data_b_s         melsec_1c_data_b_t;
@@ -90,7 +90,7 @@ static const uint8_t wr_instruction[] = {0x57, 0x52};
 static const uint8_t bw_instruction[] = {0x42, 0x57};
 static const uint8_t ww_instruction[] = {0x57, 0x57};
 
-static inline int _melsec_1c_marshalling_read_request(
+static inline int _melsec_1c_read_request_marshalling(
     melsec_1c_read_request_t* req, xcomm_melsec_byte_sequence_t* stm) {
     size_t size = XCOMM_MELSEC_1_BYTE +         // ENQ
                   XCOMM_MELSEC_2_BYTE +         // STATION
@@ -133,12 +133,11 @@ static inline int _melsec_1c_marshalling_read_request(
 
 static inline void
 _melsec_1c_send_request(xcomm_serial_t* serial, uint8_t* data, size_t size) {
-    char reqframe[XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE] = {0};
-
-    xcomm_melsec_bytes_to_hex_string(
-        data, size, reqframe, sizeof(reqframe), " ");
-    xcomm_logi(
-        "TX REQUEST FRAME(Hex): %s\n", reqframe);
+    char reqframe[XCOMM_MELSEC_512_BYTE] = {0};
+    for (size_t i = 0; i < size; i++) {
+        sprintf(reqframe + i * 3, "%02X ", data[i]);
+    }
+    xcomm_logi("REQUEST FRAME(Hex): %s\n", reqframe);
 
     int ret = xcomm_serial.send(serial, data, size);
     if (ret != size) {
@@ -184,14 +183,15 @@ static void _melsec_1c_recv_response(
         rsp_stm->size = 0;
         return;
     }
-    char rspframe[XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE] = {0};
-    xcomm_melsec_bytes_to_hex_string(
-        rsp_stm->data, rsp_stm->size, rspframe, sizeof(rspframe), " ");
-    xcomm_logi("RX RESPONSE FRAME(Hex): %s\n", rspframe);
+    char rspframe[XCOMM_MELSEC_512_BYTE] = {0};
+    for (size_t i = 0; i < rsp_stm->size; i++) {
+        sprintf(rspframe + i * 3, "%02X ", rsp_stm->data[i]);
+    }
+    xcomm_logi("RESPONSE FRAME(Hex): %s\n", rspframe);
     return;
 }
 
-static int _melsec_1c_unmarshalling_read_response(
+static int _melsec_1c_read_response_unmarshalling(
     xcomm_melsec_byte_sequence_t* rsp_stm,
     melsec_1c_read_response_t*    success,
     melsec_1c_error_response_t*   failure) {
@@ -223,44 +223,23 @@ static int _melsec_1c_unmarshalling_read_response(
         success->etx = rsp_stm->data[offset++];
         success->checksum[0] = rsp_stm->data[offset++];
         success->checksum[1] = rsp_stm->data[offset++];
-
-        uint8_t checksum_ascii[XCOMM_MELSEC_2_BYTE] = {0};
-        xcomm_melsec_ascii_checksum_calc(
-            rsp_stm->data + 1,
-            rsp_stm->size - 
-            XCOMM_MELSEC_1_BYTE - 
-            XCOMM_MELSEC_2_BYTE,
-            checksum_ascii
-        );
-        if (checksum_ascii[0] != success->checksum[0] ||
-            checksum_ascii[1] != success->checksum[1]) {
-            xcomm_loge(
-                "checksum error. calculated=%02X%02X, received=%02X%02X\n",
-                checksum_ascii[0],
-                checksum_ascii[1],
-                success->checksum[0],
-                success->checksum[1]);
-            free(success->data_b.buf.data);
-            return -1;
-        }
-        return 0;
     } else if (rsp_stm->data[0] == nak) {
         size_t offset = 0;
         failure->nak = rsp_stm->data[offset++];
-        failure->stn_no[0] = rsp_stm->data[offset++];
-        failure->stn_no[1] = rsp_stm->data[offset++];
-        failure->plc_no[0] = rsp_stm->data[offset++];
-        failure->plc_no[1] = rsp_stm->data[offset++];
+        failure->stn_no[0]  = rsp_stm->data[offset++];
+        failure->stn_no[1]  = rsp_stm->data[offset++];
+        failure->plc_no[0]  = rsp_stm->data[offset++];
+        failure->plc_no[1]  = rsp_stm->data[offset++];
         failure->errcode[0] = rsp_stm->data[offset++];
         failure->errcode[1] = rsp_stm->data[offset++];
-        return 0;
     } else {
         xcomm_loge("unknown response error.\n");
         return -1;
     }
+    return 0;
 }
 
-static inline void _melsec_1c_build_read_request(
+static inline void _melsec_1c_read_request_build(
     uint8_t                   stn_no[XCOMM_MELSEC_2_BYTE],
     uint8_t                   plc_no[XCOMM_MELSEC_2_BYTE],
     xcomm_melsec_operate_t    op_code,
@@ -304,11 +283,53 @@ static inline void _melsec_1c_build_read_request(
     checksum_buf[offset++] = req->data_a.points[0];
     checksum_buf[offset++] = req->data_a.points[1];
 
-    xcomm_melsec_ascii_checksum_calc(
-        checksum_buf, sizeof(checksum_buf), checksum_ascii);
+    uint8_t sum = 0;
+    for (size_t i = 0; i < sizeof(checksum_buf); i++) {
+        sum += checksum_buf[i];
+    }
+    xcomm_melsec_byte_to_ascii(sum, checksum_ascii);
 
     req->checksum[0] = checksum_ascii[0];
     req->checksum[1] = checksum_ascii[1];
+}
+
+static void _melsec_1c_read_response_parse(
+    bool                           isstr,
+    xcomm_melsec_operate_t         op_code,
+    melsec_1c_read_response_t*     success,
+    melsec_1c_error_response_t*    failure,
+    xcomm_melsec_flexible_value_t* val,
+    char*                          errstr) {
+    if (failure->nak == nak) {
+        if (errstr) {
+            memcpy(errstr, failure->errcode, sizeof(failure->errcode));
+        }
+        xcomm_logw(
+            "received failure response: errcode=%02X%02X\n",
+            failure->errcode[0],
+            failure->errcode[1]);
+    }
+    if (success->stx == stx) {
+        if (isstr) {
+            val->str = calloc(success->data_b.buf.size, sizeof(char));
+            if (!val->str) {
+                return;
+            }
+            memcpy(
+                val->str, success->data_b.buf.data, success->data_b.buf.size);
+        } else {
+            char valstr[XCOMM_MELSEC_512_BYTE] = {0};
+            memcpy(valstr, success->data_b.buf.data, success->data_b.buf.size);
+
+            if (op_code == XCOMM_MELSEC_B_OP) {
+                val->u64 = strtoll(valstr, NULL, 2);
+            }
+            if (op_code == XCOMM_MELSEC_W_OP) {
+                val->u64 = strtoll(valstr, NULL, 16);
+            }
+        }
+    }
+    return;
 }
 
 static int _melsec_1c_load_value(
@@ -318,6 +339,12 @@ static int _melsec_1c_load_value(
     size_t                         len,
     bool                           isstr,
     xcomm_melsec_flexible_value_t* val) {
+    melsec_1c_read_request_t     req = {0};
+    xcomm_melsec_byte_sequence_t req_stm = {0};
+    xcomm_melsec_byte_sequence_t rsp_stm = {0};
+    melsec_1c_read_response_t    success = {0};
+    melsec_1c_error_response_t   failure = {0};
+
     melsec_1c_device_ctx_t* ctx = device->opaque;
 
     size_t points = 0;
@@ -327,77 +354,28 @@ static int _melsec_1c_load_value(
     if (op_code == XCOMM_MELSEC_W_OP) {
         points = (len / XCOMM_MELSEC_CHARS_PER_W_POINT);
     }
-    melsec_1c_read_request_t req;
-    _melsec_1c_build_read_request(
+    _melsec_1c_read_request_build(
         ctx->stn_no, ctx->plc_no, op_code, addr, points, &req);
 
-    xcomm_melsec_byte_sequence_t req_stm;
-    int ret = _melsec_1c_marshalling_read_request(&req, &req_stm);
-    if (ret < 0) {
+    if (_melsec_1c_read_request_marshalling(&req, &req_stm) < 0) {
         goto fail;
     }
     _melsec_1c_send_request(ctx->serial, req_stm.data, req_stm.size);
-
-    xcomm_melsec_byte_sequence_t rsp_stm;
     _melsec_1c_recv_response(ctx->serial, len, &rsp_stm);
 
-    melsec_1c_read_response_t  success;
-    melsec_1c_error_response_t failure;
-    ret = _melsec_1c_unmarshalling_read_response(&rsp_stm, &success, &failure);
-    if (ret < 0) {
+    if (!rsp_stm.data) {
         goto fail;
     }
-    if (rsp_stm.data[0] == stx) {
-        xcomm_logi("received success response: stn_no=%02X%02X, plc_no=%02X%02X, checksum=%02X%02X\n",
-            success.stn_no[0], success.stn_no[1],
-            success.plc_no[0], success.plc_no[1],
-            success.checksum[0], success.checksum[1]);
-
-        xcomm_logi("received data_b length: %zu\n", success.data_b.buf.size);
-
-        char data_str[XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE] = {0};
-        xcomm_melsec_bytes_to_hex_string(
-            success.data_b.buf.data, success.data_b.buf.size, data_str, sizeof(data_str), " ");
-        xcomm_logi("received data_b content(Hex): %s\n", data_str);
-        
-        if (isstr) {
-            val->str = malloc(success.data_b.buf.size);
-            if (!val->str) {
-                goto fail;
-            }
-            memset(val->str, 0, success.data_b.buf.size);
-            memcpy(val->str, success.data_b.buf.data, success.data_b.buf.size);
-        } else {
-            char ascii_buffer[XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE] = {0};
-            xcomm_melsec_bytes_to_ascii_string(
-                success.data_b.buf.data,
-                success.data_b.buf.size,
-                ascii_buffer,
-                sizeof(ascii_buffer),
-                "");
-            switch (op_code) {
-            case XCOMM_MELSEC_B_OP:
-                val->u64 = strtoll(ascii_buffer, NULL, 2);
-                break;
-            case XCOMM_MELSEC_W_OP:
-                val->u64 = strtoll(ascii_buffer, NULL, 16);
-                break;
-            default:
-                break;
-            }
-        }
-        free(success.data_b.buf.data);
-    }
-    if (rsp_stm.data[0] == nak) {
-        xcomm_loge("received failure response: nak=0x%02X, stn_no=%02X%02X, plc_no=%02X%02X, errcode=%02X%02X\n",
-            failure.nak,
-            failure.stn_no[0], failure.stn_no[1],
-            failure.plc_no[0], failure.plc_no[1],
-            failure.errcode[0], failure.errcode[1]);
+    if (_melsec_1c_read_response_unmarshalling(&rsp_stm, &success, &failure) <
+        0) {
         goto fail;
     }
+    _melsec_1c_read_response_parse(
+        isstr, op_code, &success, &failure, val, NULL);
+
     free(req_stm.data);
     free(rsp_stm.data);
+    free(success.data_b.buf.data);
     return 0;
 fail:
     if (req_stm.data) {
@@ -405,6 +383,9 @@ fail:
     }
     if (rsp_stm.data) {
         free(rsp_stm.data);
+    }
+    if (success.data_b.buf.data) {
+        free(success.data_b.buf.data);
     }
     return -1;
 }

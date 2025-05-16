@@ -26,23 +26,26 @@ _Pragma("once")
 
 #define XCOMM_MELSEC_CHARS_PER_B_POINT    1
 #define XCOMM_MELSEC_CHARS_PER_W_POINT    4
-#define XCOMM_MELSEC_MAX_MESSAGE_SIZE     64
-#define XCOMM_MELSEC_MAX_MESSAGE_STR_SIZE 256
 
 typedef struct xcomm_melsec_byte_sequence_s xcomm_melsec_byte_sequence_t;
 typedef enum xcomm_melsec_operate_e         xcomm_melsec_operate_t;
 typedef union xcomm_melsec_flexible_value_u xcomm_melsec_flexible_value_t;
-typedef enum xcomm_melsec_value_type_e      xcomm_melsec_value_type_t;
 
 enum {
-    XCOMM_MELSEC_1_BYTE = 1,
-    XCOMM_MELSEC_2_BYTE = 2,
-    XCOMM_MELSEC_3_BYTE = 3,
-    XCOMM_MELSEC_4_BYTE = 4,
-    XCOMM_MELSEC_5_BYTE = 5,
-    XCOMM_MELSEC_6_BYTE = 6,
-    XCOMM_MELSEC_7_BYTE = 7,
-    XCOMM_MELSEC_8_BYTE = 8,
+    XCOMM_MELSEC_1_BYTE    = 1,
+    XCOMM_MELSEC_2_BYTE    = 2,
+    XCOMM_MELSEC_3_BYTE    = 3,
+    XCOMM_MELSEC_4_BYTE    = 4,
+    XCOMM_MELSEC_5_BYTE    = 5,
+    XCOMM_MELSEC_6_BYTE    = 6,
+    XCOMM_MELSEC_7_BYTE    = 7,
+    XCOMM_MELSEC_8_BYTE    = 8,
+    XCOMM_MELSEC_16_BYTE   = 16,
+    XCOMM_MELSEC_32_BYTE   = 32,
+    XCOMM_MELSEC_64_BYTE   = 64,
+    XCOMM_MELSEC_128_BYTE  = 128,
+    XCOMM_MELSEC_256_BYTE  = 256,
+    XCOMM_MELSEC_512_BYTE  = 512,
 };
 
 enum xcomm_melsec_operate_e{
@@ -53,11 +56,6 @@ enum xcomm_melsec_operate_e{
 struct xcomm_melsec_byte_sequence_s {
     uint8_t* data;
     size_t   size;
-};
-
-enum xcomm_melsec_value_type_e {
-    XCOMM_MELSEC_NUMBER,
-    XCOMM_MELSEC_STRING,
 };
 
 union xcomm_melsec_flexible_value_u {
@@ -73,8 +71,4 @@ union xcomm_melsec_flexible_value_u {
     char*    str;
 };
 
-extern void xcomm_melsec_byte_to_ascii(uint8_t byte, uint8_t ascii[2]);
-extern void xcomm_melsec_bytes_to_ascii_string(uint8_t* src, size_t slen, char* dst, size_t dlen, const char* delimiter);
-extern void xcomm_melsec_bytes_to_hex_string(uint8_t* src, size_t slen, char* dst, size_t dlen, const char* delimiter);
-extern void xcomm_melsec_ascii_checksum_calc(uint8_t* data, size_t len, uint8_t checksum[XCOMM_MELSEC_2_BYTE]);
-extern void xcomm_melsec_binary_checksum_calc(uint8_t* data, size_t len, uint8_t* checksum);
+extern void xcomm_melsec_byte_to_ascii(uint8_t byte, uint8_t ascii[XCOMM_MELSEC_2_BYTE]);

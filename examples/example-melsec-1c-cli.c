@@ -20,6 +20,7 @@
  */
 
 #include <stdio.h>
+#include <stdlib.h>
 #include <assert.h>
 #include "xcomm.h"
 
@@ -52,6 +53,7 @@ int main(void) {
     char* rstr;
     xcomm_melsec_1c.load_string(device, "D0000", &rstr, sizeof(wstr));
     assert(strcmp(rstr, wstr) == 0);
+    free(rstr);
 
     xcomm_melsec_1c.close(device);
     return 0;
