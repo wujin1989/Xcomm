@@ -44,7 +44,7 @@ void xcomm_sync_tcp_close(xcomm_socket_t* socketptr) {
     xcomm_logi("%s leave.\n", __FUNCTION__);
 }
 
-xcomm_socket_t* xcomm_sync_tcp_dail(const char* restrict host, const char* restrict port) {
+xcomm_socket_t* xcomm_sync_tcp_dial(const char* restrict host, const char* restrict port) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
     xcomm_socket_t* sockptr = malloc(sizeof(xcomm_socket_t));

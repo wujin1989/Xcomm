@@ -24,7 +24,7 @@
 
 xcomm_sync_tcp_module_t xcomm_sync_tcp = {
     .name         = "Xcomm Sync TCP Module",
-    .dial         = xcomm_sync_tcp_dail,
+    .dial         = xcomm_sync_tcp_dial,
     .listen       = xcomm_sync_tcp_listen,
     .accept       = xcomm_sync_tcp_accept,
     .send         = xcomm_sync_tcp_send,

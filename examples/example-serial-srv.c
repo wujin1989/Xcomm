@@ -33,7 +33,7 @@ int main(void) {
         .parity    = XCOMM_SERIAL_PARITY_NO,
         .databits  = XCOMM_SERIAL_DATABITS_CS8,
         .stopbits  = XCOMM_SERIAL_STOPBITS_ONE,
-        .timeout   = 0,
+        .timeout_ms = 0,
     };
     xcomm_serial_t* serial =
         xcomm_serial.dial(&serial_config);
