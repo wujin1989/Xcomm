@@ -22,6 +22,7 @@
 _Pragma("once")
 
 #include <stdint.h>
+#include <stddef.h>
 #include <stdbool.h>
 
 #define XCOMM_MELSEC_CHARS_PER_B_POINT    1

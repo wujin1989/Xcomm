@@ -60,7 +60,8 @@ _Pragma("once")
 #define PLATFORM_SO_ERROR_INVALID_SOCKET  -1
 #define PLATFORM_SO_ERROR_SOCKET_ERROR    -1
 
-#define PLATFORM_UART_ERROR_INVALID_VALUE -1
+#define PLATFORM_UA_ERROR_INVALID_UART    -1
+#define PLATFORM_UA_ERROR_UART_ERROR      -1
 
 #define PLATFORM_PATH_SEPARATOR '/'
 #endif
@@ -83,7 +84,8 @@ _Pragma("once")
 #define PLATFORM_SO_ERROR_INVALID_SOCKET  INVALID_SOCKET
 #define PLATFORM_SO_ERROR_SOCKET_ERROR    SOCKET_ERROR
 
-#define PLATFORM_UART_ERROR_INVALID_VALUE INVALID_HANDLE_VALUE
+#define PLATFORM_UA_ERROR_INVALID_UART    INVALID_HANDLE_VALUE
+#define PLATFORM_UA_ERROR_UART_ERROR      -1
 
 #define PLATFORM_PATH_SEPARATOR '\\'
 
@@ -164,4 +166,5 @@ struct platform_uart_config_s {
     platform_uart_parity_t   parity;
     platform_uart_databits_t databits;
     platform_uart_stopbits_t stopbits;
+    size_t                   timeout;
 };

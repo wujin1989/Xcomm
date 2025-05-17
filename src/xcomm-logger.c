@@ -20,22 +20,22 @@
  */
 
 #include "xcomm-logger.h"
+#include "platform/platform-io.h"
 #include "xcomm-thrdpool.h"
 #include "xcomm-time.h"
 #include "xcomm-utils.h"
-#include "platform/platform-io.h"
 
 #define BUFSIZE 4096
 
-typedef struct builtin_logger_s       builtin_logger_t;
-typedef struct builtin_printer_ctx_s  builtin_printer_ctx_t;
+typedef struct logger_s      logger_t;
+typedef struct printer_ctx_s printer_ctx_t;
 
-struct builtin_printer_ctx_s {
+struct printer_ctx_s {
     xcomm_logger_level_t level;
     char                 message[];
 };
 
-struct builtin_logger_s {
+struct logger_s {
     bool                 async;
     xcomm_logger_level_t level;
     FILE*                file;
@@ -45,11 +45,11 @@ struct builtin_logger_s {
     void (*callback)(xcomm_logger_level_t level, const char* restrict msg);
 };
 
-static builtin_logger_t logger;
+static logger_t    logger;
 static const char* levels[] = {"DEBUG", "INFO", "WARN", "ERROR"};
 
-static inline void _message_print(void* param) {
-    builtin_printer_ctx_t* ctx = param;
+static inline void _logger_print_message(void* param) {
+    printer_ctx_t* ctx = param;
 
     if (logger.callback) {
         logger.callback(ctx->level, ctx->message);
@@ -60,7 +60,7 @@ static inline void _message_print(void* param) {
     free(ctx);
 }
 
-static int _message_marshalling(
+static int _logger_build_message(
     char*                buf,
     size_t               buflen,
     xcomm_logger_level_t level,
@@ -100,18 +100,19 @@ static int _message_marshalling(
 static void _sync_log(
     xcomm_logger_level_t level,
     const char* restrict file,
-    int line,
+    int                  line,
     const char* restrict fmt,
-    va_list v) {
+    va_list              v) {
     char buf[BUFSIZE] = {0};
 
     mtx_lock(&logger.mtx);
-    int ret = _message_marshalling(buf, sizeof(buf), level, file, line, fmt, v);
-    builtin_printer_ctx_t* ctx = malloc(sizeof(builtin_printer_ctx_t) + ret);
+    int ret =
+        _logger_build_message(buf, sizeof(buf), level, file, line, fmt, v);
+    printer_ctx_t* ctx = malloc(sizeof(printer_ctx_t) + ret);
     if (ctx) {
         memcpy(ctx->message, buf, ret);
         ctx->level = level;
-        _message_print(ctx);
+        _logger_print_message(ctx);
     }
     mtx_unlock(&logger.mtx);
 }
@@ -119,18 +120,19 @@ static void _sync_log(
 static void _async_log(
     xcomm_logger_level_t level,
     const char* restrict file,
-    int line,
+    int                  line,
     const char* restrict fmt,
-    va_list v) {
+    va_list              v) {
     char buf[BUFSIZE] = {0};
 
     mtx_lock(&logger.mtx);
-    int ret = _message_marshalling(buf, sizeof(buf), level, file, line, fmt, v);
-    builtin_printer_ctx_t* ctx = malloc(sizeof(builtin_printer_ctx_t) + ret);
+    int ret =
+        _logger_build_message(buf, sizeof(buf), level, file, line, fmt, v);
+    printer_ctx_t* ctx = malloc(sizeof(printer_ctx_t) + ret);
     if (ctx) {
         memcpy(ctx->message, buf, ret);
         ctx->level = level;
-        xcomm_thrdpool_post(&logger.thrdpool, _message_print, ctx);
+        xcomm_thrdpool_post(&logger.thrdpool, _logger_print_message, ctx);
     }
     mtx_unlock(&logger.mtx);
 }
@@ -176,7 +178,7 @@ void xcomm_logger_destroy(void) {
 void xcomm_logger_log(
     xcomm_logger_level_t level,
     const char* restrict file,
-    int line,
+    int                  line,
     const char* restrict fmt,
     ...) {
     if (!atomic_load(&logger.initialized)) {

@@ -22,8 +22,10 @@
 #include "xcomm-heap.h"
 
 /* swap parent with child. child moves closer to the root, parent moves away. */
-static void _node_swap(
-    xcomm_heap_t* heap, xcomm_heap_node_t* parent, xcomm_heap_node_t* child) {
+static void _heap_node_swap(
+    xcomm_heap_t* heap, 
+    xcomm_heap_node_t* parent, 
+    xcomm_heap_node_t* child) {
     xcomm_heap_node_t* sibling;
     xcomm_heap_node_t  t;
 
@@ -104,7 +106,7 @@ void xcomm_heap_insert(xcomm_heap_t* heap, xcomm_heap_node_t* node) {
      * it's a min heap so parent < child must be true.
      */
     while (node->parent != NULL && heap->compare(node, node->parent)) {
-        _node_swap(heap, node->parent, node);
+        _heap_node_swap(heap, node->parent, node);
     }
 }
 
@@ -184,14 +186,14 @@ void xcomm_heap_remove(xcomm_heap_t* heap, xcomm_heap_node_t* node) {
         if (smallest == child) {
             break;
         }
-        _node_swap(heap, child, smallest);
+        _heap_node_swap(heap, child, smallest);
     }
     /* walk up the subtree and check that each parent is less than the node
      * this is required, because `max` node is not guaranteed to be the
      * actual maximum in tree
      */
     while (child->parent != NULL && heap->compare(child, child->parent)) {
-        _node_swap(heap, child->parent, child);
+        _heap_node_swap(heap, child->parent, child);
     }
 }
 

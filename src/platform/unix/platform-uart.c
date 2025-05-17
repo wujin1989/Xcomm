@@ -26,30 +26,47 @@ void platform_uart_close(platform_uart_t uart) {
 }
 
 int platform_uart_read(platform_uart_t uart, uint8_t* buf, int len) {
-    ssize_t bytes_read = read(uart, buf, len);
-    if (bytes_read == -1) {
-        return -1;
+    ssize_t off = 0;
+    while (off < len) {
+        ssize_t tmp;
+        do {
+            tmp = read(uart, buf + off, len - (int)off);
+        } while (tmp == PLATFORM_UA_ERROR_UART_ERROR && errno == EINTR);
+        if (tmp == PLATFORM_UA_ERROR_UART_ERROR) {
+            return PLATFORM_UA_ERROR_UART_ERROR;
+        }
+        if (tmp == 0) {
+            return off;
+        }
+        off += tmp;
     }
-    return (int)bytes_read;
+    return (int)off;
 }
 
 int platform_uart_write(platform_uart_t uart, uint8_t* buf, int len) {
-    ssize_t bytes_written = write(uart, buf, len);
-    if (bytes_written == -1) {
-        return -1;
+    ssize_t off = 0;
+    while (off < len) {
+        ssize_t tmp;
+        do {
+            tmp = write(uart, buf + off, len - (int)off);
+        } while (tmp == PLATFORM_UA_ERROR_UART_ERROR && errno == EINTR);
+        if (tmp == PLATFORM_UA_ERROR_UART_ERROR) {
+            return PLATFORM_UA_ERROR_UART_ERROR;
+        }
+        off += tmp;
     }
-    return (int)bytes_written;
+    return (int)off;
 }
 
 platform_uart_t platform_uart_open(platform_uart_config_t* config) {
     platform_uart_t uart = open(config->device, O_RDWR | O_NOCTTY);
     if (uart == -1) {
-        return PLATFORM_UART_ERROR_INVALID_VALUE;
+        return PLATFORM_UA_ERROR_INVALID_UART;
     }
     struct termios options;
     if (tcgetattr(uart, &options) != 0) {
         platform_uart_close(uart);
-        return PLATFORM_UART_ERROR_INVALID_VALUE;
+        return PLATFORM_UA_ERROR_INVALID_UART;
     }
     memset(&options, 0, sizeof(struct termios));
     speed_t baudrate_flag;
@@ -71,7 +88,7 @@ platform_uart_t platform_uart_open(platform_uart_config_t* config) {
         break;
     default:
         platform_uart_close(uart);
-        return PLATFORM_UART_ERROR_INVALID_VALUE;
+        return PLATFORM_UA_ERROR_INVALID_UART;
     }
     cfsetispeed(&options, baudrate_flag);
     cfsetospeed(&options, baudrate_flag);
@@ -86,7 +103,7 @@ platform_uart_t platform_uart_open(platform_uart_config_t* config) {
         break;
     default:
         platform_uart_close(uart);
-        return PLATFORM_UART_ERROR_INVALID_VALUE;
+        return PLATFORM_UA_ERROR_INVALID_UART;
     }
     switch (config->stopbits) {
     case PLATFORM_UART_STOPBITS_ONE:
@@ -97,7 +114,7 @@ platform_uart_t platform_uart_open(platform_uart_config_t* config) {
         break;
     default:
         platform_uart_close(uart);
-        return PLATFORM_UART_ERROR_INVALID_VALUE;
+        return PLATFORM_UA_ERROR_INVALID_UART;
     }
     switch (config->parity) {
     case PLATFORM_UART_PARITY_NO:
@@ -113,17 +130,21 @@ platform_uart_t platform_uart_open(platform_uart_config_t* config) {
         break;
     default:
         platform_uart_close(uart);
-        return PLATFORM_UART_ERROR_INVALID_VALUE;
+        return PLATFORM_UA_ERROR_INVALID_UART;
     }
     options.c_cflag |= CLOCAL | CREAD;
 
-    options.c_cc[VMIN] = 1;
-    options.c_cc[VTIME] = 0;
-
+    if (config->timeout) {
+        options.c_cc[VMIN] = 0;
+        options.c_cc[VTIME] = (config->timeout / 1000UL) * 10;
+    } else {
+        options.c_cc[VMIN] = 1;
+        options.c_cc[VTIME] = 0;
+    }
     tcflush(uart, TCIOFLUSH);
     if (tcsetattr(uart, TCSANOW, &options) != 0) {
         platform_uart_close(uart);
-        return PLATFORM_UART_ERROR_INVALID_VALUE;
+        return PLATFORM_UA_ERROR_INVALID_UART;
     }
     return uart;
 }

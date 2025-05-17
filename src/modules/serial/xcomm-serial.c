@@ -39,8 +39,7 @@ void xcomm_serial_close(xcomm_serial_t* serial) {
 xcomm_serial_t* xcomm_serial_open(xcomm_serial_config_t* config) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
-    platform_uart_config_t* ucptr = (void*)config;
-    xcomm_serial_t* serial   = malloc(sizeof(xcomm_serial_t));
+    xcomm_serial_t* serial = malloc(sizeof(xcomm_serial_t));
     if (!serial) {
         xcomm_loge("no memory.\n");
         return NULL;
@@ -51,9 +50,17 @@ xcomm_serial_t* xcomm_serial_open(xcomm_serial_config_t* config) {
         free(serial);
         return NULL;
     }
-    platform_uart_t uartobj = platform_uart_open(ucptr);
-    memcpy(serial->opaque, &uartobj, sizeof(platform_uart_t));
+    platform_uart_config_t* ucptr = (void*)config;
 
+    platform_uart_t uartobj = platform_uart_open(ucptr);
+    if (uartobj != PLATFORM_UA_ERROR_INVALID_UART) {
+        memcpy(serial->opaque, &uartobj, sizeof(platform_uart_t));
+    } else {
+        xcomm_loge("open serial failed.\n");
+        free(serial->opaque);
+        free(serial);
+        return NULL;
+    }
     xcomm_logi("%s leave.\n", __FUNCTION__);
     return serial;
 }
@@ -61,11 +68,21 @@ xcomm_serial_t* xcomm_serial_open(xcomm_serial_config_t* config) {
 int xcomm_serial_read(xcomm_serial_t* serial, uint8_t* buf, int len) {
     platform_uart_t* uartptr = serial->opaque;
     platform_uart_t  uartobj = *uartptr;
-    return platform_uart_read(uartobj, buf, len);
+
+    int ret = platform_uart_read(uartobj, buf, len);
+    if (ret == PLATFORM_UA_ERROR_UART_ERROR) {
+        return -1;
+    }
+    return ret;
 }
 
 int xcomm_serial_write(xcomm_serial_t* serial, uint8_t* buf, int len) {
     platform_uart_t* uartptr = serial->opaque;
     platform_uart_t  uartobj = *uartptr;
-    return platform_uart_write(uartobj, buf, len);
+    
+    int ret = platform_uart_write(uartobj, buf, len);
+    if (ret == PLATFORM_UA_ERROR_UART_ERROR) {
+        return -1;
+    }
+    return ret;
 }

@@ -64,8 +64,14 @@ xcomm_socket_t* xcomm_sync_tcp_dail(const char* restrict host, const char* restr
     bool noused;
     platform_sock_t sockobj =
         platform_socket_dial(host, port, SOCK_STREAM, &noused, false);
-    memcpy(sockptr->opaque, &sockobj, sizeof(platform_sock_t));
-
+    if (sockobj != PLATFORM_SO_ERROR_INVALID_SOCKET) {
+        memcpy(sockptr->opaque, &sockobj, sizeof(platform_sock_t));
+    } else {
+        xcomm_loge("tcp dial error.\n");
+        free(sockptr->opaque);
+        free(sockptr);
+        return NULL;
+    }
     atomic_fetch_add(&refcnt, 1);
 
     xcomm_logi("%s leave.\n", __FUNCTION__);
@@ -92,8 +98,14 @@ xcomm_sync_tcp_listen(const char* restrict host, const char* restrict port) {
     }
     platform_sock_t sockobj =
         platform_socket_listen(host, port, SOCK_STREAM, 0, 0, false);
-    memcpy(sockptr->opaque, &sockobj, sizeof(platform_sock_t));
-
+    if (sockobj != PLATFORM_SO_ERROR_INVALID_SOCKET) {
+        memcpy(sockptr->opaque, &sockobj, sizeof(platform_sock_t));
+    } else {
+        xcomm_loge("tcp listen error.\n");
+        free(sockptr->opaque);
+        free(sockptr);
+        return NULL;
+    }
     atomic_fetch_add(&refcnt, 1);
 
     xcomm_logi("%s leave.\n", __FUNCTION__);
@@ -118,8 +130,14 @@ xcomm_socket_t* xcomm_sync_tcp_accept(xcomm_socket_t* socketptr) {
         return NULL;
     }
     platform_sock_t cliobj = platform_socket_accept(srvobj, false);
-    memcpy(cliptr->opaque, &cliobj, sizeof(platform_sock_t));
-
+    if (cliobj != PLATFORM_SO_ERROR_INVALID_SOCKET) {
+        memcpy(cliptr->opaque, &cliobj, sizeof(platform_sock_t));
+    } else {
+        xcomm_loge("tcp accept error.\n");
+        free(cliptr->opaque);
+        free(cliptr);
+        return NULL;
+    }
     atomic_fetch_add(&refcnt, 1);
 
     xcomm_logi("%s leave.\n", __FUNCTION__);
@@ -130,14 +148,22 @@ int xcomm_sync_tcp_send(xcomm_socket_t* socketptr, void* buf, int len) {
     platform_sock_t* sockptr = socketptr->opaque;
     platform_sock_t  sockobj = *sockptr;
 
-    return (int)platform_socket_sendall(sockobj, buf, len);
+    int ret = (int)platform_socket_sendall(sockobj, buf, len);
+    if (ret == PLATFORM_SO_ERROR_SOCKET_ERROR) {
+        return -1;
+    }
+    return ret;
 }
 
 int xcomm_sync_tcp_recv(xcomm_socket_t* socketptr, void* buf, int len) {
     platform_sock_t* sockptr = socketptr->opaque;
     platform_sock_t  sockobj = *sockptr;
 
-    return (int)platform_socket_recvall(sockobj, buf, len);
+    int ret = (int)platform_socket_recvall(sockobj, buf, len);
+    if (ret == PLATFORM_SO_ERROR_SOCKET_ERROR) {
+        return -1;
+    }
+    return ret;
 }
 
 void xcomm_sync_tcp_set_sndtimeout(xcomm_socket_t* socketptr, int timeout_ms) {

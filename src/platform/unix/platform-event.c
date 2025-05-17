@@ -32,9 +32,9 @@ void platform_event_monitor_init(platform_event_monitor_t* monitor) {
 
 void platform_event_add(
     platform_event_monitor_t* monitor,
-    platform_sock_t            sock,
-    int                        events,
-    void*                      ud) {
+    platform_sock_t           sock,
+    int                       events,
+    void*                     ud) {
     struct epoll_event ee = {0};
 
     if (events & PLATFORM_EVENT_RD_FLAG) {
@@ -49,9 +49,9 @@ void platform_event_add(
 
 void platform_event_mod(
     platform_event_monitor_t* monitor,
-    platform_sock_t            sock,
-    int                        events,
-    void*                      ud) {
+    platform_sock_t           sock,
+    int                       events,
+    void*                     ud) {
     struct epoll_event ee = {0};
 
     if (events & PLATFORM_EVENT_RD_FLAG) {
@@ -75,9 +75,13 @@ int platform_event_wait(
     int                            timeout) {
     int                n;
     struct epoll_event epoll_events[PLATFORM_MAX_PROCESS_EVENTS] = {0};
-    memset(notifies, 0, sizeof(platform_event_notification_t) * PLATFORM_MAX_PROCESS_EVENTS);
+    memset(
+        notifies,
+        0,
+        sizeof(platform_event_notification_t) * PLATFORM_MAX_PROCESS_EVENTS);
     do {
-        n = epoll_wait(*monitor, epoll_events, PLATFORM_MAX_PROCESS_EVENTS, timeout);
+        n = epoll_wait(
+            *monitor, epoll_events, PLATFORM_MAX_PROCESS_EVENTS, timeout);
     } while (n == -1 && errno == EINTR);
 
     if (n < 0) {
@@ -104,9 +108,9 @@ void platform_event_monitor_init(platform_event_monitor_t* monitor) {
 
 void platform_event_add(
     platform_event_monitor_t* monitor,
-    platform_sock_t            sock,
-    int                        events,
-    void*                      ud) {
+    platform_sock_t           sock,
+    int                       events,
+    void*                     ud) {
     struct kevent ke = {0};
 
     if (events & PLATFORM_EVENT_RD_FLAG) {
@@ -121,9 +125,9 @@ void platform_event_add(
 
 void platform_event_mod(
     platform_event_monitor_t* monitor,
-    platform_sock_t            sock,
-    int                        events,
-    void*                      ud) {
+    platform_sock_t           sock,
+    int                       events,
+    void*                     ud) {
     struct kevent ke = {0};
 
     if (events & PLATFORM_EVENT_RD_FLAG) {
@@ -161,8 +165,8 @@ int platform_event_wait(
     ts.tv_sec = (timeout / 1000UL);
     ts.tv_nsec = ((timeout % 1000UL) * 1000000UL);
 
-    int n =
-        kevent(*monitor, NULL, 0, epoll_events, PLATFORM_MAX_PROCESS_EVENTS, &ts);
+    int n = kevent(
+        *monitor, NULL, 0, epoll_events, PLATFORM_MAX_PROCESS_EVENTS, &ts);
     /**
      * In systems utilizing the kqueue mechanism, read and write events are
      * handled independently, differing from the behavior of epoll. With epoll,

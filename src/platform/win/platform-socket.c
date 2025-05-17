@@ -19,18 +19,26 @@
  *  IN THE SOFTWARE.
  */
 
-#include "wepoll/wepoll.h"
 #include "platform/platform-socket.h"
+#include "wepoll/wepoll.h"
 
 #define SIO_UDP_CONNRESET _WSAIOW(IOC_VENDOR, 12)
 
 static atomic_flag initialized = ATOMIC_FLAG_INIT;
 
-static inline void _disable_udp_connreset(platform_sock_t sock) {
+static inline void _socket_disable_udp_connreset(platform_sock_t sock) {
     int   on = 0;
     DWORD noused;
     WSAIoctl(
-        sock, SIO_UDP_CONNRESET, &on, sizeof(int), NULL, 0, &noused, NULL, NULL);
+        sock,
+        SIO_UDP_CONNRESET,
+        &on,
+        sizeof(int),
+        NULL,
+        0,
+        &noused,
+        NULL,
+        NULL);
 }
 
 void platform_socket_set_rcvtimeout(platform_sock_t sock, int timeout_ms) {
@@ -333,7 +341,7 @@ platform_sock_t platform_socket_listen(
             platform_socket_enable_reuseport(sock, true);
         }
         if (protocol == SOCK_DGRAM) {
-            _disable_udp_connreset(sock);
+            _socket_disable_udp_connreset(sock);
             platform_socket_set_rcvbuf(sock, INT32_MAX);
             if (nonblocking) {
                 platform_socket_set_rss(sock, (uint16_t)idx, cores);
@@ -399,7 +407,7 @@ platform_sock_t platform_socket_dial(
             platform_socket_enable_keepalive(sock, true);
         }
         if (protocol == SOCK_DGRAM) {
-            _disable_udp_connreset(sock);
+            _socket_disable_udp_connreset(sock);
         }
         if (connect(sock, rp->ai_addr, (int)rp->ai_addrlen)) {
             if (WSAGetLastError() != WSAEWOULDBLOCK) {

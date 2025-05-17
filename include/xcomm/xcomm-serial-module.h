@@ -22,6 +22,7 @@
 _Pragma("once")
 
 #include <stdint.h>
+#include <stddef.h>
 
 typedef struct xcomm_serial_module_s xcomm_serial_module_t;
 typedef struct xcomm_serial_config_s xcomm_serial_config_t;
@@ -60,11 +61,12 @@ enum xcomm_serial_stopbits_e {
 };
 
 struct xcomm_serial_config_s {
-    const char* restrict device;
+    const char* restrict    device;
     xcomm_serial_baudrate_t baudrate;
     xcomm_serial_parity_t   parity;
     xcomm_serial_databits_t databits;
     xcomm_serial_stopbits_t stopbits;
+    size_t                  timeout;
 };
 
 struct xcomm_serial_module_s {

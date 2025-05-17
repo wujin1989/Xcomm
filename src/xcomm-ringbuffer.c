@@ -21,9 +21,10 @@
 
 #include <stdlib.h>
 #include <string.h>
+
 #include "xcomm-ringbuffer.h"
 
-static inline uint32_t _rounddown_pow_of_two(uint32_t n) {
+static inline uint32_t _ringbuffer_rounddown_pow_of_two(uint32_t n) {
     n |= n >> 1;
     n |= n >> 2;
     n |= n >> 4;
@@ -32,7 +33,7 @@ static inline uint32_t _rounddown_pow_of_two(uint32_t n) {
     return (n + 1) >> 1;
 }
 
-static inline void _internal_write(
+static inline void _ringbuffer_internal_write(
     xcomm_ringbuf_t* ring, const void* src, uint32_t len, uint32_t off) {
     uint32_t size = ring->mask + 1;
     uint32_t esize = ring->esz;
@@ -50,8 +51,8 @@ static inline void _internal_write(
     memcpy(ring->buf, (uint8_t*)src + l, len - l);
 }
 
-static inline void
-_internal_read(xcomm_ringbuf_t* ring, void* dst, uint32_t len, uint32_t off) {
+static inline void _ringbuffer_internal_read(
+    xcomm_ringbuf_t* ring, void* dst, uint32_t len, uint32_t off) {
     uint32_t size = ring->mask + 1;
     uint32_t esize = ring->esz;
     uint32_t l;
@@ -69,13 +70,13 @@ _internal_read(xcomm_ringbuf_t* ring, void* dst, uint32_t len, uint32_t off) {
 }
 
 static inline uint32_t
-_internal_read_peek(xcomm_ringbuf_t* ring, void* buf, uint32_t len) {
+_ringbuffer_internal_read_peek(xcomm_ringbuf_t* ring, void* buf, uint32_t len) {
     uint32_t l;
     l = ring->wpos - ring->rpos;
     if (len > l) {
         len = l;
     }
-    _internal_read(ring, buf, len, ring->rpos);
+    _ringbuffer_internal_read(ring, buf, len, ring->rpos);
     return len;
 }
 
@@ -83,7 +84,7 @@ void xcomm_ringbuf_create(
     xcomm_ringbuf_t* ring, uint32_t esize, uint32_t bufsize) {
     ring->buf = malloc(bufsize);
     ring->esz = esize;
-    ring->mask = _rounddown_pow_of_two(bufsize / esize) - 1;
+    ring->mask = _ringbuffer_rounddown_pow_of_two(bufsize / esize) - 1;
     ring->wpos = 0;
     ring->rpos = 0;
 }
@@ -121,7 +122,7 @@ uint32_t xcomm_ringbuf_write(
     if (entry_count > avail) {
         entry_count = avail;
     }
-    _internal_write(ring, buf, entry_count, ring->wpos);
+    _ringbuffer_internal_write(ring, buf, entry_count, ring->wpos);
 
     ring->wpos += entry_count;
     return entry_count;
@@ -129,7 +130,7 @@ uint32_t xcomm_ringbuf_write(
 
 uint32_t
 xcomm_ringbuf_read(xcomm_ringbuf_t* ring, void* buf, uint32_t entry_count) {
-    entry_count = _internal_read_peek(ring, buf, entry_count);
+    entry_count = _ringbuffer_internal_read_peek(ring, buf, entry_count);
     ring->rpos += entry_count;
 
     return entry_count;

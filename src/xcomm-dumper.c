@@ -30,8 +30,9 @@ void xcomm_dumper_init(xcomm_dumper_config_t* config) {
         xcomm_logger_init(config->filename, XCOMM_LOGGER_LEVEL_DEBUG, true);
         break;
     case XCOMM_DUMPER_MODE_CALLBACK:
-        xcomm_logger_set_callback((void (*)(xcomm_logger_level_t level, const char* restrict msg))
-                config->callback);
+        xcomm_logger_set_callback((void (*)(
+            xcomm_logger_level_t level,
+            const char* restrict msg))config->callback);
         xcomm_logger_init(NULL, XCOMM_LOGGER_LEVEL_DEBUG, true);
         break;
     default:

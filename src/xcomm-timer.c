@@ -85,9 +85,9 @@ xcomm_timer_t* xcomm_timer_min(xcomm_timermgr_t* timermgr) {
 xcomm_timer_t* xcomm_timer_add(
     xcomm_timermgr_t* timermgr,
     void (*routine)(void*),
-    void*  param,
-    size_t expire,
-    bool   repeat) {
+    void*             param,
+    size_t            expire,
+    bool              repeat) {
     xcomm_timer_t* timer = malloc(sizeof(xcomm_timer_t));
     if (timer) {
         mtx_lock(&timermgr->mtx);

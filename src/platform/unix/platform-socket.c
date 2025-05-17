@@ -105,10 +105,10 @@ void platform_socket_enable_reuseport(platform_sock_t sock, bool on) {
 platform_sock_t platform_socket_listen(
     const char* restrict host,
     const char* restrict port,
-    int  protocol,
-    int  idx,
-    int  cores,
-    bool nonblocking) {
+    int                  protocol,
+    int                  idx,
+    int                  cores,
+    bool                 nonblocking) {
     platform_sock_t  sock;
     struct addrinfo  hints;
     struct addrinfo* res;
@@ -157,8 +157,8 @@ platform_sock_t platform_socket_listen(
             }
             platform_socket_enable_maxseg(sock, true);
             /**
-             * must be after enable maxseg. due to enable maxseg set TCP_NOOPT on
-             * macos.
+             * must be after enable maxseg. due to enable maxseg set TCP_NOOPT
+             * on macos.
              */
             platform_socket_enable_nodelay(sock, true);
             platform_socket_enable_keepalive(sock, true);
@@ -186,9 +186,9 @@ void platform_socket_cleanup(void) {
 platform_sock_t platform_socket_dial(
     const char* restrict host,
     const char* restrict port,
-    int   protocol,
-    bool* connected,
-    bool  nonblocking) {
+    int                  protocol,
+    bool*                connected,
+    bool                 nonblocking) {
     int              ret;
     platform_sock_t  sock = PLATFORM_SO_ERROR_INVALID_SOCKET;
     struct addrinfo  hints;

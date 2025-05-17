@@ -28,7 +28,7 @@ void platform_uart_close(platform_uart_t uart) {
 int platform_uart_read(platform_uart_t uart, uint8_t* buf, int len) {
     DWORD bytes_read = 0;
     if (!ReadFile(uart, buf, len, &bytes_read, NULL)) {
-        return -1;
+        return PLATFORM_UA_ERROR_UART_ERROR;
     }
     return (int)bytes_read;
 }
@@ -36,7 +36,7 @@ int platform_uart_read(platform_uart_t uart, uint8_t* buf, int len) {
 int platform_uart_write(platform_uart_t uart, uint8_t* buf, int len) {
     DWORD bytes_written = 0;
     if (!WriteFile(uart, buf, len, &bytes_written, NULL)) {
-        return -1;
+        return PLATFORM_UA_ERROR_UART_ERROR;
     }
     return (int)bytes_written;
 }
@@ -53,7 +53,7 @@ platform_uart_t platform_uart_open(platform_uart_config_t* config) {
         0,
         0);
     if (uart == INVALID_HANDLE_VALUE) {
-        return PLATFORM_UART_ERROR_INVALID_VALUE;
+        return PLATFORM_UA_ERROR_INVALID_UART;
     }
     DCB dcb;
     SecureZeroMemory(&dcb, sizeof(DCB));
@@ -77,7 +77,7 @@ platform_uart_t platform_uart_open(platform_uart_config_t* config) {
         break;
     default:
         platform_uart_close(uart);
-        return PLATFORM_UART_ERROR_INVALID_VALUE;
+        return PLATFORM_UA_ERROR_INVALID_UART;
     }
     switch (config->databits) {
     case PLATFORM_UART_DATABITS_CS7:
@@ -88,7 +88,7 @@ platform_uart_t platform_uart_open(platform_uart_config_t* config) {
         break;
     default:
         platform_uart_close(uart);
-        return PLATFORM_UART_ERROR_INVALID_VALUE;
+        return PLATFORM_UA_ERROR_INVALID_UART;
     }
     switch (config->stopbits) {
     case PLATFORM_UART_STOPBITS_ONE:
@@ -99,7 +99,7 @@ platform_uart_t platform_uart_open(platform_uart_config_t* config) {
         break;
     default:
         platform_uart_close(uart);
-        return PLATFORM_UART_ERROR_INVALID_VALUE;
+        return PLATFORM_UA_ERROR_INVALID_UART;
     }
     switch (config->parity) {
     case PLATFORM_UART_PARITY_NO:
@@ -115,23 +115,21 @@ platform_uart_t platform_uart_open(platform_uart_config_t* config) {
         break;
     default:
         platform_uart_close(uart);
-        return PLATFORM_UART_ERROR_INVALID_VALUE;
+        return PLATFORM_UA_ERROR_INVALID_UART;
     }
     dcb.fBinary = TRUE;
     if (!SetCommState(uart, &dcb)) {
         platform_uart_close(uart);
-        return PLATFORM_UART_ERROR_INVALID_VALUE;
+        return PLATFORM_UA_ERROR_INVALID_UART;
     }
     COMMTIMEOUTS timeouts = {0};
-    timeouts.ReadIntervalTimeout = 0;
-    timeouts.ReadTotalTimeoutConstant = 0;
-    timeouts.ReadTotalTimeoutMultiplier = 0;
-    timeouts.WriteTotalTimeoutConstant = 0;
-    timeouts.WriteTotalTimeoutMultiplier = 0;
-
+    if (config->timeout) {
+        timeouts.ReadIntervalTimeout = 0;
+        timeouts.ReadTotalTimeoutConstant = config->timeout;
+    }
     if (!SetCommTimeouts(uart, &timeouts)) {
         platform_uart_close(uart);
-        return PLATFORM_UART_ERROR_INVALID_VALUE;
+        return PLATFORM_UA_ERROR_INVALID_UART;
     }
     return uart;
 }

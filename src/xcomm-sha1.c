@@ -30,9 +30,9 @@
  *  IN THE SOFTWARE.
  */
 
+#include "xcomm-sha1.h"
 #include <stddef.h>
 #include <string.h>
-#include "xcomm-sha1.h"
 
 #define rol(value, bits) (((value) << (bits)) | ((value) >> (32 - (bits))))
 #define blk0(i)                                                                \
@@ -200,8 +200,7 @@ void xcomm_sha1_final(xcomm_sha1_t* ctx, uint8_t digest[20]) {
 
     for (i = 0; i < 8; i++) {
         finalcount[i] =
-            (uint8_t)((ctx->count[(i >= 4 ? 0 : 1)] >> ((3 - (i & 3)) * 8)) &
-                      255);
+            (uint8_t)((ctx->count[(i >= 4 ? 0 : 1)] >> ((3 - (i & 3)) * 8)) & 255);
     }
     c = 0200;
     xcomm_sha1_update(ctx, &c, 1);

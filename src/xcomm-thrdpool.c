@@ -21,13 +21,15 @@
 
 #include "xcomm-thrdpool.h"
 
-typedef struct thrdpool_job_s {
+typedef struct thrdpool_job_s thrdpool_job_t;
+
+struct thrdpool_job_s {
     void (*routine)(void*);
     void*              arg;
     xcomm_queue_node_t n;
-} thrdpool_job_t;
+};
 
-static int _thrdfunc(void* arg) {
+static int _thrdpool_thrdfunc(void* arg) {
     xcomm_thrdpool_t* pool = arg;
     while (pool->status) {
         mtx_lock(&pool->qmtx);
@@ -49,13 +51,13 @@ static int _thrdfunc(void* arg) {
     return 0;
 }
 
-static void _thrd_create(xcomm_thrdpool_t* pool) {
+static void _thrdpool_thrd_create(xcomm_thrdpool_t* pool) {
     void* thrds;
     mtx_lock(&pool->tmtx);
     thrds = realloc(pool->thrds, (pool->thrdcnt + 1) * sizeof(thrd_t));
     if (thrds) {
         pool->thrds = thrds;
-        thrd_create(pool->thrds + pool->thrdcnt, _thrdfunc, pool);
+        thrd_create(pool->thrds + pool->thrdcnt, _thrdpool_thrdfunc, pool);
         pool->thrdcnt++;
     }
     mtx_unlock(&pool->tmtx);
@@ -68,10 +70,10 @@ void xcomm_thrdpool_init(xcomm_thrdpool_t* restrict pool, int nthrds) {
     cnd_init(&pool->qcnd);
 
     pool->thrdcnt = 0;
-    pool->status  = true;
-    pool->thrds   = NULL;
+    pool->status = true;
+    pool->thrds = NULL;
     for (int i = 0; i < nthrds; i++) {
-        _thrd_create(pool);
+        _thrdpool_thrd_create(pool);
     }
 }
 

@@ -21,6 +21,7 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <assert.h>
 #include "xcomm.h"
 
@@ -36,6 +37,7 @@ int main(void) {
         .parity   = XCOMM_SERIAL_PARITY_NO,
         .databits = XCOMM_SERIAL_DATABITS_CS8,
         .stopbits = XCOMM_SERIAL_STOPBITS_ONE,
+        .timeout = 0,
     };
     xcomm_melsec_device_t* device = 
         xcomm_melsec_1c.dial(&config, NULL, NULL);
