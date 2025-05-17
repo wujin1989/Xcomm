@@ -134,9 +134,9 @@ platform_uart_t platform_uart_open(platform_uart_config_t* config) {
     }
     options.c_cflag |= CLOCAL | CREAD;
 
-    if (config->timeout) {
+    if (config->timeout_ms) {
         options.c_cc[VMIN] = 0;
-        options.c_cc[VTIME] = (config->timeout / 1000UL) * 10;
+        options.c_cc[VTIME] = (config->timeout_ms / 1000UL) * 10;
     } else {
         options.c_cc[VMIN] = 1;
         options.c_cc[VTIME] = 0;

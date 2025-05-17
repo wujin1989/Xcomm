@@ -166,5 +166,5 @@ struct platform_uart_config_s {
     platform_uart_parity_t   parity;
     platform_uart_databits_t databits;
     platform_uart_stopbits_t stopbits;
-    size_t                   timeout;
+    size_t                   timeout_ms;
 };

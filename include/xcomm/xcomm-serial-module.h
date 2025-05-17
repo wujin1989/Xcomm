@@ -66,7 +66,7 @@ struct xcomm_serial_config_s {
     xcomm_serial_parity_t   parity;
     xcomm_serial_databits_t databits;
     xcomm_serial_stopbits_t stopbits;
-    size_t                  timeout;
+    size_t                  timeout_ms;
 };
 
 struct xcomm_serial_module_s {

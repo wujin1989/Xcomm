@@ -123,9 +123,9 @@ platform_uart_t platform_uart_open(platform_uart_config_t* config) {
         return PLATFORM_UA_ERROR_INVALID_UART;
     }
     COMMTIMEOUTS timeouts = {0};
-    if (config->timeout) {
+    if (config->timeout_ms) {
         timeouts.ReadIntervalTimeout = 0;
-        timeouts.ReadTotalTimeoutConstant = config->timeout;
+        timeouts.ReadTotalTimeoutConstant = config->timeout_ms;
     }
     if (!SetCommTimeouts(uart, &timeouts)) {
         platform_uart_close(uart);
