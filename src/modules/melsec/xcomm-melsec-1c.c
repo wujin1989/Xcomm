@@ -569,14 +569,15 @@ int xcomm_melsec_1c_load_double(
 int xcomm_melsec_1c_load_string(
     xcomm_melsec_device_t* device,
     const char* restrict   addr,
-    char**                 dst,
+    char*                  dst,
     uint64_t               dstlen) {
     xcomm_melsec_flexible_value_t val = {0};
 
     int ret = _melsec_1c_load_value(
         device, addr, XCOMM_MELSEC_W_OP, dstlen, true, &val);
     if (!ret) {
-        *dst = val.str;
+        memcpy(dst, val.str, dstlen);
+        free(val.str);
     }
     return ret;
 }

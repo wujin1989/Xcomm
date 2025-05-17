@@ -51,7 +51,7 @@ struct xcomm_melsec_1c_module_s {
     int (*load_uint64)(xcomm_melsec_device_t* device, const char* restrict addr, uint64_t* dst);
     int (*load_float)(xcomm_melsec_device_t* device, const char* restrict addr, float* dst);
     int (*load_double)(xcomm_melsec_device_t* device, const char* restrict addr, double* dst);
-    int (*load_string)(xcomm_melsec_device_t* device, const char* restrict addr, char** dst, uint64_t dlen);
+    int (*load_string)(xcomm_melsec_device_t* device, const char* restrict addr, char* dst, uint64_t dlen);
 
     int (*store_bool)(xcomm_melsec_device_t* device, const char* restrict addr, bool src);
     int (*store_int16)(xcomm_melsec_device_t* device, const char* restrict addr, int16_t src);
