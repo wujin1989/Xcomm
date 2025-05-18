@@ -19,26 +19,8 @@
  *  IN THE SOFTWARE.
  */
 
-#include "platform/platform-utils.h"
+#include "platform/platform-process.h"
 
-#if defined(__APPLE__)
-platform_tid_t platform_utils_gettid(void) {
-    uint64_t tid;
-    pthread_threadid_np(NULL, &tid);
-    return tid;
-}
-#endif
-
-#if defined(__linux__)
-platform_tid_t platform_utils_gettid(void) {
-    return syscall(SYS_gettid);
-}
-#endif
-
-int platform_utils_getcpus(void) {
-    return (int)sysconf(_SC_NPROCESSORS_ONLN);
-}
-
-platform_pid_t platform_utils_getpid(void) {
-    return getpid();
+platform_pid_t platform_process_getpid(void) {
+    return GetCurrentProcessId();
 }

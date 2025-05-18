@@ -19,18 +19,8 @@
  *  IN THE SOFTWARE.
  */
 
-#include "platform/platform-utils.h"
-
-int platform_utils_getcpus(void) {
-    SYSTEM_INFO si;
-    GetSystemInfo(&si);
-    return (int)si.dwNumberOfProcessors;
-}
-
-platform_tid_t platform_utils_gettid(void) {
-    return GetCurrentThreadId();
-}
+#include "platform/platform-process.h"
 
 platform_pid_t platform_utils_getpid(void) {
-    return GetCurrentProcessId();
+    return getpid();
 }

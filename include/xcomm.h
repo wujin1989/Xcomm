@@ -21,7 +21,7 @@
 
 _Pragma("once")
 
-#include "xcomm/xcomm-dumper.h"
-#include "xcomm/xcomm-serial-module.h"
 #include "xcomm/xcomm-tcp-module.h"
 #include "xcomm/xcomm-melsec-module.h"
+#include "xcomm/xcomm-dumper-module.h"
+#include "xcomm/xcomm-serial-module.h"

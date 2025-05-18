@@ -25,7 +25,7 @@ _Pragma("once")
 #include <stddef.h>
 #include <stdbool.h>
 
-#define xcomm_builtin_keycmp(k1, k2)                                           \
+#define xcomm_rbtree_builtin_keycmp(k1, k2)                                    \
     _Generic(                                                                  \
         (k1),                                                                  \
         int8_t: builtin_keycmp_i8,                                             \

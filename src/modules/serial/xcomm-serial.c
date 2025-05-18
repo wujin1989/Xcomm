@@ -50,9 +50,13 @@ xcomm_serial_t* xcomm_serial_open(xcomm_serial_config_t* config) {
         free(serial);
         return NULL;
     }
-    platform_uart_config_t* ucptr = (void*)config;
+    /**
+     * avoiding "strict aliasing rule" 
+     */
+    platform_uart_config_t uconfig;
+    memcpy(&uconfig, config, sizeof(platform_uart_config_t));
 
-    platform_uart_t uartobj = platform_uart_open(ucptr);
+    platform_uart_t uartobj = platform_uart_open(&uconfig);
     if (uartobj != PLATFORM_UA_ERROR_INVALID_UART) {
         memcpy(serial->opaque, &uartobj, sizeof(platform_uart_t));
     } else {

@@ -118,13 +118,13 @@ typedef HANDLE  platform_uart_t;
 typedef SSIZE_T ssize_t;
 #endif
 
-typedef enum platform_event_flag_e           platform_event_flag_t;
-typedef struct platform_event_cqe_s          platform_event_cqe_t;
-typedef struct platform_uart_config_s        platform_uart_config_t;
-typedef enum platform_uart_baudrate_e        platform_uart_baudrate_t;
-typedef enum platform_uart_parity_e          platform_uart_parity_t;
-typedef enum platform_uart_databits_e        platform_uart_databits_t;
-typedef enum platform_uart_stopbits_e        platform_uart_stopbits_t;
+typedef enum platform_event_flag_e     platform_event_flag_t;
+typedef struct platform_event_cqe_s    platform_event_cqe_t;
+typedef struct platform_uart_config_s  platform_uart_config_t;
+typedef enum platform_uart_baudrate_e  platform_uart_baudrate_t;
+typedef enum platform_uart_parity_e    platform_uart_parity_t;
+typedef enum platform_uart_databits_e  platform_uart_databits_t;
+typedef enum platform_uart_stopbits_e  platform_uart_stopbits_t;
 
 struct platform_event_cqe_s {
     uint32_t events;

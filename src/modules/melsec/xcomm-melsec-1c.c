@@ -336,13 +336,13 @@ static inline void _melsec_1c_read_request_build(
 }
 
 static inline void _melsec_1c_write_request_build(
-    uint8_t                       stn_no[XCOMM_MELSEC_2_BYTE],
-    uint8_t                       plc_no[XCOMM_MELSEC_2_BYTE],
-    xcomm_melsec_operate_t        op_code,
-    const char* restrict          addr,
-    uint8_t                       points,
-    xcomm_melsec_flexible_value_t val,
-    melsec_1c_write_request_t*    req) {
+    uint8_t                    stn_no[XCOMM_MELSEC_2_BYTE],
+    uint8_t                    plc_no[XCOMM_MELSEC_2_BYTE],
+    xcomm_melsec_operate_t     op_code,
+    const char* restrict       addr,
+    uint8_t                    points,
+    xcomm_melsec_value_t       val,
+    melsec_1c_write_request_t* req) {
     size_t  offset = 0;
     uint8_t points_ascii[XCOMM_MELSEC_2_BYTE];
     uint8_t checksum_ascii[XCOMM_MELSEC_2_BYTE];
@@ -356,8 +356,11 @@ static inline void _melsec_1c_write_request_build(
     if (!req->data_c.buf.data) {
         return;
     }
-    xcomm_melsec_value_to_ascii(
-        val, req->data_c.buf.data, req->data_c.buf.size, op_code);
+    xcomm_melsec_byte_sequence_t bytes = {
+        .data = req->data_c.buf.data, 
+        .size = req->data_c.buf.size,
+    };
+    xcomm_melsec_value_to_bytes(op_code, &val, &bytes);
 
     req->enq = enq;
     req->stn_no[0] = stn_no[0];
@@ -393,10 +396,10 @@ static inline void _melsec_1c_write_request_build(
 }
 
 static void _melsec_1c_read_response_parse(
-    bool                           isstr,
-    xcomm_melsec_operate_t         op_code,
-    melsec_1c_read_response_t*     rsp,
-    xcomm_melsec_flexible_value_t* val) {
+    bool                       isstr,
+    xcomm_melsec_operate_t     op_code,
+    melsec_1c_read_response_t* rsp,
+    xcomm_melsec_value_t*      val) {
     if (isstr) {
         if (val->str = calloc(rsp->success.data_b.buf.size, sizeof(char))) {
             memcpy(
@@ -405,29 +408,22 @@ static void _melsec_1c_read_response_parse(
                 rsp->success.data_b.buf.size);
         }
     } else {
-        char data_b_str[XCOMM_MELSEC_512_BYTE] = {0};
-        memcpy(
-            data_b_str,
-            rsp->success.data_b.buf.data,
-            rsp->success.data_b.buf.size);
-
-        if (op_code == XCOMM_MELSEC_B_OP) {
-            val->u64 = strtoll(data_b_str, NULL, 2);
-        }
-        if (op_code == XCOMM_MELSEC_W_OP) {
-            val->u64 = strtoll(data_b_str, NULL, 16);
-        }
+        xcomm_melsec_byte_sequence_t bytes = {
+            .data = rsp->success.data_b.buf.data,
+            .size = rsp->success.data_b.buf.size,
+        };
+        xcomm_melsec_bytes_to_value(op_code, &bytes, val);
     }
     return;
 }
 
 static int _melsec_1c_load_value(
-    xcomm_melsec_device_t*         device,
-    const char* restrict           addr,
-    xcomm_melsec_operate_t         op_code,
-    size_t                         len,
-    bool                           isstr,
-    xcomm_melsec_flexible_value_t* val) {
+    xcomm_melsec_device_t* device,
+    const char* restrict   addr,
+    xcomm_melsec_operate_t op_code,
+    size_t                 len,
+    bool                   isstr,
+    xcomm_melsec_value_t*  val) {
     melsec_1c_device_ctx_t* ctx = device->opaque;
 
     size_t points = 0;
@@ -475,12 +471,12 @@ static int _melsec_1c_load_value(
 }
 
 static int _melsec_1c_store_value(
-    xcomm_melsec_device_t*         device,
-    const char* restrict           addr,
-    xcomm_melsec_operate_t         op_code,
-    size_t                         len,
-    bool                           isstr,
-    xcomm_melsec_flexible_value_t  val) {
+    xcomm_melsec_device_t* device,
+    const char* restrict   addr,
+    xcomm_melsec_operate_t op_code,
+    size_t                 len,
+    bool                   isstr,
+    xcomm_melsec_value_t   val) {
     melsec_1c_device_ctx_t* ctx = device->opaque;
 
     size_t points = 0;
@@ -574,8 +570,10 @@ void xcomm_melsec_1c_close(xcomm_melsec_device_t* device) {
 
 int xcomm_melsec_1c_load_bool(
     xcomm_melsec_device_t* device, const char* restrict addr, bool* dst) {
-    xcomm_melsec_flexible_value_t val = {0};
-
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_BOOL, 
+        .b = false
+    };
     size_t points = 1;
     size_t length = points * XCOMM_MELSEC_CHARS_PER_B_POINT;
 
@@ -589,8 +587,10 @@ int xcomm_melsec_1c_load_bool(
 
 int xcomm_melsec_1c_load_int16(
     xcomm_melsec_device_t* device, const char* restrict addr, int16_t* dst) {
-    xcomm_melsec_flexible_value_t val = {0};
-
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_INT16, 
+        .i16 = 0
+    };
     size_t points = 1;
     size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
 
@@ -604,8 +604,10 @@ int xcomm_melsec_1c_load_int16(
 
 int xcomm_melsec_1c_load_uint16(
     xcomm_melsec_device_t* device, const char* restrict addr, uint16_t* dst) {
-    xcomm_melsec_flexible_value_t val = {0};
-
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_UINT16, 
+        .u16 = 0
+    };
     size_t points = 1;
     size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
 
@@ -619,8 +621,10 @@ int xcomm_melsec_1c_load_uint16(
 
 int xcomm_melsec_1c_load_int32(
     xcomm_melsec_device_t* device, const char* restrict addr, int32_t* dst) {
-    xcomm_melsec_flexible_value_t val = {0};
-
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_INT32, 
+        .i32 = 0
+    };
     size_t points = 2;
     size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
 
@@ -634,8 +638,10 @@ int xcomm_melsec_1c_load_int32(
 
 int xcomm_melsec_1c_load_uint32(
     xcomm_melsec_device_t* device, const char* restrict addr, uint32_t* dst) {
-    xcomm_melsec_flexible_value_t val = {0};
-
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_UINT32, 
+        .u32 = 0
+    };
     size_t points = 2;
     size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
 
@@ -649,8 +655,10 @@ int xcomm_melsec_1c_load_uint32(
 
 int xcomm_melsec_1c_load_int64(
     xcomm_melsec_device_t* device, const char* restrict addr, int64_t* dst) {
-    xcomm_melsec_flexible_value_t val = {0};
-
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_INT64, 
+        .i64 = 0
+    };
     size_t points = 4;
     size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
 
@@ -664,8 +672,10 @@ int xcomm_melsec_1c_load_int64(
 
 int xcomm_melsec_1c_load_uint64(
     xcomm_melsec_device_t* device, const char* restrict addr, uint64_t* dst) {
-    xcomm_melsec_flexible_value_t val = {0};
-
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_UINT64, 
+        .u64 = 0
+    };
     size_t points = 4;
     size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
 
@@ -679,8 +689,10 @@ int xcomm_melsec_1c_load_uint64(
 
 int xcomm_melsec_1c_load_float(
     xcomm_melsec_device_t* device, const char* restrict addr, float* dst) {
-    xcomm_melsec_flexible_value_t val = {0};
-
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_FLOAT, 
+        .f32 = 0.0f
+    };
     size_t points = 2;
     size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
 
@@ -694,8 +706,10 @@ int xcomm_melsec_1c_load_float(
 
 int xcomm_melsec_1c_load_double(
     xcomm_melsec_device_t* device, const char* restrict addr, double* dst) {
-    xcomm_melsec_flexible_value_t val = {0};
-
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_DOUBLE, 
+        .f64 = 0.0
+    };
     size_t points = 4;
     size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
 
@@ -712,8 +726,10 @@ int xcomm_melsec_1c_load_string(
     const char* restrict   addr,
     char*                  dst,
     uint64_t               dstlen) {
-    xcomm_melsec_flexible_value_t val = {0};
-
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_STRING, 
+        .str = NULL
+    };
     int ret = _melsec_1c_load_value(
         device, addr, XCOMM_MELSEC_W_OP, dstlen, true, &val);
     if (!ret) {
@@ -727,8 +743,10 @@ int xcomm_melsec_1c_store_bool(
     xcomm_melsec_device_t* device, const char* restrict addr, bool src) {
     size_t points = 1;
     size_t length = points * XCOMM_MELSEC_CHARS_PER_B_POINT;
-    xcomm_melsec_flexible_value_t val = {.b = src};
-
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_BOOL, 
+        .b = src
+    };
     return _melsec_1c_store_value(
         device, addr, XCOMM_MELSEC_B_OP, length, false, val);
 }

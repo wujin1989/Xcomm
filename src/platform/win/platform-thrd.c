@@ -19,11 +19,8 @@
  *  IN THE SOFTWARE.
  */
 
-_Pragma("once")
+#include "platform/platform-thrd.h"
 
-#include <time.h>
-#include <stdint.h>
-
-extern uint64_t xcomm_time_now(void);
-extern void     xcomm_time_sleep(const uint32_t ms);
-extern void     xcomm_time_localtime(const time_t* restrict time, struct tm* restrict tm);
+platform_tid_t platform_thrd_gettid(void) {
+    return GetCurrentThreadId();
+}

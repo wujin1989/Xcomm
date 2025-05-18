@@ -19,13 +19,228 @@
  *  IN THE SOFTWARE.
  */
 
+#include <stdio.h>
 #include <stdint.h>
+#include <string.h>
 #include "xcomm-melsec-common.h"
 
-void xcomm_melsec_byte_to_ascii(
-    uint8_t byte, uint8_t ascii[XCOMM_MELSEC_2_BYTE]) {
-    const char hex_chars[] = "0123456789ABCDEF";
+static const char bit_char_table[] = {'0', '1'};
+static const char hex_char_table[] = "0123456789ABCDEF";
 
-    ascii[0] = hex_chars[(byte >> 4) & 0x0F];
-    ascii[1] = hex_chars[byte & 0x0F];
+void xcomm_melsec_bool_to_bit_chars(
+    bool value, char bit_chars[XCOMM_MELSEC_1_BYTE]) {
+    bit_chars[0] = value ? '1' : '0';
+}
+
+void xcomm_melsec_uint8_to_bit_chars(
+    uint8_t value, char bit_chars[XCOMM_MELSEC_8_BYTE]) {
+    for (int i = 0; i < XCOMM_MELSEC_8_BYTE; ++i) {
+        bit_chars[i] = bit_char_table[(value & (0x80 >> i))];
+    }
+}
+
+void xcomm_melsec_int8_to_bit_chars(
+    int8_t value, char bit_chars[XCOMM_MELSEC_8_BYTE]) {
+    xcomm_melsec_uint8_to_bit_chars((uint8_t)value, bit_chars);
+}
+
+void xcomm_melsec_uint16_to_bit_chars(
+    uint16_t value, char bit_chars[XCOMM_MELSEC_16_BYTE]) {
+    for (int i = 0; i < XCOMM_MELSEC_16_BYTE; ++i) {
+        bit_chars[i] = bit_char_table[(value & ((uint16_t)0x8000 >> i))];
+    }
+}
+
+void xcomm_melsec_int16_to_bit_chars(
+    int16_t value, char bit_chars[XCOMM_MELSEC_16_BYTE]) {
+    xcomm_melsec_uint16_to_bit_chars((uint16_t)value, bit_chars);
+}
+
+void xcomm_melsec_uint32_to_bit_chars(
+    uint32_t value, char bit_chars[XCOMM_MELSEC_32_BYTE]) {
+    for (int i = 0; i < XCOMM_MELSEC_32_BYTE; ++i) {
+        bit_chars[i] = bit_char_table[(value & ((uint32_t)0x80000000 >> i))];
+    }
+}
+
+void xcomm_melsec_int32_to_bit_chars(
+    int32_t value, char bit_chars[XCOMM_MELSEC_32_BYTE]) {
+    xcomm_melsec_uint32_to_bit_chars((uint32_t)value, bit_chars);
+}
+
+void xcomm_melsec_uint64_to_bit_chars(
+    uint64_t value, char bit_chars[XCOMM_MELSEC_64_BYTE]) {
+    for (int i = 0; i < XCOMM_MELSEC_64_BYTE; ++i) {
+        bit_chars[i] =
+            bit_char_table[(value & ((uint64_t)0x8000000000000000ULL >> i))];
+    }
+}
+
+void xcomm_melsec_int64_to_bit_chars(
+    int64_t value, char bit_chars[XCOMM_MELSEC_64_BYTE]) {
+    xcomm_melsec_uint64_to_bit_chars((uint64_t)value, bit_chars);
+}
+
+void xcomm_melsec_float_to_bit_chars(
+    float value, char bit_chars[XCOMM_MELSEC_32_BYTE]) {
+    union {
+        float    f;
+        uint32_t u;
+    } conv = {.f = value};
+    xcomm_melsec_uint32_to_bit_chars(conv.u, bit_chars);
+}
+
+void xcomm_melsec_double_to_bit_chars(
+    double value, char bit_chars[XCOMM_MELSEC_64_BYTE]) {
+    union {
+        double   d;
+        uint64_t u;
+    } conv = {.d = value};
+    xcomm_melsec_uint64_to_bit_chars(conv.u, bit_chars);
+}
+
+void xcomm_melsec_uint8_to_nibble_chars(
+    uint8_t value, uint8_t nibble_chars[XCOMM_MELSEC_2_BYTE]) {
+    nibble_chars[0] = hex_char_table[(value >> 4) & 0x0F];
+    nibble_chars[1] = hex_char_table[value & 0x0F];
+}
+
+void xcomm_melsec_int8_to_nibble_chars(
+    int8_t value, uint8_t nibble_chars[XCOMM_MELSEC_2_BYTE]) {
+    xcomm_melsec_uint8_to_nibble_chars((uint8_t)value, nibble_chars);
+}
+
+void xcomm_melsec_uint16_to_nibble_chars(
+    uint16_t value, uint8_t nibble_chars[XCOMM_MELSEC_4_BYTE]) {
+    nibble_chars[0] = hex_char_table[(value >> 12) & 0x0F];
+    nibble_chars[1] = hex_char_table[(value >> 8)  & 0x0F];
+    nibble_chars[2] = hex_char_table[(value >> 4)  & 0x0F];
+    nibble_chars[3] = hex_char_table[value         & 0x0F];
+}
+
+void xcomm_melsec_int16_to_nibble_chars(
+    int16_t value, uint8_t nibble_chars[XCOMM_MELSEC_4_BYTE]) {
+    xcomm_melsec_uint16_to_nibble_chars((uint16_t)value, nibble_chars);
+}
+
+void xcomm_melsec_uint32_to_nibble_chars(
+    uint32_t value, uint8_t nibble_chars[XCOMM_MELSEC_8_BYTE]) {
+    nibble_chars[0] = hex_char_table[(value >> 28) & 0x0F];
+    nibble_chars[1] = hex_char_table[(value >> 24) & 0x0F];
+    nibble_chars[2] = hex_char_table[(value >> 20) & 0x0F];
+    nibble_chars[3] = hex_char_table[(value >> 16) & 0x0F];
+    nibble_chars[4] = hex_char_table[(value >> 12) & 0x0F];
+    nibble_chars[5] = hex_char_table[(value >> 8)  & 0x0F];
+    nibble_chars[6] = hex_char_table[(value >> 4)  & 0x0F];
+    nibble_chars[7] = hex_char_table[value         & 0x0F];
+}
+
+void xcomm_melsec_int32_to_nibble_chars(
+    int32_t value, uint8_t nibble_chars[XCOMM_MELSEC_8_BYTE]) {
+    xcomm_melsec_uint32_to_nibble_chars((uint32_t)value, nibble_chars);
+}
+
+void xcomm_melsec_float_to_nibble_chars(
+    float value, uint8_t nibble_chars[XCOMM_MELSEC_8_BYTE]) {
+    union {
+        float    f;
+        uint32_t u;
+    } conv = {.f = value};
+    xcomm_melsec_uint32_to_nibble_chars(conv.u, nibble_chars);
+}
+
+void xcomm_melsec_uint64_to_nibble_chars(
+    uint64_t value, uint8_t nibble_chars[XCOMM_MELSEC_16_BYTE]) {
+    nibble_chars[0]  = hex_char_table[(value >> 60) & 0x0F];
+    nibble_chars[1]  = hex_char_table[(value >> 56) & 0x0F];
+    nibble_chars[2]  = hex_char_table[(value >> 52) & 0x0F];
+    nibble_chars[3]  = hex_char_table[(value >> 48) & 0x0F];
+    nibble_chars[4]  = hex_char_table[(value >> 44) & 0x0F];
+    nibble_chars[5]  = hex_char_table[(value >> 40) & 0x0F];
+    nibble_chars[6]  = hex_char_table[(value >> 36) & 0x0F];
+    nibble_chars[7]  = hex_char_table[(value >> 32) & 0x0F];
+    nibble_chars[8]  = hex_char_table[(value >> 28) & 0x0F];
+    nibble_chars[9]  = hex_char_table[(value >> 24) & 0x0F];
+    nibble_chars[10] = hex_char_table[(value >> 20) & 0x0F];
+    nibble_chars[11] = hex_char_table[(value >> 16) & 0x0F];
+    nibble_chars[12] = hex_char_table[(value >> 12) & 0x0F];
+    nibble_chars[13] = hex_char_table[(value >> 8)  & 0x0F];
+    nibble_chars[14] = hex_char_table[(value >> 4)  & 0x0F];
+    nibble_chars[15] = hex_char_table[value         & 0x0F];
+}
+
+void xcomm_melsec_int64_to_nibble_chars(
+    int64_t value, uint8_t nibble_chars[XCOMM_MELSEC_16_BYTE]) {
+    xcomm_melsec_uint64_to_nibble_chars((uint64_t)value, nibble_chars);
+}
+
+void xcomm_melsec_double_to_nibble_chars(
+    double value, uint8_t nibble_chars[XCOMM_MELSEC_16_BYTE]) {
+    union {
+        double   d;
+        uint64_t u;
+    } conv = {.d = value};
+    xcomm_melsec_uint64_to_nibble_chars(conv.u, nibble_chars);
+}
+
+void xcomm_melsec_value_to_bytes(
+    xcomm_melsec_operate_t        op_code,
+    xcomm_melsec_value_t*         val,
+    xcomm_melsec_byte_sequence_t* bytes) {
+    if (op_code == XCOMM_MELSEC_B_OP) {
+        switch (val->type) {
+        case XCOMM_MELSEC_BOOL:
+            break;
+        case XCOMM_MELSEC_INT16:
+        case XCOMM_MELSEC_UINT16:
+            break;
+        case XCOMM_MELSEC_INT32:
+        case XCOMM_MELSEC_UINT32:
+        case XCOMM_MELSEC_FLOAT:
+            break;
+        case XCOMM_MELSEC_INT64:
+        case XCOMM_MELSEC_UINT64:
+        case XCOMM_MELSEC_DOUBLE:
+            break;
+        case XCOMM_MELSEC_STRING:
+            break;
+        default:
+            break;
+        }
+    }
+    if (op_code == XCOMM_MELSEC_W_OP) {
+        switch (val->type) {
+        case XCOMM_MELSEC_INT16:
+        case XCOMM_MELSEC_UINT16:
+            break;
+        case XCOMM_MELSEC_INT32:
+        case XCOMM_MELSEC_UINT32:
+        case XCOMM_MELSEC_FLOAT:
+            break;
+        case XCOMM_MELSEC_INT64:
+        case XCOMM_MELSEC_UINT64:
+        case XCOMM_MELSEC_DOUBLE:
+            break;
+        case XCOMM_MELSEC_STRING:
+            break;
+        default:
+            break;
+        }
+    }
+    return;
+}
+
+void xcomm_melsec_bytes_to_value(
+    xcomm_melsec_operate_t        op_code,
+    xcomm_melsec_byte_sequence_t* bytes,
+    xcomm_melsec_value_t*         val) {
+    char str[XCOMM_MELSEC_512_BYTE] = {0};
+    memcpy(str, bytes->data, bytes->size);
+
+    if (op_code == XCOMM_MELSEC_B_OP) {
+        val->u64 = strtoll(str, NULL, 2);
+    }
+    if (op_code == XCOMM_MELSEC_W_OP) {
+        val->u64 = strtoll(str, NULL, 16);
+    }
 }

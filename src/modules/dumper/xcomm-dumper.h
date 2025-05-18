@@ -19,27 +19,9 @@
  *  IN THE SOFTWARE.
  */
 
-#include <stdio.h>
+_Pragma("once")
 
-#include "xcomm-logger.h"
-#include "xcomm/xcomm-dumper.h"
+#include "xcomm/xcomm-dumper-module.h"
 
-void xcomm_dumper_init(xcomm_dumper_config_t* config) {
-    switch (config->mode) {
-    case XCOMM_DUMPER_MODE_FILE:
-        xcomm_logger_init(config->filename, XCOMM_LOGGER_LEVEL_DEBUG, true);
-        break;
-    case XCOMM_DUMPER_MODE_CALLBACK:
-        xcomm_logger_set_callback((void (*)(
-            xcomm_logger_level_t level,
-            const char* restrict msg))config->callback);
-        xcomm_logger_init(NULL, XCOMM_LOGGER_LEVEL_DEBUG, true);
-        break;
-    default:
-        break;
-    }
-}
-
-void xcomm_dumper_destroy(void) {
-    xcomm_logger_destroy();
-}
+extern void xcomm_dumper_init(xcomm_dumper_config_t* config);
+extern void xcomm_dumper_destroy(void);

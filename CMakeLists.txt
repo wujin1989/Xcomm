@@ -34,13 +34,15 @@ set(SRCS
 	src/xcomm-varint.c
 	src/xcomm-stack.c
 	src/xcomm-timer.c
-	src/xcomm-time.c
 	src/xcomm-rwlock.c
 	src/xcomm-spinlock.c
 	src/xcomm-wg.c
 	src/xcomm-thrdpool.c
 	src/xcomm-ringbuffer.c
-	src/xcomm-dumper.c
+	src/xcomm-bswap.c
+
+	src/modules/dumper/xcomm-dumper.c
+	src/modules/dumper/xcomm-dumper-module.c
 
 	src/modules/serial/xcomm-serial.c
 	src/modules/serial/xcomm-serial-module.c
@@ -58,7 +60,9 @@ set(SRCS
 
 if(WIN32)
 	list(APPEND SRCS 
-		src/platform/win/platform-utils.c
+		src/platform/win/platform-info.c
+		src/platform/win/platform-thrd.c
+		src/platform/win/platform-process.c
 		src/platform/win/platform-socket.c
 		src/platform/win/platform-event.c
 		src/platform/win/wepoll/wepoll.c
@@ -71,7 +75,9 @@ endif()
 
 if(UNIX)
 	list(APPEND SRCS 
-		src/platform/unix/platform-utils.c
+		src/platform/unix/platform-info.c
+		src/platform/unix/platform-thrd.c
+		src/platform/unix/platform-process.c
 		src/platform/unix/platform-socket.c
 		src/platform/unix/platform-event.c
 		src/platform/unix/platform-time.c

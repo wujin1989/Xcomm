@@ -19,27 +19,8 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-utils.h"
+_Pragma("once")
 
-uint64_t xcomm_utils_getnow(void) {
-    struct timespec tsc;
-    if (!timespec_get(&tsc, TIME_UTC)) {
-        return 0;
-    }
-    return (tsc.tv_sec * (1000UL) + tsc.tv_nsec / (1000000UL));
-}
+#include "platform-types.h"
 
-xcomm_endian_t xcomm_utils_getendian(void) {
-    return (*((unsigned char*)(&(unsigned short){0x01}))) ? XCOMM_ENDIAN_LE
-                                                          : XCOMM_ENDIAN_BE;
-}
-
-int xcomm_utils_getprng(int min, int max) {
-    static unsigned int seed = 0;
-    if (seed == 0) {
-        seed = (unsigned int)time(NULL);
-        srand(seed);
-    }
-    return min +
-           (int)((double)((double)(max) - (min) + 1.0) * (rand() / ((RAND_MAX) + 1.0)));
-}
+extern platform_tid_t platform_utils_gettid(void);

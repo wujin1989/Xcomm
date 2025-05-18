@@ -30,7 +30,8 @@ _Pragma("once")
 
 typedef struct xcomm_melsec_byte_sequence_s xcomm_melsec_byte_sequence_t;
 typedef enum xcomm_melsec_operate_e         xcomm_melsec_operate_t;
-typedef union xcomm_melsec_flexible_value_u xcomm_melsec_flexible_value_t;
+typedef struct xcomm_melsec_value_s         xcomm_melsec_value_t;
+typedef enum xcomm_melsec_value_type_e      xcomm_melsec_value_type_t;
 
 enum {
     XCOMM_MELSEC_1_BYTE    = 1,
@@ -59,17 +60,62 @@ struct xcomm_melsec_byte_sequence_s {
     size_t   size;
 };
 
-union xcomm_melsec_flexible_value_u {
-    bool     b;
-    int16_t  i16;
-    int32_t  i32;
-    int64_t  i64;
-    uint16_t u16;
-    uint32_t u32;
-    uint64_t u64;
-    float    f32;
-    double   f64;
-    char*    str;
+enum xcomm_melsec_value_type_e {
+    XCOMM_MELSEC_BOOL,
+    XCOMM_MELSEC_INT16,
+    XCOMM_MELSEC_UINT16,
+    XCOMM_MELSEC_INT32,
+    XCOMM_MELSEC_UINT32,
+    XCOMM_MELSEC_INT64,
+    XCOMM_MELSEC_UINT64,
+    XCOMM_MELSEC_FLOAT,
+    XCOMM_MELSEC_DOUBLE,
+    XCOMM_MELSEC_STRING,
 };
 
-extern void xcomm_melsec_byte_to_ascii(uint8_t byte, uint8_t ascii[XCOMM_MELSEC_2_BYTE]);
+struct xcomm_melsec_value_s {
+    xcomm_melsec_value_type_t type;
+    union {
+        bool     b;
+        int16_t  i16;
+        int32_t  i32;
+        int64_t  i64;
+        uint16_t u16;
+        uint32_t u32;
+        uint64_t u64;
+        float    f32;
+        double   f64;
+        char*    str;
+    } ;
+
+};
+
+extern void xcomm_melsec_value_to_bytes(xcomm_melsec_operate_t op_code, xcomm_melsec_value_t* val, xcomm_melsec_byte_sequence_t* bytes);
+extern void xcomm_melsec_bytes_to_value(xcomm_melsec_operate_t op_code, xcomm_melsec_byte_sequence_t* bytes, xcomm_melsec_value_t* val);
+
+
+/**
+ * used by internal.
+ */
+extern void xcomm_melsec_bool_to_bit_chars(bool value, char bit_chars[XCOMM_MELSEC_1_BYTE]);
+extern void xcomm_melsec_uint8_to_bit_chars(uint8_t value, char bit_chars[XCOMM_MELSEC_8_BYTE]);
+extern void xcomm_melsec_int8_to_bit_chars(int8_t value, char bit_chars[XCOMM_MELSEC_8_BYTE]);
+extern void xcomm_melsec_uint16_to_bit_chars(uint16_t value, char bit_chars[XCOMM_MELSEC_16_BYTE]);
+extern void xcomm_melsec_int16_to_bit_chars(int16_t value, char bit_chars[XCOMM_MELSEC_16_BYTE]);
+extern void xcomm_melsec_uint32_to_bit_chars(uint32_t value, char bit_chars[XCOMM_MELSEC_32_BYTE]);
+extern void xcomm_melsec_int32_to_bit_chars(int32_t value, char bit_chars[XCOMM_MELSEC_32_BYTE]);
+extern void xcomm_melsec_uint64_to_bit_chars(uint64_t value, char bit_chars[XCOMM_MELSEC_64_BYTE]);
+extern void xcomm_melsec_int64_to_bit_chars(int64_t value, char bit_chars[XCOMM_MELSEC_64_BYTE]);
+extern void xcomm_melsec_float_to_bit_chars(float value, char bit_chars[XCOMM_MELSEC_32_BYTE]);
+extern void xcomm_melsec_double_to_bit_chars(double value, char bit_chars[XCOMM_MELSEC_64_BYTE]);
+
+extern void xcomm_melsec_uint8_to_nibble_chars(uint8_t value, uint8_t nibble_chars[XCOMM_MELSEC_2_BYTE]);
+extern void xcomm_melsec_int8_to_nibble_chars(int8_t value, uint8_t nibble_chars[XCOMM_MELSEC_2_BYTE]);
+extern void xcomm_melsec_uint16_to_nibble_chars(uint16_t value, uint8_t nibble_chars[XCOMM_MELSEC_4_BYTE]);
+extern void xcomm_melsec_int16_to_nibble_chars(int16_t value, uint8_t nibble_chars[XCOMM_MELSEC_4_BYTE]);
+extern void xcomm_melsec_uint32_to_nibble_chars(uint32_t value, uint8_t nibble_chars[XCOMM_MELSEC_8_BYTE]);
+extern void xcomm_melsec_int32_to_nibble_chars(int32_t value, uint8_t nibble_chars[XCOMM_MELSEC_8_BYTE]);
+extern void xcomm_melsec_float_to_nibble_chars(float value, uint8_t nibble_chars[XCOMM_MELSEC_8_BYTE]);
+extern void xcomm_melsec_uint64_to_nibble_chars(uint64_t value, uint8_t nibble_chars[XCOMM_MELSEC_16_BYTE]);
+extern void xcomm_melsec_int64_to_nibble_chars(int64_t value, uint8_t nibble_chars[XCOMM_MELSEC_16_BYTE]);
+extern void xcomm_melsec_double_to_nibble_chars(double value, uint8_t nibble_chars[XCOMM_MELSEC_16_BYTE]);

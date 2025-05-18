@@ -19,7 +19,7 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-time.h"
+#include "xcomm-utils.h"
 #include "xcomm-timer.h"
 
 static inline int _min_heapcmp(xcomm_heap_node_t* a, xcomm_heap_node_t* b) {
@@ -61,7 +61,7 @@ void xcomm_timer_reset(
     xcomm_timermgr_t* timermgr, xcomm_timer_t* timer, size_t expire) {
     mtx_lock(&timermgr->mtx);
     xcomm_heap_remove(&timermgr->heap, &timer->node);
-    timer->birth = xcomm_time_now();
+    timer->birth = xcomm_utils_getnow();
     timer->expire = expire;
     xcomm_heap_insert(&timermgr->heap, &timer->node);
     mtx_unlock(&timermgr->mtx);
@@ -92,7 +92,7 @@ xcomm_timer_t* xcomm_timer_add(
     if (timer) {
         mtx_lock(&timermgr->mtx);
         timer->param   = param;
-        timer->birth   = xcomm_time_now();
+        timer->birth   = xcomm_utils_getnow();
         timer->expire  = expire;
         timer->repeat  = repeat;
         timer->routine = routine;

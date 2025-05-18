@@ -24,6 +24,7 @@ _Pragma("once")
 typedef enum xcomm_dumper_mode_s     xcomm_dumper_mode_t;
 typedef struct xcomm_dumper_config_s xcomm_dumper_config_t;
 typedef enum xcomm_dumper_level_e    xcomm_dumper_level_t;
+typedef struct xcomm_dumper_module_s xcomm_dumper_module_t;
 
 enum xcomm_dumper_mode_s {
     XCOMM_DUMPER_MODE_FILE,
@@ -31,10 +32,10 @@ enum xcomm_dumper_mode_s {
 };
 
 enum xcomm_dumper_level_e {
-    XCOMM_DUMPER_LEVEL_DEBUG = 1,
-    XCOMM_DUMPER_LEVEL_INFO  = 2,
-    XCOMM_DUMPER_LEVEL_WARN  = 3,
-    XCOMM_DUMPER_LEVEL_ERROR = 4,
+    XCOMM_DUMPER_LEVEL_DEBUG,
+    XCOMM_DUMPER_LEVEL_INFO,
+    XCOMM_DUMPER_LEVEL_WARN,
+    XCOMM_DUMPER_LEVEL_ERROR,
 };
 
 struct xcomm_dumper_config_s {
@@ -42,8 +43,14 @@ struct xcomm_dumper_config_s {
         const char* restrict filename;
         void (*callback)(xcomm_dumper_level_t level, const char* restrict msg);
     };
-    xcomm_dumper_mode_t mode;
+    xcomm_dumper_mode_t  mode;
+    xcomm_dumper_level_t level;
 };
 
-extern void xcomm_dumper_init(xcomm_dumper_config_t* config);
-extern void xcomm_dumper_destroy(void);
+struct xcomm_dumper_module_s {
+    const char* restrict name;
+    void (*init)(xcomm_dumper_config_t* config);
+    void (*destroy)(void);
+};
+
+extern xcomm_dumper_module_t xcomm_dumper;

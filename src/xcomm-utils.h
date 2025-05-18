@@ -23,13 +23,14 @@ _Pragma("once")
 
 #include "platform/platform-types.h"
 
-#define XCOMM_PATH_SEPARATOR PLATFORM_PATH_SEPARATOR
+typedef enum xcomm_endian_e xcomm_endian_t;
 
-typedef platform_tid_t xcomm_tid_t;
-typedef platform_pid_t xcomm_pid_t;
+enum xcomm_endian_e {
+    XCOMM_ENDIAN_BE = 0,
+    XCOMM_ENDIAN_LE = 1,
+};
 
-extern int         xcomm_utils_cpus(void);
-extern int         xcomm_utils_byteorder(void);
-extern int         xcomm_utils_rand(int min, int max);
-extern xcomm_tid_t xcomm_utils_gettid(void);
-extern xcomm_pid_t xcomm_utils_getpid(void);
+extern int            xcomm_utils_getprng(int min, int max);
+extern uint64_t       xcomm_utils_getnow(void);
+extern xcomm_endian_t xcomm_utils_getendian(void);
+

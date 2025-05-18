@@ -19,11 +19,12 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-logger.h"
-#include "platform/platform-io.h"
-#include "xcomm-thrdpool.h"
-#include "xcomm-time.h"
 #include "xcomm-utils.h"
+#include "xcomm-logger.h"
+#include "xcomm-thrdpool.h"
+#include "platform/platform-io.h"
+#include "platform/platform-time.h"
+#include "platform/platform-thrd.h"
 
 #define BUFSIZE 4096
 
@@ -76,7 +77,7 @@ static int _logger_build_message(
         ret = sprintf(buf, "%s:%d ", file, line);
     } else {
         timespec_get(&tsc, TIME_UTC);
-        xcomm_time_localtime(&tsc.tv_sec, &tm);
+        platform_time_localtime(&tsc.tv_sec, &tm);
         ret = sprintf(
             buf,
             "%04d-%02d-%02d %02d:%02d:%02d.%03d %8d %5s %s:%d ",
@@ -87,7 +88,7 @@ static int _logger_build_message(
             tm.tm_min,
             tm.tm_sec,
             (int)(tsc.tv_nsec / 1000000UL),
-            (int)xcomm_utils_gettid(),
+            (int)platform_thrd_gettid(),
             levels[level],
             file,
             line);
@@ -184,7 +185,7 @@ void xcomm_logger_log(
     if (!atomic_load(&logger.initialized)) {
         return;
     }
-    char* p = strrchr(file, XCOMM_PATH_SEPARATOR);
+    char* p = strrchr(file, PLATFORM_PATH_SEPARATOR);
 
     if (logger.level > level) {
         return;

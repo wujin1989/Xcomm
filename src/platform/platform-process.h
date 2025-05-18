@@ -23,6 +23,4 @@ _Pragma("once")
 
 #include "platform-types.h"
 
-extern int platform_utils_getcpus(void);
-extern platform_tid_t platform_utils_gettid(void);
-extern platform_pid_t platform_utils_getpid(void);
+extern platform_pid_t platform_process_getpid(void);

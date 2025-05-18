@@ -19,21 +19,28 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-time.h"
-#include "platform/platform-time.h"
+_Pragma("once")
 
-void xcomm_time_sleep(const uint32_t ms) {
-    platform_time_sleep(ms);
-}
+#include <stdint.h>
 
-void xcomm_time_localtime(const time_t* restrict time, struct tm* restrict tm) {
-    platform_time_localtime(time, tm);
-}
+#define xcomm_bswap(x)                               \
+    _Generic((x),                                    \
+        uint16_t: xcomm_bswap_u16,                   \
+        uint32_t: xcomm_bswap_u32,                   \
+        uint64_t: xcomm_bswap_u64,                   \
+        int16_t:  xcomm_bswap_i16,                   \
+        int32_t:  xcomm_bswap_i32,                   \
+        int64_t:  xcomm_bswap_i64,                   \
+        float:    xcomm_bswap_f32,                   \
+        double:   xcomm_bswap_f64                    \
+    )(x)
 
-uint64_t xcomm_time_now(void) {
-    struct timespec tsc;
-    if (!timespec_get(&tsc, TIME_UTC)) {
-        return 0;
-    }
-    return (tsc.tv_sec * (1000UL) + tsc.tv_nsec / (1000000UL));
-}
+/* used by internal */
+extern uint16_t xcomm_bswap_u16(uint16_t val);
+extern uint32_t xcomm_bswap_u32(uint32_t val);
+extern uint64_t xcomm_bswap_u64(uint64_t val);
+extern int16_t  xcomm_bswap_i16(int16_t val);
+extern int32_t  xcomm_bswap_i32(int32_t val);
+extern int64_t  xcomm_bswap_i64(int64_t val);
+extern float    xcomm_bswap_f32(float val);
+extern double   xcomm_bswap_f64(double val);

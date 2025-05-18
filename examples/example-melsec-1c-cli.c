@@ -28,9 +28,11 @@
 int main(void) {
     xcomm_dumper_config_t dumper_config = {
         .filename = NULL, 
-        .mode = XCOMM_DUMPER_MODE_FILE
+        .mode     = XCOMM_DUMPER_MODE_FILE,
+        .level    = XCOMM_DUMPER_LEVEL_DEBUG
     };
-    xcomm_dumper_init(&dumper_config);
+    xcomm_dumper.init(&dumper_config);
+
     xcomm_serial_config_t config = {
         .device   = "COM2",
         .baudrate = XCOMM_SERIAL_BAUDRATE_9600,
@@ -42,7 +44,7 @@ int main(void) {
     xcomm_melsec_device_t* device = 
         xcomm_melsec_1c.dial(&config, NULL, NULL);
 
-    float wf = 0.75f;
+   /* float wf = 0.75f;
     xcomm_melsec_1c.store_float(device, "D0000", wf);
 
     float rf;
@@ -53,8 +55,13 @@ int main(void) {
     xcomm_melsec_1c.store_string(device, "D0000", wstr, sizeof(wstr));
 
     char rstr[5];
-    xcomm_melsec_1c.load_string(device, "D0000", &rstr, sizeof(wstr));
-    assert(strcmp(rstr, wstr) == 0);
+    xcomm_melsec_1c.load_string(device, "D0000", rstr, sizeof(rstr));
+    assert(strcmp(rstr, wstr) == 0);*/
+
+    float rf;
+    xcomm_melsec_1c.load_float(device, "D0000", &rf);
+
+    printf("%f\n", rf);
 
     xcomm_melsec_1c.close(device);
     return 0;

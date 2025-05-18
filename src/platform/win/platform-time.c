@@ -24,7 +24,7 @@
 
 void platform_time_sleep(const uint32_t ms) {
     struct timespec ts;
-    ts.tv_sec = ms / 1000UL;
+    ts.tv_sec  = ms / 1000UL;
     ts.tv_nsec = (ms % 1000UL) * 1000000UL;
 
     thrd_sleep(&ts, NULL);
