@@ -28,13 +28,18 @@
 #include "xcomm-melsec-1c.h"
 #include "xcomm-melsec-common.h"
 
-typedef struct melsec_1c_device_ctx_s            melsec_1c_device_ctx_t;
-typedef struct melsec_1c_read_request_s          melsec_1c_read_request_t;
-typedef struct melsec_1c_read_response_s         melsec_1c_read_response_t;
-typedef struct melsec_1c_success_read_response_s melsec_1c_success_read_response_t;
-typedef struct melsec_1c_failure_read_response_s melsec_1c_failure_read_response_t;
-typedef struct melsec_1c_data_a_s                melsec_1c_data_a_t;
-typedef struct melsec_1c_data_b_s                melsec_1c_data_b_t;
+typedef struct melsec_1c_device_ctx_s             melsec_1c_device_ctx_t;
+typedef struct melsec_1c_read_request_s           melsec_1c_read_request_t;
+typedef struct melsec_1c_read_response_s          melsec_1c_read_response_t;
+typedef struct melsec_1c_write_request_s          melsec_1c_write_request_t;
+typedef struct melsec_1c_write_response_s         melsec_1c_write_response_t;
+typedef struct melsec_1c_success_read_response_s  melsec_1c_success_read_response_t;
+typedef struct melsec_1c_failure_read_response_s  melsec_1c_failure_read_response_t;
+typedef struct melsec_1c_success_write_response_s melsec_1c_success_write_response_t;
+typedef melsec_1c_failure_read_response_t         melsec_1c_failure_write_response_t;
+typedef struct melsec_1c_data_a_s                 melsec_1c_data_a_t;
+typedef struct melsec_1c_data_b_s                 melsec_1c_data_b_t;
+typedef struct melsec_1c_data_c_s                 melsec_1c_data_c_t;
 
 struct melsec_1c_device_ctx_s {
     char            stn_no[XCOMM_MELSEC_2_BYTE];
@@ -54,6 +59,22 @@ struct melsec_1c_read_request_s {
     uint8_t            instruction[XCOMM_MELSEC_2_BYTE];
     uint8_t            timewait;
     melsec_1c_data_a_t data_a;
+    uint8_t            checksum[XCOMM_MELSEC_2_BYTE];
+};
+
+struct melsec_1c_data_c_s {
+    uint8_t                      addr[XCOMM_MELSEC_5_BYTE];
+    uint8_t                      points[XCOMM_MELSEC_2_BYTE];
+    xcomm_melsec_byte_sequence_t buf;
+};
+
+struct melsec_1c_write_request_s {
+    uint8_t            enq;
+    uint8_t            stn_no[XCOMM_MELSEC_2_BYTE];
+    uint8_t            plc_no[XCOMM_MELSEC_2_BYTE];
+    uint8_t            instruction[XCOMM_MELSEC_2_BYTE];
+    uint8_t            timewait;
+    melsec_1c_data_c_t data_c;
     uint8_t            checksum[XCOMM_MELSEC_2_BYTE];
 };
 
@@ -81,6 +102,20 @@ struct melsec_1c_read_response_s {
     union {
         melsec_1c_success_read_response_t success;
         melsec_1c_failure_read_response_t failure;
+    };
+    bool status;
+};
+
+struct melsec_1c_success_write_response_s {
+    uint8_t ack;
+    uint8_t stn_no[XCOMM_MELSEC_2_BYTE];
+    uint8_t plc_no[XCOMM_MELSEC_2_BYTE];
+};
+
+struct melsec_1c_write_response_s {
+    union {
+        melsec_1c_success_write_response_t success;
+        melsec_1c_failure_write_response_t failure;
     };
     bool status;
 };
@@ -300,6 +335,63 @@ static inline void _melsec_1c_read_request_build(
     req->checksum[1] = checksum_ascii[1];
 }
 
+static inline void _melsec_1c_write_request_build(
+    uint8_t                       stn_no[XCOMM_MELSEC_2_BYTE],
+    uint8_t                       plc_no[XCOMM_MELSEC_2_BYTE],
+    xcomm_melsec_operate_t        op_code,
+    const char* restrict          addr,
+    uint8_t                       points,
+    xcomm_melsec_flexible_value_t val,
+    melsec_1c_write_request_t*    req) {
+    size_t  offset = 0;
+    uint8_t points_ascii[XCOMM_MELSEC_2_BYTE];
+    uint8_t checksum_ascii[XCOMM_MELSEC_2_BYTE];
+
+    if (op_code == XCOMM_MELSEC_B_OP) {
+        req->data_c.buf.size = points * XCOMM_MELSEC_CHARS_PER_B_POINT;
+    } else if (op_code == XCOMM_MELSEC_W_OP) {
+        req->data_c.buf.size = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
+    }
+    req->data_c.buf.data = malloc(req->data_c.buf.size);
+    if (!req->data_c.buf.data) {
+        return;
+    }
+    xcomm_melsec_value_to_ascii(
+        val, req->data_c.buf.data, req->data_c.buf.size, op_code);
+
+    req->enq = enq;
+    req->stn_no[0] = stn_no[0];
+    req->stn_no[1] = stn_no[1];
+    req->plc_no[0] = plc_no[0];
+    req->plc_no[1] = plc_no[1];
+    req->instruction[0] = (op_code == XCOMM_MELSEC_B_OP) ? br_instruction[0] : wr_instruction[0];
+    req->instruction[1] = (op_code == XCOMM_MELSEC_B_OP) ? br_instruction[1] : wr_instruction[1];
+    req->timewait = default_timewait;
+    memcpy(req->data_c.addr, addr, XCOMM_MELSEC_5_BYTE);
+
+    xcomm_melsec_byte_to_ascii(points, points_ascii);
+    req->data_c.points[0] = points_ascii[0];
+    req->data_c.points[1] = points_ascii[1];
+
+    uint8_t sum = 0;
+    sum += req->stn_no[0] + req->stn_no[1];
+    sum += req->plc_no[0] + req->plc_no[1];
+    sum += req->instruction[0] + req->instruction[1];
+    sum += req->timewait;
+    for (int i = 0; i < XCOMM_MELSEC_5_BYTE; ++i) {
+        sum += req->data_c.addr[i];
+    }
+    sum += req->data_c.points[0] + req->data_c.points[1];
+
+    for (size_t i = 0; i < req->data_c.buf.size; ++i) {
+        sum += req->data_c.buf.data[i];
+    }
+    xcomm_melsec_byte_to_ascii(sum, checksum_ascii);
+    memcpy(req->checksum, checksum_ascii, XCOMM_MELSEC_2_BYTE);
+
+    return;
+}
+
 static void _melsec_1c_read_response_parse(
     bool                           isstr,
     xcomm_melsec_operate_t         op_code,
@@ -340,14 +432,11 @@ static int _melsec_1c_load_value(
 
     size_t points = 0;
     if (op_code == XCOMM_MELSEC_B_OP) {
-        points = 
-            (len / XCOMM_MELSEC_CHARS_PER_B_POINT);
+        points = (len / XCOMM_MELSEC_CHARS_PER_B_POINT);
     }
     if (op_code == XCOMM_MELSEC_W_OP) {
-        points = 
-            (len / XCOMM_MELSEC_CHARS_PER_W_POINT);
+        points =  (len / XCOMM_MELSEC_CHARS_PER_W_POINT);
     }
-
     melsec_1c_read_request_t req = {0};
     _melsec_1c_read_request_build(
         ctx->stn_no, ctx->plc_no, op_code, addr, points, &req);
@@ -365,6 +454,58 @@ static int _melsec_1c_load_value(
     melsec_1c_read_response_t rsp;
     if (_melsec_1c_read_response_unmarshalling(&rsp_stm, &rsp) <
         0) {
+        free(req_stm.data);
+        free(rsp_stm.data);
+        return -1;
+    }
+    if (rsp.status) {
+        _melsec_1c_read_response_parse(isstr, op_code, &rsp, val);
+    } else {
+        xcomm_logw(
+            "received failure response: errcode=%02X%02X\n",
+            rsp.failure.errcode[0],
+            rsp.failure.errcode[1]);
+    }
+    if (rsp.status) {
+        free(rsp.success.data_b.buf.data);
+    }
+    free(req_stm.data);
+    free(rsp_stm.data);
+    return 0;
+}
+
+static int _melsec_1c_store_value(
+    xcomm_melsec_device_t*         device,
+    const char* restrict           addr,
+    xcomm_melsec_operate_t         op_code,
+    size_t                         len,
+    bool                           isstr,
+    xcomm_melsec_flexible_value_t  val) {
+    melsec_1c_device_ctx_t* ctx = device->opaque;
+
+    size_t points = 0;
+    if (op_code == XCOMM_MELSEC_B_OP) {
+        points = (len / XCOMM_MELSEC_CHARS_PER_B_POINT);
+    }
+    if (op_code == XCOMM_MELSEC_W_OP) {
+        points = (len / XCOMM_MELSEC_CHARS_PER_W_POINT);
+    }
+    melsec_1c_write_request_t req = {0};
+    _melsec_1c_write_request_build(
+        ctx->stn_no, ctx->plc_no, op_code, addr, points, val, &req);
+
+    xcomm_melsec_byte_sequence_t req_stm = {0};
+    if (_melsec_1c_read_request_marshalling(&req, &req_stm) < 0) {
+        free(req_stm.data);
+        return -1;
+    }
+    _melsec_1c_send_request(ctx->serial, req_stm.data, req_stm.size);
+
+    xcomm_melsec_byte_sequence_t rsp_stm = {0};
+    _melsec_1c_recv_response(ctx->serial, len, &rsp_stm);
+
+    melsec_1c_read_response_t rsp;
+    if (_melsec_1c_read_response_unmarshalling(&rsp_stm, &rsp) < 0) {
         free(req_stm.data);
         free(rsp_stm.data);
         return -1;
@@ -584,7 +725,12 @@ int xcomm_melsec_1c_load_string(
 
 int xcomm_melsec_1c_store_bool(
     xcomm_melsec_device_t* device, const char* restrict addr, bool src) {
+    size_t points = 1;
+    size_t length = points * XCOMM_MELSEC_CHARS_PER_B_POINT;
+    xcomm_melsec_flexible_value_t val = {.b = src};
 
+    return _melsec_1c_store_value(
+        device, addr, XCOMM_MELSEC_B_OP, length, false, val);
 }
 
 int xcomm_melsec_1c_store_int16(
