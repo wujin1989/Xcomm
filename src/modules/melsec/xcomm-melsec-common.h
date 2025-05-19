@@ -93,6 +93,36 @@ struct xcomm_melsec_value_s {
 extern void xcomm_melsec_value_to_bytes(xcomm_melsec_operate_t op_code, xcomm_melsec_value_t* val, xcomm_melsec_byte_sequence_t* bytes);
 extern void xcomm_melsec_bytes_to_value(xcomm_melsec_operate_t op_code, xcomm_melsec_byte_sequence_t* bytes, xcomm_melsec_value_t* val);
 
+#define xcomm_melsec_value_to_bit_chars(val, chars)                        \
+    _Generic(                                                              \
+        (val),                                                             \
+        bool:     xcomm_melsec_bool_to_bit_chars,                          \
+        int8_t:   xcomm_melsec_int8_to_bit_chars,                          \
+        int16_t:  xcomm_melsec_int16_to_bit_chars,                         \
+        int32_t:  xcomm_melsec_int32_to_bit_chars,                         \
+        int64_t:  xcomm_melsec_int64_to_bit_chars,                         \
+        uint8_t:  xcomm_melsec_uint8_to_bit_chars,                         \
+        uint16_t: xcomm_melsec_uint16_to_bit_chars,                        \
+        uint32_t: xcomm_melsec_uint32_to_bit_chars,                        \
+        uint64_t: xcomm_melsec_uint64_to_bit_chars,                        \
+        float:    xcomm_melsec_float_to_bit_chars,                         \
+        double:   xcomm_melsec_double_to_bit_chars                         \
+    )(val, chars)
+
+#define xcomm_melsec_value_to_nibble_chars(val, chars)                     \
+    _Generic(                                                              \
+        (val),                                                             \
+        int8_t:   xcomm_melsec_int8_to_nibble_chars,                       \
+        int16_t:  xcomm_melsec_int16_to_nibble_chars,                      \
+        int32_t:  xcomm_melsec_int32_to_nibble_chars,                      \
+        int64_t:  xcomm_melsec_int64_to_nibble_chars,                      \
+        uint8_t:  xcomm_melsec_uint8_to_nibble_chars,                      \
+        uint16_t: xcomm_melsec_uint16_to_nibble_chars,                     \
+        uint32_t: xcomm_melsec_uint32_to_nibble_chars,                     \
+        uint64_t: xcomm_melsec_uint64_to_nibble_chars,                     \
+        float:    xcomm_melsec_float_to_nibble_chars,                      \
+        double:   xcomm_melsec_double_to_nibble_chars                      \
+    )(val, chars)
 
 /**
  * used by internal.

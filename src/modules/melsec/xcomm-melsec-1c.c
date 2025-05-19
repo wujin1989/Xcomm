@@ -128,6 +128,7 @@ static const uint8_t enq = 0x05;
 static const uint8_t stx = 0x02;
 static const uint8_t etx = 0x03;
 static const uint8_t nak = 0x15;
+static const uint8_t ack = 0x06;
 
 static const uint8_t br_instruction[] = {0x45, 0x52};
 static const uint8_t wr_instruction[] = {0x57, 0x52};
@@ -175,6 +176,52 @@ static inline int _melsec_1c_read_request_marshalling(
     return 0;
 }
 
+static inline int _melsec_1c_write_request_marshalling(
+    melsec_1c_write_request_t* req, xcomm_melsec_byte_sequence_t* stm) {
+    size_t size = XCOMM_MELSEC_1_BYTE  + // ENQ
+                  XCOMM_MELSEC_2_BYTE  + // STATION
+                  XCOMM_MELSEC_2_BYTE  + // PLC
+                  XCOMM_MELSEC_2_BYTE  + // INSTRUCTION
+                  XCOMM_MELSEC_1_BYTE  + // TIMEWAIT
+                  XCOMM_MELSEC_5_BYTE  + // START_ADDRESS
+                  XCOMM_MELSEC_2_BYTE  + // POINTS
+                  req->data_c.buf.size + // DATA_C
+                  XCOMM_MELSEC_2_BYTE;  // CHECKSUM
+
+    uint8_t* data = malloc(size);
+    if (!data) {
+        stm->data = NULL;
+        stm->size = 0;
+        return -1;
+    }
+    size_t offset = 0;
+    data[offset++] = req->enq;
+    data[offset++] = req->stn_no[0];
+    data[offset++] = req->stn_no[1];
+    data[offset++] = req->plc_no[0];
+    data[offset++] = req->plc_no[1];
+    data[offset++] = req->instruction[0];
+    data[offset++] = req->instruction[1];
+    data[offset++] = req->timewait;
+    data[offset++] = req->data_c.addr[0];
+    data[offset++] = req->data_c.addr[1];
+    data[offset++] = req->data_c.addr[2];
+    data[offset++] = req->data_c.addr[3];
+    data[offset++] = req->data_c.addr[4];
+    data[offset++] = req->data_c.points[0];
+    data[offset++] = req->data_c.points[1];
+    
+    memcpy(data + offset, req->data_c.buf.data, req->data_c.buf.size);
+    offset += req->data_c.buf.size;
+
+    data[offset++] = req->checksum[0];
+    data[offset++] = req->checksum[1];
+
+    stm->data = data;
+    stm->size = size;
+    return 0;
+}
+
 static inline void
 _melsec_1c_send_request(xcomm_serial_t* serial, uint8_t* data, size_t size) {
     char reqframe[XCOMM_MELSEC_512_BYTE] = {0};
@@ -203,7 +250,7 @@ static void _melsec_1c_recv_response(
             XCOMM_MELSEC_2_BYTE +
             XCOMM_MELSEC_2_BYTE + 
             XCOMM_MELSEC_2_BYTE;
-    } else {
+    } else if (fst == stx){
         rsp_stm->size = 
             XCOMM_MELSEC_1_BYTE + 
             XCOMM_MELSEC_2_BYTE +
@@ -211,6 +258,14 @@ static void _melsec_1c_recv_response(
             size + 
             XCOMM_MELSEC_1_BYTE +
             XCOMM_MELSEC_2_BYTE;
+    } else if (fst == ack) {
+        rsp_stm->size =
+            XCOMM_MELSEC_1_BYTE + 
+            XCOMM_MELSEC_2_BYTE + 
+            XCOMM_MELSEC_2_BYTE; 
+    } else {
+        xcomm_loge("unknown response.\n");
+        return;
     }
     rsp_stm->data = malloc(rsp_stm->size);
     if (!rsp_stm->data) {
@@ -281,6 +336,36 @@ static int _melsec_1c_read_response_unmarshalling(
     return 0;
 }
 
+static int _melsec_1c_write_response_unmarshalling(
+    xcomm_melsec_byte_sequence_t* rsp_stm, melsec_1c_write_response_t* rsp) {
+    if (!rsp_stm || !rsp_stm->data || rsp_stm->size == 0) {
+        return -1;
+    }
+    if (rsp_stm->data[0] == ack) {
+        size_t offset = 0;
+        rsp->success.ack = rsp_stm->data[offset++];
+        rsp->success.stn_no[0] = rsp_stm->data[offset++];
+        rsp->success.stn_no[1] = rsp_stm->data[offset++];
+        rsp->success.plc_no[0] = rsp_stm->data[offset++];
+        rsp->success.plc_no[1] = rsp_stm->data[offset++];
+        rsp->status = true;
+    } else if (rsp_stm->data[0] == nak) {
+        size_t offset = 0;
+        rsp->failure.nak = rsp_stm->data[offset++];
+        rsp->failure.stn_no[0] = rsp_stm->data[offset++];
+        rsp->failure.stn_no[1] = rsp_stm->data[offset++];
+        rsp->failure.plc_no[0] = rsp_stm->data[offset++];
+        rsp->failure.plc_no[1] = rsp_stm->data[offset++];
+        rsp->failure.errcode[0] = rsp_stm->data[offset++];
+        rsp->failure.errcode[1] = rsp_stm->data[offset++];
+        rsp->status = false;
+    } else {
+        xcomm_loge("unknown response error.\n");
+        return -1;
+    }
+    return 0;
+}
+
 static inline void _melsec_1c_read_request_build(
     uint8_t                   stn_no[XCOMM_MELSEC_2_BYTE],
     uint8_t                   plc_no[XCOMM_MELSEC_2_BYTE],
@@ -289,13 +374,13 @@ static inline void _melsec_1c_read_request_build(
     uint8_t                   points,
     melsec_1c_read_request_t* req) {
     size_t  offset = 0;
-    uint8_t points_ascii[XCOMM_MELSEC_2_BYTE];
-    uint8_t checksum_ascii[XCOMM_MELSEC_2_BYTE];
+    uint8_t points_chars[XCOMM_MELSEC_2_BYTE];
+    uint8_t checksum_chars[XCOMM_MELSEC_2_BYTE];
     uint8_t checksum_buf
         [XCOMM_MELSEC_2_BYTE + XCOMM_MELSEC_2_BYTE + XCOMM_MELSEC_2_BYTE +
          XCOMM_MELSEC_1_BYTE + XCOMM_MELSEC_5_BYTE + XCOMM_MELSEC_2_BYTE];
 
-    xcomm_melsec_byte_to_ascii(points, points_ascii);
+    xcomm_melsec_value_to_nibble_chars(points, points_chars);
 
     req->enq = enq;
     req->stn_no[0] = stn_no[0];
@@ -308,8 +393,8 @@ static inline void _melsec_1c_read_request_build(
 
     memcpy(req->data_a.addr, addr, strlen(addr));
 
-    req->data_a.points[0] = points_ascii[0];
-    req->data_a.points[1] = points_ascii[1];
+    req->data_a.points[0] = points_chars[0];
+    req->data_a.points[1] = points_chars[1];
 
     checksum_buf[offset++] = req->stn_no[0];
     checksum_buf[offset++] = req->stn_no[1];
@@ -329,10 +414,10 @@ static inline void _melsec_1c_read_request_build(
     for (size_t i = 0; i < sizeof(checksum_buf); i++) {
         sum += checksum_buf[i];
     }
-    xcomm_melsec_byte_to_ascii(sum, checksum_ascii);
+    xcomm_melsec_value_to_nibble_chars(sum, checksum_chars);
 
-    req->checksum[0] = checksum_ascii[0];
-    req->checksum[1] = checksum_ascii[1];
+    req->checksum[0] = checksum_chars[0];
+    req->checksum[1] = checksum_chars[1];
 }
 
 static inline void _melsec_1c_write_request_build(
@@ -344,8 +429,8 @@ static inline void _melsec_1c_write_request_build(
     xcomm_melsec_value_t       val,
     melsec_1c_write_request_t* req) {
     size_t  offset = 0;
-    uint8_t points_ascii[XCOMM_MELSEC_2_BYTE];
-    uint8_t checksum_ascii[XCOMM_MELSEC_2_BYTE];
+    uint8_t points_chars[XCOMM_MELSEC_2_BYTE];
+    uint8_t checksum_chars[XCOMM_MELSEC_2_BYTE];
 
     if (op_code == XCOMM_MELSEC_B_OP) {
         req->data_c.buf.size = points * XCOMM_MELSEC_CHARS_PER_B_POINT;
@@ -372,9 +457,11 @@ static inline void _melsec_1c_write_request_build(
     req->timewait = default_timewait;
     memcpy(req->data_c.addr, addr, XCOMM_MELSEC_5_BYTE);
 
-    xcomm_melsec_byte_to_ascii(points, points_ascii);
-    req->data_c.points[0] = points_ascii[0];
-    req->data_c.points[1] = points_ascii[1];
+    xcomm_melsec_value_to_nibble_chars(points, points_chars);
+    req->data_c.points[0] = points_chars[0];
+    req->data_c.points[1] = points_chars[1];
+
+    memcpy(req->data_c.buf.data, bytes.data, req->data_c.buf.size);
 
     uint8_t sum = 0;
     sum += req->stn_no[0] + req->stn_no[1];
@@ -389,8 +476,8 @@ static inline void _melsec_1c_write_request_build(
     for (size_t i = 0; i < req->data_c.buf.size; ++i) {
         sum += req->data_c.buf.data[i];
     }
-    xcomm_melsec_byte_to_ascii(sum, checksum_ascii);
-    memcpy(req->checksum, checksum_ascii, XCOMM_MELSEC_2_BYTE);
+    xcomm_melsec_value_to_nibble_chars(sum, checksum_chars);
+    memcpy(req->checksum, checksum_chars, XCOMM_MELSEC_2_BYTE);
 
     return;
 }
@@ -491,7 +578,7 @@ static int _melsec_1c_store_value(
         ctx->stn_no, ctx->plc_no, op_code, addr, points, val, &req);
 
     xcomm_melsec_byte_sequence_t req_stm = {0};
-    if (_melsec_1c_read_request_marshalling(&req, &req_stm) < 0) {
+    if (_melsec_1c_write_request_marshalling(&req, &req_stm) < 0) {
         free(req_stm.data);
         return -1;
     }
@@ -500,22 +587,19 @@ static int _melsec_1c_store_value(
     xcomm_melsec_byte_sequence_t rsp_stm = {0};
     _melsec_1c_recv_response(ctx->serial, len, &rsp_stm);
 
-    melsec_1c_read_response_t rsp;
-    if (_melsec_1c_read_response_unmarshalling(&rsp_stm, &rsp) < 0) {
+    melsec_1c_write_response_t rsp;
+    if (_melsec_1c_write_response_unmarshalling(&rsp_stm, &rsp) < 0) {
         free(req_stm.data);
         free(rsp_stm.data);
         return -1;
     }
     if (rsp.status) {
-        _melsec_1c_read_response_parse(isstr, op_code, &rsp, val);
+        xcomm_logi("received success response\n");
     } else {
         xcomm_logw(
             "received failure response: errcode=%02X%02X\n",
             rsp.failure.errcode[0],
             rsp.failure.errcode[1]);
-    }
-    if (rsp.status) {
-        free(rsp.success.data_b.buf.data);
     }
     free(req_stm.data);
     free(rsp_stm.data);
@@ -743,6 +827,7 @@ int xcomm_melsec_1c_store_bool(
     xcomm_melsec_device_t* device, const char* restrict addr, bool src) {
     size_t points = 1;
     size_t length = points * XCOMM_MELSEC_CHARS_PER_B_POINT;
+
     xcomm_melsec_value_t val = {
         .type = XCOMM_MELSEC_BOOL, 
         .b = src
@@ -753,35 +838,106 @@ int xcomm_melsec_1c_store_bool(
 
 int xcomm_melsec_1c_store_int16(
     xcomm_melsec_device_t* device, const char* restrict addr, int16_t src) {
+    size_t points = 1;
+    size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
+
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_INT16, 
+        .i16 = src
+    };
+    return _melsec_1c_store_value(
+        device, addr, XCOMM_MELSEC_W_OP, length, false, val);
 }
 
 int xcomm_melsec_1c_store_uint16(
     xcomm_melsec_device_t* device, const char* restrict addr, uint16_t src) {
+    size_t points = 1;
+    size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
+
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_UINT16, 
+        .u16 = src
+    };
+    return _melsec_1c_store_value(
+        device, addr, XCOMM_MELSEC_W_OP, length, false, val);
 }
 
 int xcomm_melsec_1c_store_int32(
     xcomm_melsec_device_t* device, const char* restrict addr, int32_t src) {
+    size_t points = 2;
+    size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
 
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_INT32, 
+        .i32 = src
+    };
+    return _melsec_1c_store_value(
+        device, addr, XCOMM_MELSEC_W_OP, length, false, val);
 }
 
 int xcomm_melsec_1c_store_uint32(
     xcomm_melsec_device_t* device, const char* restrict addr, uint32_t src) {
+    size_t points = 2;
+    size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
+
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_UINT32, 
+        .u32 = src
+    };
+    return _melsec_1c_store_value(
+        device, addr, XCOMM_MELSEC_W_OP, length, false, val);
 }
 
 int xcomm_melsec_1c_store_int64(
     xcomm_melsec_device_t* device, const char* restrict addr, int64_t src) {
+    size_t points = 4;
+    size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
+
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_INT64, 
+        .i64 = src
+    };
+    return _melsec_1c_store_value(
+        device, addr, XCOMM_MELSEC_W_OP, length, false, val);
 }
 
 int xcomm_melsec_1c_store_uint64(
     xcomm_melsec_device_t* device, const char* restrict addr, uint64_t src) {
+    size_t points = 4;
+    size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
+
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_UINT64, 
+        .u64 = src
+    };
+    return _melsec_1c_store_value(
+        device, addr, XCOMM_MELSEC_W_OP, length, false, val);
 }
 
 int xcomm_melsec_1c_store_float(
     xcomm_melsec_device_t* device, const char* restrict addr, float src) {
+    size_t points = 2;
+    size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
+
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_FLOAT, 
+        .f32 = src
+    };
+    return _melsec_1c_store_value(
+        device, addr, XCOMM_MELSEC_W_OP, length, false, val);
 }
 
 int xcomm_melsec_1c_store_double(
     xcomm_melsec_device_t* device, const char* restrict addr, double src) {
+    size_t points = 4;
+    size_t length = points * XCOMM_MELSEC_CHARS_PER_W_POINT;
+
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_DOUBLE, 
+        .f64 = src
+    };
+    return _melsec_1c_store_value(
+        device, addr, XCOMM_MELSEC_W_OP, length, false, val);
 }
 
 int xcomm_melsec_1c_store_string(
@@ -789,5 +945,12 @@ int xcomm_melsec_1c_store_string(
     const char* restrict   addr,
     char*                  src,
     int                    slen) {
+    size_t length = slen;
 
+    xcomm_melsec_value_t val = {
+        .type = XCOMM_MELSEC_STRING, 
+        .str = src
+    };
+    return _melsec_1c_store_value(
+        device, addr, XCOMM_MELSEC_W_OP, length, false, val);
 }

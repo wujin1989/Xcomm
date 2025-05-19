@@ -102,7 +102,7 @@ void xcomm_melsec_double_to_bit_chars(
 void xcomm_melsec_uint8_to_nibble_chars(
     uint8_t value, uint8_t nibble_chars[XCOMM_MELSEC_2_BYTE]) {
     nibble_chars[0] = hex_char_table[(value >> 4) & 0x0F];
-    nibble_chars[1] = hex_char_table[value & 0x0F];
+    nibble_chars[1] = hex_char_table[value        & 0x0F];
 }
 
 void xcomm_melsec_int8_to_nibble_chars(
@@ -189,39 +189,116 @@ void xcomm_melsec_value_to_bytes(
     xcomm_melsec_byte_sequence_t* bytes) {
     if (op_code == XCOMM_MELSEC_B_OP) {
         switch (val->type) {
-        case XCOMM_MELSEC_BOOL:
+        case XCOMM_MELSEC_BOOL: {
+            char bit_chars[XCOMM_MELSEC_2_BYTE];
+            xcomm_melsec_value_to_bit_chars(val->b, bit_chars);
+            memcpy(bytes->data, bit_chars, bytes->size);
             break;
-        case XCOMM_MELSEC_INT16:
-        case XCOMM_MELSEC_UINT16:
+        }
+        case XCOMM_MELSEC_INT16: {
+            char bit_chars[XCOMM_MELSEC_4_BYTE];
+            xcomm_melsec_value_to_bit_chars(val->i16, bit_chars);
+            memcpy(bytes->data, bit_chars, bytes->size);
             break;
-        case XCOMM_MELSEC_INT32:
-        case XCOMM_MELSEC_UINT32:
-        case XCOMM_MELSEC_FLOAT:
+        }
+        case XCOMM_MELSEC_UINT16: {
+            char bit_chars[XCOMM_MELSEC_4_BYTE];
+            xcomm_melsec_value_to_bit_chars(val->u16, bit_chars);
+            memcpy(bytes->data, bit_chars, bytes->size);
             break;
-        case XCOMM_MELSEC_INT64:
-        case XCOMM_MELSEC_UINT64:
-        case XCOMM_MELSEC_DOUBLE:
+        }
+        case XCOMM_MELSEC_INT32: {
+            char bit_chars[XCOMM_MELSEC_8_BYTE];
+            xcomm_melsec_value_to_bit_chars(val->i32, bit_chars);
+            memcpy(bytes->data, bit_chars, bytes->size);
             break;
-        case XCOMM_MELSEC_STRING:
+        }
+        case XCOMM_MELSEC_UINT32: {
+            char bit_chars[XCOMM_MELSEC_8_BYTE];
+            xcomm_melsec_value_to_bit_chars(val->i32, bit_chars);
+            memcpy(bytes->data, bit_chars, bytes->size);
             break;
+        }
+        case XCOMM_MELSEC_FLOAT: {
+            char bit_chars[XCOMM_MELSEC_8_BYTE];
+            xcomm_melsec_value_to_bit_chars(val->f32, bit_chars);
+            memcpy(bytes->data, bit_chars, bytes->size);
+            break;
+        }
+        case XCOMM_MELSEC_INT64: {
+            char bit_chars[XCOMM_MELSEC_16_BYTE];
+            xcomm_melsec_value_to_bit_chars(val->i64, bit_chars);
+            memcpy(bytes->data, bit_chars, bytes->size);
+            break;
+        }
+        case XCOMM_MELSEC_UINT64: {
+            char bit_chars[XCOMM_MELSEC_16_BYTE];
+            xcomm_melsec_value_to_bit_chars(val->u64, bit_chars);
+            memcpy(bytes->data, bit_chars, bytes->size);
+            break;
+        }
+        case XCOMM_MELSEC_DOUBLE: {
+            char bit_chars[XCOMM_MELSEC_16_BYTE];
+            xcomm_melsec_value_to_bit_chars(val->f64, bit_chars);
+            memcpy(bytes->data, bit_chars, bytes->size);
+            break;
+        }
         default:
             break;
         }
     }
     if (op_code == XCOMM_MELSEC_W_OP) {
         switch (val->type) {
-        case XCOMM_MELSEC_INT16:
-        case XCOMM_MELSEC_UINT16:
+        case XCOMM_MELSEC_INT16: {
+            char nibble_chars[XCOMM_MELSEC_4_BYTE];
+            xcomm_melsec_value_to_nibble_chars(val->i16, nibble_chars);
+            memcpy(bytes->data, nibble_chars, bytes->size);
             break;
-        case XCOMM_MELSEC_INT32:
-        case XCOMM_MELSEC_UINT32:
-        case XCOMM_MELSEC_FLOAT:
+        }
+        case XCOMM_MELSEC_UINT16: {
+            char nibble_chars[XCOMM_MELSEC_4_BYTE];
+            xcomm_melsec_value_to_nibble_chars(val->u16, nibble_chars);
+            memcpy(bytes->data, nibble_chars, bytes->size);
             break;
-        case XCOMM_MELSEC_INT64:
-        case XCOMM_MELSEC_UINT64:
-        case XCOMM_MELSEC_DOUBLE:
+        }
+        case XCOMM_MELSEC_INT32: {
+            char nibble_chars[XCOMM_MELSEC_8_BYTE];
+            xcomm_melsec_value_to_nibble_chars(val->i32, nibble_chars);
+            memcpy(bytes->data, nibble_chars, bytes->size);
             break;
+        }
+        case XCOMM_MELSEC_UINT32: {
+            char nibble_chars[XCOMM_MELSEC_8_BYTE];
+            xcomm_melsec_value_to_nibble_chars(val->u32, nibble_chars);
+            memcpy(bytes->data, nibble_chars, bytes->size);
+            break;
+        }
+        case XCOMM_MELSEC_FLOAT: {
+            char nibble_chars[XCOMM_MELSEC_8_BYTE];
+            xcomm_melsec_value_to_nibble_chars(val->f32, nibble_chars);
+            memcpy(bytes->data, nibble_chars, bytes->size);
+            break;
+        }
+        case XCOMM_MELSEC_INT64: {
+            char nibble_chars[XCOMM_MELSEC_16_BYTE];
+            xcomm_melsec_value_to_nibble_chars(val->i64, nibble_chars);
+            memcpy(bytes->data, nibble_chars, bytes->size);
+            break;
+        }
+        case XCOMM_MELSEC_UINT64: {
+            char nibble_chars[XCOMM_MELSEC_16_BYTE];
+            xcomm_melsec_value_to_nibble_chars(val->u64, nibble_chars);
+            memcpy(bytes->data, nibble_chars, bytes->size);
+            break;
+        }
+        case XCOMM_MELSEC_DOUBLE: {
+            char nibble_chars[XCOMM_MELSEC_16_BYTE];
+            xcomm_melsec_value_to_nibble_chars(val->f64, nibble_chars);
+            memcpy(bytes->data, nibble_chars, bytes->size);
+            break;
+        }
         case XCOMM_MELSEC_STRING:
+            memcpy(bytes->data, val->str, bytes->size);
             break;
         default:
             break;
