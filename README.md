@@ -14,7 +14,7 @@ The compiler needs to support C11.
     cmake --install out 
 
 # Documentation
-Reference docs Directory.
+Reference docs.
 
 # License
 MIT License
