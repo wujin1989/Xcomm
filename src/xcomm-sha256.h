@@ -22,6 +22,7 @@
 _Pragma("once")
 
 #include <stdint.h>
+#include <stddef.h>
 
 typedef struct xcomm_sha256_s xcomm_sha256_t;
 

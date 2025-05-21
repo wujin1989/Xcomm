@@ -22,6 +22,7 @@
 #include <stdio.h>
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 #include "xcomm-melsec-common.h"
 
 static const char bit_char_table[] = {'0', '1'};
@@ -190,55 +191,55 @@ void xcomm_melsec_value_to_bytes(
     if (op_code == XCOMM_MELSEC_B_OP) {
         switch (val->type) {
         case XCOMM_MELSEC_BOOL: {
-            char bit_chars[XCOMM_MELSEC_2_BYTE];
+            char bit_chars[XCOMM_MELSEC_1_BYTE];
             xcomm_melsec_value_to_bit_chars(val->b, bit_chars);
             memcpy(bytes->data, bit_chars, bytes->size);
             break;
         }
         case XCOMM_MELSEC_INT16: {
-            char bit_chars[XCOMM_MELSEC_4_BYTE];
+            char bit_chars[XCOMM_MELSEC_16_BYTE];
             xcomm_melsec_value_to_bit_chars(val->i16, bit_chars);
             memcpy(bytes->data, bit_chars, bytes->size);
             break;
         }
         case XCOMM_MELSEC_UINT16: {
-            char bit_chars[XCOMM_MELSEC_4_BYTE];
+            char bit_chars[XCOMM_MELSEC_16_BYTE];
             xcomm_melsec_value_to_bit_chars(val->u16, bit_chars);
             memcpy(bytes->data, bit_chars, bytes->size);
             break;
         }
         case XCOMM_MELSEC_INT32: {
-            char bit_chars[XCOMM_MELSEC_8_BYTE];
+            char bit_chars[XCOMM_MELSEC_32_BYTE];
             xcomm_melsec_value_to_bit_chars(val->i32, bit_chars);
             memcpy(bytes->data, bit_chars, bytes->size);
             break;
         }
         case XCOMM_MELSEC_UINT32: {
-            char bit_chars[XCOMM_MELSEC_8_BYTE];
+            char bit_chars[XCOMM_MELSEC_32_BYTE];
             xcomm_melsec_value_to_bit_chars(val->i32, bit_chars);
             memcpy(bytes->data, bit_chars, bytes->size);
             break;
         }
         case XCOMM_MELSEC_FLOAT: {
-            char bit_chars[XCOMM_MELSEC_8_BYTE];
+            char bit_chars[XCOMM_MELSEC_32_BYTE];
             xcomm_melsec_value_to_bit_chars(val->f32, bit_chars);
             memcpy(bytes->data, bit_chars, bytes->size);
             break;
         }
         case XCOMM_MELSEC_INT64: {
-            char bit_chars[XCOMM_MELSEC_16_BYTE];
+            char bit_chars[XCOMM_MELSEC_64_BYTE];
             xcomm_melsec_value_to_bit_chars(val->i64, bit_chars);
             memcpy(bytes->data, bit_chars, bytes->size);
             break;
         }
         case XCOMM_MELSEC_UINT64: {
-            char bit_chars[XCOMM_MELSEC_16_BYTE];
+            char bit_chars[XCOMM_MELSEC_64_BYTE];
             xcomm_melsec_value_to_bit_chars(val->u64, bit_chars);
             memcpy(bytes->data, bit_chars, bytes->size);
             break;
         }
         case XCOMM_MELSEC_DOUBLE: {
-            char bit_chars[XCOMM_MELSEC_16_BYTE];
+            char bit_chars[XCOMM_MELSEC_64_BYTE];
             xcomm_melsec_value_to_bit_chars(val->f64, bit_chars);
             memcpy(bytes->data, bit_chars, bytes->size);
             break;

@@ -23,4 +23,4 @@ _Pragma("once")
 
 #include "platform-types.h"
 
-extern platform_tid_t platform_utils_gettid(void);
+extern platform_tid_t platform_thrd_gettid(void);

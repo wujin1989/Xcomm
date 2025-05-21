@@ -22,7 +22,7 @@
 #include "platform/platform-thrd.h"
 
 #if defined(__APPLE__)
-platform_tid_t platform_utils_gettid(void) {
+platform_tid_t platform_thrd_gettid(void) {
     uint64_t tid;
     pthread_threadid_np(NULL, &tid);
     return tid;
@@ -30,7 +30,7 @@ platform_tid_t platform_utils_gettid(void) {
 #endif
 
 #if defined(__linux__)
-platform_tid_t platform_utils_gettid(void) {
+platform_tid_t platform_thrd_gettid(void) {
     return syscall(SYS_gettid);
 }
 #endif
