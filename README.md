@@ -1,5 +1,5 @@
 # Overview
-Xcomm is a cross-platform communication library supporting multiple protocols (industrial & common standards), offering client and partial server interfaces. It encapsulates diverse protocols into a unified API, simplifying data interaction and system integration. With modular design and abstraction of protocol complexities, Xcomm enables efficient cross-platform, cross-protocol communication with minimal code, enhancing development speed and system compatibility.
+Xcomm is a cross-platform communication library. It adopts a modular design and abstracts the complexity of protocols, achieving efficient cross-platform and cross-protocol communication with minimal code, thereby improving development speed and system compatibility.
 
 # Feature
 - Cross-platform Compatibility
@@ -20,7 +20,7 @@ Reference docs.
 MIT License
 
 ====
-Copyright (c) 2025, Archermind Tech. Co., Ltd. <marketing@archermind.com>
+Copyright (c) 2025, Wu Jin <wujin.developer@gmail.com>
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to

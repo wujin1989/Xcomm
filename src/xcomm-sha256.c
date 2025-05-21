@@ -12,7 +12,7 @@
  * http://csrc.nist.gov/publications/fips/fips180-2/fips180-2withchangenotice.pdf
  *              This implementation uses little endian byte order.
  *
- *  Copyright (c) 2025, Archermind Tech. Co., Ltd. <marketing@archermind.com>
+ *  Copyright (c) 2025, Wu Jin <wujin.developer@gmail.com>
  *
  *  Permission is hereby granted, free of charge, to any person obtaining a copy
  *  of this software and associated documentation files (the "Software"), to
