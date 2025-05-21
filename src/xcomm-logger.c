@@ -66,9 +66,9 @@ static int _logger_build_message(
     size_t               buflen,
     xcomm_logger_level_t level,
     const char* restrict file,
-    int line,
+    int                  line,
     const char* restrict fmt,
-    va_list v) {
+    va_list              v) {
     int             ret;
     struct tm       tm;
     struct timespec tsc;
