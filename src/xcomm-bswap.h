@@ -35,7 +35,7 @@ _Pragma("once")
         double:   xcomm_bswap_f64                    \
     )(x)
 
-/* used by internal 
+/* used by internal */
 extern uint16_t xcomm_bswap_u16(uint16_t val);
 extern uint32_t xcomm_bswap_u32(uint32_t val);
 extern uint64_t xcomm_bswap_u64(uint64_t val);
@@ -43,4 +43,4 @@ extern int16_t  xcomm_bswap_i16(int16_t val);
 extern int32_t  xcomm_bswap_i32(int32_t val);
 extern int64_t  xcomm_bswap_i64(int64_t val);
 extern float    xcomm_bswap_f32(float val);
-    extern double   xcomm_bswap_f64(double val);*/
+extern double   xcomm_bswap_f64(double val);
