@@ -26,3 +26,17 @@ int platform_info_getcpus(void) {
     GetSystemInfo(&si);
     return (int)si.dwNumberOfProcessors;
 }
+
+platform_tid_t platform_info_gettid(void) {
+    return GetCurrentThreadId();
+}
+
+platform_pid_t platform_info_getpid(void) {
+    return GetCurrentProcessId();
+}
+
+void platform_info_getlocaltime(
+    const time_t* restrict time, struct tm* restrict tm) {
+    _tzset();
+    localtime_s(tm, time);
+}

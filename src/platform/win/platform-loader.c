@@ -19,6 +19,11 @@
  *  IN THE SOFTWARE.
  */
 
+#include <string.h>
+#include <stdlib.h>
+#include <locale.h>
+#include <wchar.h>
+
 #include "platform/platform-loader.h"
 
 void* platform_loader_create(char* restrict file) {
@@ -27,7 +32,19 @@ void* platform_loader_create(char* restrict file) {
             file[i] = '\\';
         }
     }
-    return (void*)LoadLibrary(TEXT(file));
+    int wlen = MultiByteToWideChar(GetACP(), 0, file, -1, NULL, 0);
+    if (wlen <= 0) {
+        return NULL;
+    }
+    wchar_t* wfile = (wchar_t*)malloc(wlen * sizeof(wchar_t));
+    if (!wfile) {
+        return NULL;
+    }
+    MultiByteToWideChar(GetACP(), 0, file, -1, wfile, wlen);
+
+    HMODULE hModule = LoadLibraryW(wfile);
+    free(wfile);
+    return (void*)hModule;
 }
 
 void* platform_loader_load(void* module, const char* restrict func) {

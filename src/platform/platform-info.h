@@ -23,4 +23,7 @@ _Pragma("once")
 
 #include "platform-types.h"
 
-extern int platform_info_getcpus(void);
+extern platform_tid_t platform_info_gettid(void);
+extern platform_pid_t platform_info_getpid(void);
+extern int            platform_info_getcpus(void);
+extern void           platform_info_getlocaltime(const time_t* restrict time, struct tm* restrict tm);

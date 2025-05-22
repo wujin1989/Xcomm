@@ -19,8 +19,10 @@
  *  IN THE SOFTWARE.
  */
 
-#include "platform/platform-process.h"
+#include <stdio.h>
+#include "xcomm-bswap.h"
 
-platform_pid_t platform_process_getpid(void) {
-    return GetCurrentProcessId();
+int main(void) {
+
+    return 0;
 }

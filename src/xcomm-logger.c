@@ -23,8 +23,7 @@
 #include "xcomm-logger.h"
 #include "xcomm-thrdpool.h"
 #include "platform/platform-io.h"
-#include "platform/platform-time.h"
-#include "platform/platform-thrd.h"
+#include "platform/platform-info.h"
 
 #define BUFSIZE 4096
 
@@ -77,7 +76,7 @@ static int _logger_build_message(
         ret = sprintf(buf, "%s:%d ", file, line);
     } else {
         timespec_get(&tsc, TIME_UTC);
-        platform_time_localtime(&tsc.tv_sec, &tm);
+        platform_info_getlocaltime(&tsc.tv_sec, &tm);
         ret = sprintf(
             buf,
             "%04d-%02d-%02d %02d:%02d:%02d.%03d %8d %5s %s:%d ",
@@ -88,7 +87,7 @@ static int _logger_build_message(
             tm.tm_min,
             tm.tm_sec,
             (int)(tsc.tv_nsec / 1000000UL),
-            (int)platform_thrd_gettid(),
+            (int)platform_info_gettid(),
             levels[level],
             file,
             line);
