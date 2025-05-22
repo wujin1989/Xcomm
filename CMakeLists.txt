@@ -2,6 +2,7 @@ cmake_minimum_required(VERSION 3.16)
 
 project(Xcomm LANGUAGES C)
 
+option(ENABLE_TESTING "Enable Testing" ON)
 option(BUILD_DYNAMIC_LIBRARY "Build Dynamic Library" OFF)
 option(CMAKE_EXPORT_COMPILE_COMMANDS "Export Compile-Commands" OFF)
 
@@ -127,4 +128,9 @@ install(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/docs DESTINATION . FILES_MATCHING 
 install(TARGETS xcomm DESTINATION lib)
 
 add_subdirectory(examples)
+
+if(ENABLE_TESTING)
+	enable_testing()
+	add_subdirectory(tests)
+endif()
 
