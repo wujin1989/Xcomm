@@ -75,7 +75,7 @@ static int _logger_build_message(
     if (logger.callback) {
         ret = sprintf(buf, "%s:%d ", file, line);
     } else {
-        timespec_get(&tsc, TIME_UTC);
+        (void)timespec_get(&tsc, TIME_UTC);
         platform_info_getlocaltime(&tsc.tv_sec, &tm);
         ret = sprintf(
             buf,

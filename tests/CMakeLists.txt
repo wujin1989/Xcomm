@@ -2,12 +2,26 @@ cmake_minimum_required(VERSION 3.16)
 
 project(tests LANGUAGES C)
 
-add_executable(test-byteorder-swap "test-byteorder-swap.c")
-target_link_libraries(test-byteorder-swap PUBLIC xcomm)
+add_executable(test-bswap "test-bswap.c")
+target_link_libraries(test-bswap PUBLIC xcomm)
+add_test(NAME bswap COMMAND test-bswap)
 
-add_executable(test-dlist "test-dlist.c")
-target_link_libraries(test-dlist PUBLIC xcomm)
+add_executable(test-list "test-list.c")
+target_link_libraries(test-list PUBLIC xcomm)
+add_test(NAME list COMMAND test-list)
 
-add_test(NAME byteorder-swap COMMAND test-byteorder-swap)
-add_test(NAME dlist COMMAND test-dlist)
+add_executable(test-base64 "test-base64.c")
+target_link_libraries(test-base64 PUBLIC xcomm)
+add_test(NAME base64 COMMAND test-base64)
 
+add_executable(test-heap "test-heap.c")
+target_link_libraries(test-heap PUBLIC xcomm)
+add_test(NAME heap COMMAND test-heap)
+
+add_executable(test-logger "test-logger.c")
+target_link_libraries(test-logger PUBLIC xcomm)
+add_test(NAME logger COMMAND test-logger)
+
+add_executable(test-rbtree "test-rbtree.c")
+target_link_libraries(test-rbtree PUBLIC xcomm)
+add_test(NAME rbtree COMMAND test-rbtree)

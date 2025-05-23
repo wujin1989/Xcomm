@@ -53,17 +53,17 @@ void xcomm_base64_decode(
         15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 64, 64, 64, 64, 63,
         64, 26, 27, 28, 29, 30, 31, 32, 33, 34, 35, 36, 37, 38, 39, 40,
         41, 42, 43, 44, 45, 46, 47, 48, 49, 50, 51, 64, 64, 64, 64, 64};
-    size_t i, j;
-    for (i = 0, j = 0; i < srclen; i += 4, j += 3) {
+    size_t i, j, outlen = 0;
+    for (i = 0, j = 0; i + 3 < srclen; i += 4) {
         uint32_t n = (b64[src[i]] << 18) | (b64[src[i + 1]] << 12) |
                      (b64[src[i + 2]] << 6) | (b64[src[i + 3]]);
-        dst[j] = (n >> 16) & 0xff;
+        dst[outlen++] = (n >> 16) & 0xff;
         if (src[i + 2] != '=') {
-            dst[j + 1] = (n >> 8) & 0xff;
+            dst[outlen++] = (n >> 8) & 0xff;
         }
         if (src[i + 3] != '=') {
-            dst[j + 2] = n & 0xff;
+            dst[outlen++] = n & 0xff;
         }
     }
-    *dstlen = j;
+    *dstlen = outlen;
 }

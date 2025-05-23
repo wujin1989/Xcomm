@@ -20,37 +20,34 @@
  */
 
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
-#include "xcomm-bswap.h"
+#include "xcomm-base64.h"
+
+void test_base64_encode(void) {
+    size_t      dstlen = 0;
+    uint8_t     dst[256] = {0};
+    uint8_t     src[] = "Hello, World!";
+    const char* expected = "SGVsbG8sIFdvcmxkIQ==";
+
+    xcomm_base64_encode(src, strlen((char*)src), dst, &dstlen);
+    assert(strcmp((char*)dst, expected) == 0);
+    assert(dstlen == strlen(expected));
+}
+
+void test_base64_decode(void) {
+    size_t      dstlen = 0;
+    uint8_t     dst[256] = {0};
+    const char* src = "SGVsbG8sIFdvcmxkIQ==";
+    const char* expected = "Hello, World!";
+
+    xcomm_base64_decode((uint8_t*)src, strlen(src), dst, &dstlen);
+    assert(strcmp((char*)dst, expected) == 0);
+    assert(dstlen == strlen(expected));
+}
 
 int main(void) {
-    int16_t m16 = 0x1234;
-    int16_t n16 = 0x3412;
-    assert(xcomm_bswap(m16) == n16);
-
-    int32_t m32 = 0x12345678;
-    int32_t n32 = 0x78563412;
-    assert(xcomm_bswap(m32) == n32);
-
-    int64_t m64 = 0x1234567890ABCDEF;
-    int64_t n64 = 0xEFCDAB9078563412;
-    assert(xcomm_bswap(m64) == n64);
-
-    union {
-        float    f32;
-        uint32_t u32;
-    } mf, nf;
-    mf.f32 = 12.34f;
-    nf.u32 = 0xA4704541;
-    assert(xcomm_bswap(mf.u32) == nf.u32);
-
-    union {
-        double   f64;
-        uint64_t u64;
-    } md, nd;
-    md.f64 = 12.34;
-    nd.u64 = 0xAE47E17A14AE2840;
-    assert(xcomm_bswap(md.u64) == nd.u64);
-
+    test_base64_encode();
+    test_base64_decode();
     return 0;
 }

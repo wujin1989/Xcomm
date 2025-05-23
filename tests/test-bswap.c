@@ -19,34 +19,53 @@
  *  IN THE SOFTWARE.
  */
 
-_Pragma("once")
+#include "xcomm-bswap.h"
+#include <assert.h>
+#include <stdio.h>
 
-#include <stdint.h>
-#include <stddef.h>
-#include <stdbool.h>
+static void test_bswap16(void) {
+    int16_t m = 0x1234;
+    int16_t n = 0x3412;
+    assert(xcomm_bswap(m) == n);
+}
 
-#define xcomm_heap_data(x, t, m) ((t*)((char*)(x) - offsetof(t, m)))
+static void test_bswap32(void) {
+    int32_t m = 0x12345678;
+    int32_t n = 0x78563412;
+    assert(xcomm_bswap(m) == n);
+}
 
-typedef struct xcomm_heap_s      xcomm_heap_t;
-typedef struct xcomm_heap_node_s xcomm_heap_node_t;
+static void test_bswap64(void) {
+    int64_t m = 0x1234567890ABCDEF;
+    int64_t n = 0xEFCDAB9078563412;
+    assert(xcomm_bswap(m) == n);
+}
 
-struct xcomm_heap_node_s {
-    struct xcomm_heap_node_s* left;
-    struct xcomm_heap_node_s* right;
-    struct xcomm_heap_node_s* parent;
-};
+static void test_bswap_float(void) {
+    union {
+        float    f32;
+        uint32_t u32;
+    } m, n;
+    m.f32 = 12.34f;
+    n.u32 = 0xA4704541;
+    assert(xcomm_bswap(m.u32) == n.u32);
+}
 
-struct xcomm_heap_s {
-    struct xcomm_heap_node_s* heap_min;
-    size_t                    heap_nelts;
-    /* a < b return positive that means min-heap */
-    /* a > b return positive, means max-heap     */
-    int (*compare)(xcomm_heap_node_t* a, xcomm_heap_node_t* b);
-};
+static void test_bswap_double(void) {
+    union {
+        double   f64;
+        uint64_t u64;
+    } m, n;
+    m.f64 = 12.34;
+    n.u64 = 0xAE47E17A14AE2840;
+    assert(xcomm_bswap(m.u64) == n.u64);
+}
 
-extern void xcomm_heap_init(xcomm_heap_t* heap, int (*cmp)(xcomm_heap_node_t* a, xcomm_heap_node_t* b));
-extern void xcomm_heap_insert(xcomm_heap_t* heap, xcomm_heap_node_t* node);
-extern void xcomm_heap_remove(xcomm_heap_t* heap, xcomm_heap_node_t* node);
-extern void xcomm_heap_dequeue(xcomm_heap_t* heap);
-extern bool xcomm_heap_empty(xcomm_heap_t* heap);
-extern xcomm_heap_node_t* xcomm_heap_min(xcomm_heap_t* heap);
+int main(void) {
+    test_bswap16();
+    test_bswap32();
+    test_bswap64();
+    test_bswap_float();
+    test_bswap_double();
+    return 0;
+}
