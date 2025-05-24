@@ -1,4 +1,5 @@
 ![image](https://github.com/wujin1989/Xcomm/blob/main/docs/images/Xcomm-logo.png)
+[![CodeFactor](https://www.codefactor.io/repository/github/wujin1989/xcomm/badge)](https://www.codefactor.io/repository/github/wujin1989/xcomm)
 
 # Overview
 Xcomm is a cross-platform communication library. It adopts a modular design and abstracts the complexity of protocols, achieving efficient cross-platform and cross-protocol communication with minimal code, thereby improving development speed and system compatibility.
