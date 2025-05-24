@@ -14,7 +14,13 @@ Xcomm is a cross-platform communication library. It adopts a modular design and 
 # Compile
     cmake -B out
     cmake --build out --config Release -j 8
-    cmake --install out 
+
+# Test
+    ctest --test-dir out -C Release
+
+# Install
+    cmake --install out
+
 
 # Documentation
 Reference docs.
