@@ -24,12 +24,10 @@
 #include <stdio.h>
 #include <string.h>
 
-typedef struct test_data_s test_data_t;
-
-struct test_data_s {
+typedef struct test_data_s {
     int               value;
     xcomm_heap_node_t node;
-};
+} test_data_t;
 
 static int test_min_compare(xcomm_heap_node_t* a, xcomm_heap_node_t* b) {
     test_data_t* data_a = xcomm_heap_data(a, test_data_t, node);

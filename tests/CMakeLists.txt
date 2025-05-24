@@ -25,3 +25,7 @@ add_test(NAME logger COMMAND test-logger)
 add_executable(test-rbtree "test-rbtree.c")
 target_link_libraries(test-rbtree PUBLIC xcomm)
 add_test(NAME rbtree COMMAND test-rbtree)
+
+add_executable(test-ringbuffer "test-ringbuffer.c")
+target_link_libraries(test-ringbuffer PUBLIC xcomm)
+add_test(NAME ringbuffer COMMAND test-ringbuffer)

@@ -19,27 +19,12 @@
  *  IN THE SOFTWARE.
  */
 
-_Pragma("once")
+#include <stdio.h>
+#include <string.h>
+#include <assert.h>
+#include "xcomm-ringbuffer.h"
 
-#include <stdint.h>
-#include <stdbool.h>
-
-typedef struct xcomm_ringbuf_s xcomm_ringbuf_t;
-
-struct xcomm_ringbuf_s {
-    char*    buf;
-    uint32_t wpos; /* write pos */
-    uint32_t rpos; /* read pos */
-    uint32_t mask; /* mask */
-    uint32_t esz;  /* entry size */
-};
-
-extern void     xcomm_ringbuf_init(xcomm_ringbuf_t* ring, uint32_t esize, uint32_t bufsize);
-extern void     xcomm_ringbuf_destroy(xcomm_ringbuf_t* ring);
-extern bool     xcomm_ringbuf_full(xcomm_ringbuf_t* ring);
-extern bool     xcomm_ringbuf_empty(xcomm_ringbuf_t* ring);
-extern uint32_t xcomm_ringbuf_len(xcomm_ringbuf_t* ring);
-extern uint32_t xcomm_ringbuf_cap(xcomm_ringbuf_t* ring);
-extern uint32_t xcomm_ringbuf_avail(xcomm_ringbuf_t* ring);
-extern uint32_t xcomm_ringbuf_write(xcomm_ringbuf_t* ring, const void* buf, uint32_t entry_count);
-extern uint32_t xcomm_ringbuf_read(xcomm_ringbuf_t* ring, void* buf, uint32_t entry_count);
+int main(void) {
+    
+    return 0;
+}

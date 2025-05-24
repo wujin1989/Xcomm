@@ -19,10 +19,12 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-logger.h"
 #include <assert.h>
 #include <stdio.h>
 #include <string.h>
+
+#include "xcomm-logger.h"
+#include "deprecated/c11-threads.h"
 
 static const char*          TEST_FILE = "test.log";
 static int                  callback_count = 0;
@@ -103,6 +105,7 @@ void test_async_logging() {
     for (int i = 0; i < 1000; i++) {
         xcomm_logi("Async message %d\n", i);
     }
+    thrd_sleep(&(struct timespec){.tv_sec = 0, .tv_nsec = 100000000}, NULL);
     xcomm_logger_destroy();
 
     FILE* fp = fopen(TEST_FILE, "r");
@@ -114,7 +117,6 @@ void test_async_logging() {
         line_count++;
     }
     fclose(fp);
-
     assert(line_count == 1000);
     cleanup();
 }

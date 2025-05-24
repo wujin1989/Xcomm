@@ -80,7 +80,7 @@ _ringbuffer_internal_read_peek(xcomm_ringbuf_t* ring, void* buf, uint32_t len) {
     return len;
 }
 
-void xcomm_ringbuf_create(
+void xcomm_ringbuf_init(
     xcomm_ringbuf_t* ring, uint32_t esize, uint32_t bufsize) {
     ring->buf = malloc(bufsize);
     ring->esz = esize;

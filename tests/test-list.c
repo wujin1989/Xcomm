@@ -23,12 +23,10 @@
 #include <stdio.h>
 #include "xcomm-list.h"
 
-typedef struct test_data_s test_data_t;
-
-struct test_data_s {
+typedef struct test_data_s {
     int               value;
     xcomm_list_node_t node;
-};
+} test_data_t;
 
 void test_init_and_empty(void) {
     xcomm_list_t list;

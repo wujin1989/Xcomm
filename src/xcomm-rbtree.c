@@ -205,7 +205,7 @@ static void _rbtree_erase_color(
     }
 }
 
-int xcomm_builtin_keycmp_i8(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
+int xcomm_rbtree_keycmp_i8(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     if (k1->i8 < k2->i8) {
         return -1;
     }
@@ -215,7 +215,7 @@ int xcomm_builtin_keycmp_i8(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     return 0;
 }
 
-int xcomm_builtin_keycmp_i16(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
+int xcomm_rbtree_keycmp_i16(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     if (k1->i16 < k2->i16) {
         return -1;
     }
@@ -225,7 +225,7 @@ int xcomm_builtin_keycmp_i16(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     return 0;
 }
 
-int xcomm_builtin_keycmp_i32(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
+int xcomm_rbtree_keycmp_i32(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     if (k1->i32 < k2->i32) {
         return -1;
     }
@@ -235,7 +235,7 @@ int xcomm_builtin_keycmp_i32(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     return 0;
 }
 
-int xcomm_builtin_keycmp_i64(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
+int xcomm_rbtree_keycmp_i64(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     if (k1->i64 < k2->i64) {
         return -1;
     }
@@ -245,7 +245,7 @@ int xcomm_builtin_keycmp_i64(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     return 0;
 }
 
-int xcomm_builtin_keycmp_u8(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
+int xcomm_rbtree_keycmp_u8(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     if (k1->u8 < k2->u8) {
         return -1;
     }
@@ -255,7 +255,7 @@ int xcomm_builtin_keycmp_u8(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     return 0;
 }
 
-int xcomm_builtin_keycmp_u16(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
+int xcomm_rbtree_keycmp_u16(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     if (k1->u16 < k2->u16) {
         return -1;
     }
@@ -265,7 +265,7 @@ int xcomm_builtin_keycmp_u16(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     return 0;
 }
 
-int xcomm_builtin_keycmp_u32(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
+int xcomm_rbtree_keycmp_u32(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     if (k1->u32 < k2->u32) {
         return -1;
     }
@@ -275,7 +275,7 @@ int xcomm_builtin_keycmp_u32(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     return 0;
 }
 
-int xcomm_builtin_keycmp_u64(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
+int xcomm_rbtree_keycmp_u64(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     if (k1->u64 < k2->u64) {
         return -1;
     }
@@ -285,7 +285,7 @@ int xcomm_builtin_keycmp_u64(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     return 0;
 }
 
-int xcomm_builtin_keycmp_str(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
+int xcomm_rbtree_keycmp_str(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     return strcmp(k1->str, k2->str);
 }
 
