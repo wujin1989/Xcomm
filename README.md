@@ -8,7 +8,7 @@ Xcomm is a cross-platform communication library. It adopts a modular design and 
 - Cross-platform Compatibility
 
 # Requirement
-The compiler needs to support C11.
+- The compiler needs to support C11.
 
 
 # Compile
