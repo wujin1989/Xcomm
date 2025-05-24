@@ -10,8 +10,11 @@ This module mainly implements the 1C, 1E, 3C, and 3E protocols from the Mitsubis
 ## Requirements
 
 * **1C Protocol**：
+  
   a. Configure the 'Format One' message for the 1C protocol in the PLC.
+  
   b. Soft component address range, as shown in the figure below:
+  
   ![Soft component address range](images/melsec-1c-component-address-range.png)
 
 * **1E Protocol**：
