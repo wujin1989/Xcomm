@@ -35,7 +35,7 @@ static int test_min_compare(xcomm_heap_node_t* a, xcomm_heap_node_t* b) {
     return data_a->value < data_b->value;
 }
 
-void test_heap_init() {
+static void test_heap_init() {
     xcomm_heap_t heap;
     xcomm_heap_init(&heap, test_min_compare);
 
@@ -44,7 +44,7 @@ void test_heap_init() {
     assert(heap.heap_min == NULL);
 }
 
-void test_single_element() {
+static void test_single_element() {
     xcomm_heap_t heap;
     xcomm_heap_init(&heap, test_min_compare);
 
@@ -60,7 +60,7 @@ void test_single_element() {
     assert(heap.heap_nelts == 0);
 }
 
-void test_heap_property() {
+static void test_heap_property() {
     xcomm_heap_t heap;
     xcomm_heap_init(&heap, test_min_compare);
 
@@ -82,7 +82,7 @@ void test_heap_property() {
     assert(heap.heap_nelts == 3);
 }
 
-void test_remove_middle() {
+static void test_remove_middle() {
     xcomm_heap_t heap;
     xcomm_heap_init(&heap, test_min_compare);
 
@@ -100,7 +100,7 @@ void test_remove_middle() {
     assert(min->value == 2);
 }
 
-void test_edge_cases() {
+static void test_edge_cases() {
     xcomm_heap_t heap;
     xcomm_heap_init(&heap, test_min_compare);
 

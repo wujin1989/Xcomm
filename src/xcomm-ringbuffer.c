@@ -35,15 +35,15 @@ static inline uint32_t _ringbuffer_rounddown_pow_of_two(uint32_t n) {
 
 static inline void _ringbuffer_internal_write(
     xcomm_ringbuf_t* ring, const void* src, uint32_t len, uint32_t off) {
-    uint32_t size = ring->mask + 1;
+    uint32_t size  = ring->mask + 1;
     uint32_t esize = ring->esz;
     uint32_t l;
 
     off &= ring->mask;
     if (esize != 1) {
-        off *= esize;
+        off  *= esize;
         size *= esize;
-        len *= esize;
+        len  *= esize;
     }
     l = (len) < (size - off) ? (len) : (size - off);
 

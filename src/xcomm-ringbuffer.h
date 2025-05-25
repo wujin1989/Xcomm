@@ -28,9 +28,9 @@ typedef struct xcomm_ringbuf_s xcomm_ringbuf_t;
 
 struct xcomm_ringbuf_s {
     char*    buf;
-    uint32_t wpos; /* write pos */
-    uint32_t rpos; /* read pos */
-    uint32_t mask; /* mask */
+    uint32_t wpos; /* write pos  */
+    uint32_t rpos; /* read pos   */
+    uint32_t mask; /* mask       */
     uint32_t esz;  /* entry size */
 };
 

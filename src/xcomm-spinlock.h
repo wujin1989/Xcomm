@@ -30,5 +30,6 @@ struct xcomm_spinlock_s {
 };
 
 extern void xcomm_spinlock_init(xcomm_spinlock_t* restrict lock);
+extern void xcomm_spinlock_destroy(xcomm_spinlock_t* restrict lock);
 extern void xcomm_spinlock_lock(xcomm_spinlock_t* restrict lock);
 extern void xcomm_spinlock_unlock(xcomm_spinlock_t* restrict lock);

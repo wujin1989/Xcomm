@@ -41,10 +41,7 @@ static int _thrdpool_thrdfunc(void* arg) {
         if (node) {
             job = xcomm_queue_data(node, thrdpool_job_t, n);
             job->routine(job->arg);
-            if (job) {
-                free(job);
-                job = NULL;
-            }
+            free(job);
         }
         mtx_unlock(&pool->qmtx);
     }
@@ -57,8 +54,10 @@ static void _thrdpool_thrd_create(xcomm_thrdpool_t* pool) {
     thrds = realloc(pool->thrds, (pool->thrdcnt + 1) * sizeof(thrd_t));
     if (thrds) {
         pool->thrds = thrds;
-        thrd_create(pool->thrds + pool->thrdcnt, _thrdpool_thrdfunc, pool);
-        pool->thrdcnt++;
+        int ret = thrd_create(pool->thrds + pool->thrdcnt, _thrdpool_thrdfunc, pool);
+        if (ret == thrd_success) {
+            pool->thrdcnt++;
+        }
     }
     mtx_unlock(&pool->tmtx);
 }

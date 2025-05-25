@@ -28,7 +28,7 @@ typedef struct test_data_s {
     xcomm_list_node_t node;
 } test_data_t;
 
-void test_init_and_empty(void) {
+static void test_init_and_empty(void) {
     xcomm_list_t list;
     xcomm_list_init(&list);
 
@@ -37,7 +37,7 @@ void test_init_and_empty(void) {
     assert(xcomm_list_tail(&list) == xcomm_list_sentinel(&list));
 }
 
-void test_insert_head(void) {
+static void test_insert_head(void) {
     xcomm_list_t list;
     xcomm_list_init(&list);
 
@@ -60,7 +60,7 @@ void test_insert_head(void) {
     assert(tail == &data1.node);
 }
 
-void test_insert_tail(void) {
+static void test_insert_tail(void) {
     xcomm_list_t list;
     xcomm_list_init(&list);
 
@@ -81,7 +81,7 @@ void test_insert_tail(void) {
     assert(first->value == 1);
 }
 
-void test_remove_node(void) {
+static void test_remove_node(void) {
     xcomm_list_t list;
     xcomm_list_init(&list);
 
@@ -98,7 +98,7 @@ void test_remove_node(void) {
     assert(xcomm_list_empty(&list));
 }
 
-void test_traversal_edge_cases(void) {
+static void test_traversal_edge_cases(void) {
     xcomm_list_t list;
     xcomm_list_init(&list);
 

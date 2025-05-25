@@ -23,14 +23,22 @@ _Pragma("once")
 
 #include "platform/platform-types.h"
 
-typedef enum xcomm_endian_e xcomm_endian_t;
+typedef enum xcomm_endian_e         xcomm_endian_t;
+typedef enum xcomm_time_precision_e xcomm_time_precision_t;
 
 enum xcomm_endian_e {
     XCOMM_ENDIAN_BE = 0,
     XCOMM_ENDIAN_LE = 1,
 };
 
+enum xcomm_time_precision_e {
+    XCOMM_TIME_PRECISION_SEC,
+    XCOMM_TIME_PRECISION_MSEC,
+    XCOMM_TIME_PRECISION_USEC,
+    XCOMM_TIME_PRECISION_NSEC,
+};
+
 extern int            xcomm_utils_getprng(int min, int max);
-extern uint64_t       xcomm_utils_getnow(void);
+extern uint64_t       xcomm_utils_getnow(xcomm_time_precision_t precision);
 extern xcomm_endian_t xcomm_utils_getendian(void);
 

@@ -58,11 +58,11 @@ void xcomm_timer_del(xcomm_timermgr_t* timermgr, xcomm_timer_t* timer) {
 }
 
 void xcomm_timer_reset(
-    xcomm_timermgr_t* timermgr, xcomm_timer_t* timer, size_t expire) {
+    xcomm_timermgr_t* timermgr, xcomm_timer_t* timer, size_t expire_ms) {
     mtx_lock(&timermgr->mtx);
     xcomm_heap_remove(&timermgr->heap, &timer->node);
-    timer->birth = xcomm_utils_getnow();
-    timer->expire = expire;
+    timer->birth = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
+    timer->expire = expire_ms;
     xcomm_heap_insert(&timermgr->heap, &timer->node);
     mtx_unlock(&timermgr->mtx);
 }
@@ -86,14 +86,14 @@ xcomm_timer_t* xcomm_timer_add(
     xcomm_timermgr_t* timermgr,
     void (*routine)(void*),
     void*             param,
-    size_t            expire,
+    size_t            expire_ms,
     bool              repeat) {
     xcomm_timer_t* timer = malloc(sizeof(xcomm_timer_t));
     if (timer) {
         mtx_lock(&timermgr->mtx);
         timer->param   = param;
-        timer->birth   = xcomm_utils_getnow();
-        timer->expire  = expire;
+        timer->birth   = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
+        timer->expire  = expire_ms;
         timer->repeat  = repeat;
         timer->routine = routine;
         timer->id      = timermgr->ntimers++;

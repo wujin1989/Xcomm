@@ -22,32 +22,9 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include "xcomm-base64.h"
-
-static void test_base64_encode(void) {
-    size_t      dstlen = 0;
-    uint8_t     dst[256] = {0};
-    uint8_t     src[] = "Hello, World!";
-    const char* expected = "SGVsbG8sIFdvcmxkIQ==";
-
-    xcomm_base64_encode(src, strlen((char*)src), dst, &dstlen);
-    assert(strcmp((char*)dst, expected) == 0);
-    assert(dstlen == strlen(expected));
-}
-
-static void test_base64_decode(void) {
-    size_t      dstlen = 0;
-    uint8_t     dst[256] = {0};
-    const char* src = "SGVsbG8sIFdvcmxkIQ==";
-    const char* expected = "Hello, World!";
-
-    xcomm_base64_decode((uint8_t*)src, strlen(src), dst, &dstlen);
-    assert(strcmp((char*)dst, expected) == 0);
-    assert(dstlen == strlen(expected));
-}
+#include "xcomm-varint.h"
 
 int main(void) {
-    test_base64_encode();
-    test_base64_decode();
+
     return 0;
 }

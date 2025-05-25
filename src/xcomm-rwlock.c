@@ -19,37 +19,104 @@
  *  IN THE SOFTWARE.
  */
 
-#include <stdbool.h>
 #include "xcomm-rwlock.h"
+#include <stdbool.h>
 
 void xcomm_rwlock_init(xcomm_rwlock_t* restrict rwlock) {
-    atomic_init(&rwlock->rdcnt, 0);
-    atomic_init(&rwlock->wrlock, false);
+    atomic_init(&rwlock->rd_cnt, 0);
+    atomic_init(&rwlock->wr_waiters, 0);
+    atomic_init(&rwlock->wr_locked, false);
+
+    mtx_init(&rwlock->mutex, mtx_plain);
+    cnd_init(&rwlock->rd_cond);
+    cnd_init(&rwlock->wr_cond);
+    return;
+}
+
+void xcomm_rwlock_destroy(xcomm_rwlock_t* restrict rwlock) {
+    mtx_destroy(&rwlock->mutex);
+    cnd_destroy(&rwlock->rd_cond);
+    cnd_destroy(&rwlock->wr_cond);
 }
 
 void xcomm_rwlock_rdlock(xcomm_rwlock_t* restrict rwlock) {
+    /* Fast Path */
     while (true) {
-        while (atomic_load(&rwlock->wrlock)) {
-        }
-        atomic_fetch_add(&rwlock->rdcnt, 1);
-        if (!atomic_load(&rwlock->wrlock)) {
+        bool has_writer =
+            atomic_load_explicit(&rwlock->wr_locked, memory_order_acquire) ||
+            atomic_load_explicit(&rwlock->wr_waiters, memory_order_acquire) > 0;
+
+        if (has_writer) {
             break;
         }
-        atomic_fetch_sub(&rwlock->rdcnt, 1);
+        int expected =
+            atomic_load_explicit(&rwlock->rd_cnt, memory_order_acquire);
+        if (atomic_compare_exchange_weak_explicit(
+                &rwlock->rd_cnt,
+                &expected,
+                expected + 1,
+                memory_order_acq_rel,
+                memory_order_relaxed)) {
+            return;
+        }
     }
+    /* Slow Path */
+    mtx_lock(&rwlock->mutex);
+    while (atomic_load_explicit(&rwlock->wr_waiters, memory_order_acquire) ||
+           atomic_load_explicit(&rwlock->wr_locked, memory_order_acquire)) {
+        cnd_wait(&rwlock->rd_cond, &rwlock->mutex);
+    }
+    atomic_fetch_add_explicit(&rwlock->rd_cnt, 1, memory_order_release);
+    mtx_unlock(&rwlock->mutex);
 }
 
 void xcomm_rwlock_wrlock(xcomm_rwlock_t* restrict rwlock) {
-    while (atomic_exchange(&rwlock->wrlock, true)) {
+    atomic_fetch_add_explicit(&rwlock->wr_waiters, 1, memory_order_release);
+
+    mtx_lock(&rwlock->mutex);
+    while (atomic_load_explicit(&rwlock->rd_cnt, memory_order_acquire) ||
+           atomic_load_explicit(&rwlock->wr_locked, memory_order_acquire)) {
+        cnd_wait(&rwlock->wr_cond, &rwlock->mutex);
     }
-    while (atomic_load(&rwlock->rdcnt)) {
-    }
+    atomic_fetch_sub_explicit(&rwlock->wr_waiters, 1, memory_order_release);
+    atomic_store_explicit(&rwlock->wr_locked, true, memory_order_release);
+    mtx_unlock(&rwlock->mutex);
 }
 
 void xcomm_rwlock_rdunlock(xcomm_rwlock_t* restrict rwlock) {
-    atomic_fetch_sub(&rwlock->rdcnt, 1);
+    int  expected, desired;
+    bool success = false;
+
+    do {
+        expected = atomic_load_explicit(&rwlock->rd_cnt, memory_order_acquire);
+        if (expected <= 0) {
+            abort();
+        }
+        desired = expected - 1;
+        success = atomic_compare_exchange_weak_explicit(
+            &rwlock->rd_cnt,
+            &expected,
+            desired,
+            memory_order_acq_rel,
+            memory_order_relaxed);
+    } while (!success);
+
+    if (expected == 1) {
+        mtx_lock(&rwlock->mutex);
+        cnd_signal(&rwlock->wr_cond);
+        mtx_unlock(&rwlock->mutex);
+    }
 }
 
 void xcomm_rwlock_wrunlock(xcomm_rwlock_t* restrict rwlock) {
-    atomic_exchange(&rwlock->wrlock, false);
+    bool was_locked = atomic_exchange_explicit(
+        &rwlock->wr_locked, false, memory_order_acq_rel);
+
+    if (!was_locked) {
+        abort();
+    }
+    mtx_lock(&rwlock->mutex);
+    cnd_signal(&rwlock->wr_cond); /* Writer Priority */
+    cnd_broadcast(&rwlock->rd_cond);
+    mtx_unlock(&rwlock->mutex);
 }

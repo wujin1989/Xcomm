@@ -21,12 +21,22 @@
 
 #include "xcomm-utils.h"
 
-uint64_t xcomm_utils_getnow(void) {
+uint64_t xcomm_utils_getnow(xcomm_time_precision_t precision) {
     struct timespec tsc;
-    if (!timespec_get(&tsc, TIME_UTC)) {
-        return 0;
+    (void)timespec_get(&tsc, TIME_UTC);
+
+    switch (precision) {
+    case XCOMM_TIME_PRECISION_SEC:
+        return tsc.tv_sec;
+    case XCOMM_TIME_PRECISION_MSEC:
+        return tsc.tv_sec * 1000ULL + tsc.tv_nsec / 1000000ULL;
+    case XCOMM_TIME_PRECISION_USEC:
+        return tsc.tv_sec * 1000000ULL + tsc.tv_nsec / 1000ULL;
+    case XCOMM_TIME_PRECISION_NSEC:
+        return tsc.tv_sec * 1000000000ULL + tsc.tv_nsec;
+    default:
+        return UINT64_MAX;
     }
-    return (tsc.tv_sec * (1000UL) + tsc.tv_nsec / (1000000UL));
 }
 
 xcomm_endian_t xcomm_utils_getendian(void) {

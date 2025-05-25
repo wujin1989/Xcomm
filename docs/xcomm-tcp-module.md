@@ -133,15 +133,15 @@ int main(void) {
     char sbuf[64] = "ping";
     char rbuf[64] = {0};
     xcomm_socket_t* socket =
-        xcomm_sync_tcp_module.xcomm_dial("127.0.0.1", "1234");
+        xcomm_sync_tcp.xcomm_dial("127.0.0.1", "1234");
     
-    xcomm_sync_tcp_module.xcomm_send(socket, sbuf, sizeof(sbuf));
+    xcomm_sync_tcp.xcomm_send(socket, sbuf, sizeof(sbuf));
     printf("cli send %s to srv.\n", sbuf);
 
-    xcomm_sync_tcp_module.xcomm_recv(socket, rbuf, sizeof(rbuf));
+    xcomm_sync_tcp.xcomm_recv(socket, rbuf, sizeof(rbuf));
     printf("cli recv %s from srv.\n", rbuf);
 
-    xcomm_sync_tcp_module.xcomm_close(socket);
+    xcomm_sync_tcp.xcomm_close(socket);
     return 0;
 }
 ```

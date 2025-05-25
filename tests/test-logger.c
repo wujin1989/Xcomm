@@ -42,7 +42,7 @@ static void cleanup() {
     remove(TEST_FILE);
 }
 
-void assert_file_contains(const char* filename, const char* substr) {
+static void assert_file_contains(const char* filename, const char* substr) {
     FILE* fp = fopen(filename, "r");
     assert(fp != NULL);
 
@@ -58,7 +58,7 @@ void assert_file_contains(const char* filename, const char* substr) {
     assert(found);
 }
 
-void test_basic_logging() {
+static void test_basic_logging(void) {
     xcomm_logger_init(TEST_FILE, XCOMM_LOGGER_LEVEL_DEBUG, false);
 
     const char* test_msg = "Basic test message";
@@ -72,7 +72,7 @@ void test_basic_logging() {
     cleanup();
 }
 
-void test_level_filter() {
+static void test_level_filter(void) {
     xcomm_logger_init(TEST_FILE, XCOMM_LOGGER_LEVEL_WARN, false);
 
     xcomm_logd("Debug message\n");
@@ -99,7 +99,7 @@ void test_level_filter() {
     cleanup();
 }
 
-void test_async_logging() {
+static void test_async_logging(void) {
     xcomm_logger_init(TEST_FILE, XCOMM_LOGGER_LEVEL_DEBUG, true);
 
     for (int i = 0; i < 1000; i++) {
@@ -121,7 +121,7 @@ void test_async_logging() {
     cleanup();
 }
 
-void test_callback_feature() {
+static void test_callback_feature(void) {
     xcomm_logger_init(TEST_FILE, XCOMM_LOGGER_LEVEL_DEBUG, false);
     xcomm_logger_set_callback(logger_callback);
 

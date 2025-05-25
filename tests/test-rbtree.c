@@ -59,7 +59,7 @@ static void validate_rbtree(xcomm_rbtree_t* tree) {
     check_rbtree_properties(tree->root, NULL);
 }
 
-void test_int32_keys(void) {
+static void test_int32_keys(void) {
     xcomm_rbtree_t tree;
     xcomm_rbtree_init(&tree, xcomm_rbtree_keycmp_i32);
 
@@ -93,7 +93,7 @@ void test_int32_keys(void) {
     validate_rbtree(&tree);
 }
 
-void test_string_keys(void) {
+static void test_string_keys(void) {
     xcomm_rbtree_t tree;
     xcomm_rbtree_init(&tree, xcomm_rbtree_keycmp_str);
 
@@ -115,7 +115,7 @@ void test_string_keys(void) {
     }
 }
 
-void test_edge_cases(void) {
+static void test_edge_cases(void) {
     xcomm_rbtree_t tree;
     xcomm_rbtree_init(&tree, xcomm_rbtree_keycmp_i32);
 
@@ -134,7 +134,7 @@ void test_edge_cases(void) {
     assert(xcomm_rbtree_empty(&tree));
 }
 
-void test_different_int_types(void) {
+static void test_different_int_types(void) {
     {
         xcomm_rbtree_t tree;
         xcomm_rbtree_init(&tree, xcomm_rbtree_keycmp_u64);
@@ -160,7 +160,7 @@ void test_different_int_types(void) {
     }
 }
 
-void test_delete_and_reinsert(void) {
+static void test_delete_and_reinsert(void) {
     xcomm_rbtree_t tree;
     xcomm_rbtree_init(&tree, xcomm_rbtree_keycmp_i32);
 
@@ -180,7 +180,7 @@ void test_delete_and_reinsert(void) {
     validate_rbtree(&tree);
 }
 
-void test_duplicate_keys(void) {
+static void test_duplicate_keys(void) {
     {
         xcomm_rbtree_t tree;
         xcomm_rbtree_init(&tree, xcomm_rbtree_keycmp_i32);

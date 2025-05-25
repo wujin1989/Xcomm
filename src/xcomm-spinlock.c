@@ -21,16 +21,23 @@
 
 #include <stdbool.h>
 #include "xcomm-spinlock.h"
+#include "deprecated/c11-threads.h"
 
 void xcomm_spinlock_init(xcomm_spinlock_t* restrict lock) {
     atomic_init(&lock->locked, false);
 }
 
+void xcomm_spinlock_destroy(xcomm_spinlock_t* restrict lock) {
+    (void)lock;
+}
+
 void xcomm_spinlock_lock(xcomm_spinlock_t* restrict lock) {
-    while (atomic_exchange(&lock->locked, true)) {
+    while (
+        atomic_exchange_explicit(&lock->locked, true, memory_order_acquire)) {
+        thrd_yield();
     }
 }
 
 void xcomm_spinlock_unlock(xcomm_spinlock_t* restrict lock) {
-    atomic_exchange(&lock->locked, false);
+    atomic_exchange_explicit(&lock->locked, false, memory_order_release);
 }

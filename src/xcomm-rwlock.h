@@ -22,14 +22,21 @@
 _Pragma("once")
 
 #include <stdatomic.h>
+#include "deprecated/c11-threads.h"
 
 typedef struct xcomm_rwlock_s xcomm_rwlock_t;
 
 struct xcomm_rwlock_s {
-    atomic_int  rdcnt;
-    atomic_bool wrlock;
+    atomic_int  rd_cnt;
+    atomic_int  wr_waiters;
+    atomic_bool wr_locked;
+    mtx_t       mutex;
+    cnd_t       rd_cond;
+    cnd_t       wr_cond;
 };
+
 extern void xcomm_rwlock_init(xcomm_rwlock_t* restrict rwlock);
+extern void xcomm_rwlock_destroy(xcomm_rwlock_t* restrict rwlock);
 extern void xcomm_rwlock_rdlock(xcomm_rwlock_t* restrict rwlock);
 extern void xcomm_rwlock_wrlock(xcomm_rwlock_t* restrict rwlock);
 extern void xcomm_rwlock_rdunlock(xcomm_rwlock_t* restrict rwlock);
