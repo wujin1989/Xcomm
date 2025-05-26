@@ -105,14 +105,14 @@ typedef pid_t platform_tid_t;
 
 typedef int   platform_sock_t;
 typedef pid_t platform_pid_t;
-typedef int   platform_event_eventq_t;
+typedef int   platform_eventqueue_t;
 typedef int   platform_uart_t;
 #endif
 
 #if defined(_WIN32)
 typedef DWORD   platform_tid_t;
 typedef DWORD   platform_pid_t;
-typedef HANDLE  platform_event_eventq_t;
+typedef HANDLE  platform_eventqueue_t;
 typedef SOCKET  platform_sock_t;
 typedef HANDLE  platform_uart_t;
 typedef SSIZE_T ssize_t;

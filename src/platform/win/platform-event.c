@@ -22,19 +22,19 @@
 #include "platform/platform-event.h"
 #include "wepoll/wepoll.h"
 
-void platform_event_eventq_init(platform_event_eventq_t* eventq) {
+void platform_eventqueue_init(platform_eventqueue_t* eventq) {
     *eventq = epoll_create1(0);
 }
 
-void platform_event_eventq_destroy(platform_event_eventq_t* eventq) {
+void platform_eventqueue_destroy(platform_eventqueue_t* eventq) {
     epoll_close(*eventq);
 }
 
-void platform_event_add(
-    platform_event_eventq_t* eventq,
-    platform_sock_t          sock,
-    int                      events,
-    void*                    ud) {
+void platform_eventqueue_add(
+    platform_eventqueue_t* eventq,
+    platform_sock_t        sock,
+    int                    events,
+    void*                  ud) {
     struct epoll_event ee = {0};
 
     if (events & PLATFORM_EVENT_RD_FLAG) {
@@ -47,11 +47,11 @@ void platform_event_add(
     epoll_ctl(*eventq, EPOLL_CTL_ADD, sock, (struct epoll_event*)&ee);
 }
 
-void platform_event_mod(
-    platform_event_eventq_t* eventq,
-    platform_sock_t          sock,
-    int                      events,
-    void*                    ud) {
+void platform_eventqueue_mod(
+    platform_eventqueue_t* eventq,
+    platform_sock_t        sock,
+    int                    events,
+    void*                  ud) {
     struct epoll_event ee = {0};
 
     if (events & PLATFORM_EVENT_RD_FLAG) {
@@ -64,12 +64,13 @@ void platform_event_mod(
     epoll_ctl(*eventq, EPOLL_CTL_MOD, sock, (struct epoll_event*)&ee);
 }
 
-void platform_event_del(platform_event_eventq_t* eventq, platform_sock_t sock) {
+void platform_eventqueue_del(
+    platform_eventqueue_t* eventq, platform_sock_t sock) {
     epoll_ctl(*eventq, EPOLL_CTL_DEL, sock, NULL);
 }
 
-int platform_event_wait(
-    platform_event_eventq_t* eventq, platform_event_cqe_t* cqe, int timeout) {
+int platform_eventqueue_wait(
+    platform_eventqueue_t* eventq, platform_event_cqe_t* cqe, int timeout) {
     struct epoll_event epoll_events[PLATFORM_EVENT_CQE_NUM] = {0};
     memset(cqe, 0, sizeof(platform_event_cqe_t) * PLATFORM_EVENT_CQE_NUM);
 

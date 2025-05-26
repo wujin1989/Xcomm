@@ -22,9 +22,123 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <stdatomic.h>
+
 #include "xcomm-wg.h"
 
-int main(void) {
+static atomic_int wait_test_flag = 0;
 
+static void test_init_destroy(void) {
+    xcomm_wg_t wg;
+    xcomm_wg_init(&wg);
+    xcomm_wg_destroy(&wg);
+}
+
+static void test_single_thread(void) {
+    xcomm_wg_t wg;
+    xcomm_wg_init(&wg);
+
+    xcomm_wg_add(&wg, 3);
+    xcomm_wg_done(&wg);
+    xcomm_wg_done(&wg);
+    xcomm_wg_done(&wg);
+    xcomm_wg_wait(&wg);
+
+    xcomm_wg_destroy(&wg);
+}
+
+static int worker_done(void* arg) {
+    xcomm_wg_t* wg = arg;
+    xcomm_wg_done(wg);
+    return 0;
+}
+
+static void test_multiple_threads(void) {
+    xcomm_wg_t wg;
+    xcomm_wg_init(&wg);
+
+    xcomm_wg_add(&wg, 5);
+
+    thrd_t threads[5];
+    for (int i = 0; i < 5; i++) {
+        thrd_create(&threads[i], worker_done, &wg);
+    }
+    xcomm_wg_wait(&wg);
+
+    for (int i = 0; i < 5; i++) {
+        thrd_join(threads[i], NULL);
+    }
+    xcomm_wg_destroy(&wg);
+}
+
+static void test_add_negative(void) {
+    xcomm_wg_t wg;
+    xcomm_wg_init(&wg);
+
+    xcomm_wg_add(&wg, 10);
+    xcomm_wg_add(&wg, -5);
+    xcomm_wg_add(&wg, -5);
+
+    xcomm_wg_wait(&wg);
+
+    xcomm_wg_destroy(&wg);
+}
+
+static int worker_add_done(void* arg) {
+    xcomm_wg_t* wg = arg;
+    xcomm_wg_add(wg, 1);
+    struct timespec delay = {.tv_nsec = 1000000};
+    thrd_sleep(&delay, NULL);
+    xcomm_wg_done(wg);
+    return 0;
+}
+
+static void test_concurrent_operations(void) {
+    xcomm_wg_t wg;
+    xcomm_wg_init(&wg);
+
+    thrd_t    threads[10];
+    for (int i = 0; i < 10; i++) {
+        thrd_create(&threads[i], worker_add_done, &wg);
+    }
+    xcomm_wg_wait(&wg);
+
+    for (int i = 0; i < 10; i++) {
+        thrd_join(threads[i], NULL);
+    }
+    xcomm_wg_destroy(&wg);
+}
+
+static int worker_done_with_flag(void* arg) {
+    xcomm_wg_t*     wg = arg;
+    struct timespec delay = {.tv_nsec = 50000000};
+    thrd_sleep(&delay, NULL);
+    wait_test_flag = 1;
+    xcomm_wg_done(wg);
+    return 0;
+}
+
+static void test_wait_blocks(void) {
+    xcomm_wg_t wg;
+    xcomm_wg_init(&wg);
+
+    xcomm_wg_add(&wg, 1);
+    thrd_t thread;
+    thrd_create(&thread, worker_done_with_flag, &wg);
+    assert(wait_test_flag == 0);
+    xcomm_wg_wait(&wg);
+    assert(wait_test_flag == 1);
+
+    thrd_join(thread, NULL);
+    xcomm_wg_destroy(&wg);
+}
+
+int main(void) {
+    test_init_destroy();
+    test_single_thread();
+    test_multiple_threads();
+    test_add_negative();
+    test_concurrent_operations();
+    test_wait_blocks();
     return 0;
 }

@@ -21,20 +21,20 @@
 
 #include "platform/platform-event.h"
 
-void platform_event_eventq_destroy(platform_event_eventq_t* eventq) {
+void platform_eventqueue_destroy(platform_eventqueue_t* eventq) {
     close(*eventq);
 }
 
 #if defined(__linux__)
-void platform_event_eventq_init(platform_event_eventq_t* eventq) {
+void platform_eventqueue_init(platform_eventqueue_t* eventq) {
     *eventq = epoll_create1(0);
 }
 
-void platform_event_add(
-    platform_event_eventq_t* eventq,
-    platform_sock_t          sock,
-    int                      events,
-    void*                    ud) {
+void platform_eventqueue_add(
+    platform_eventqueue_t* eventq,
+    platform_sock_t        sock,
+    int                    events,
+    void*                  ud) {
     struct epoll_event ee = {0};
 
     if (events & PLATFORM_EVENT_RD_FLAG) {
@@ -47,11 +47,11 @@ void platform_event_add(
     epoll_ctl(*eventq, EPOLL_CTL_ADD, sock, (struct epoll_event*)&ee);
 }
 
-void platform_event_mod(
-    platform_event_eventq_t* eventq,
-    platform_sock_t          sock,
-    int                      events,
-    void*                    ud) {
+void platform_eventqueue_mod(
+    platform_eventqueue_t* eventq,
+    platform_sock_t        sock,
+    int                    events,
+    void*                  ud) {
     struct epoll_event ee = {0};
 
     if (events & PLATFORM_EVENT_RD_FLAG) {
@@ -64,13 +64,13 @@ void platform_event_mod(
     epoll_ctl(*eventq, EPOLL_CTL_MOD, sock, (struct epoll_event*)&ee);
 }
 
-void platform_event_del(
-    platform_event_eventq_t* eventq, platform_sock_t sock) {
+void platform_eventqueue_del(
+    platform_eventqueue_t* eventq, platform_sock_t sock) {
     epoll_ctl(*eventq, EPOLL_CTL_DEL, sock, NULL);
 }
 
-int platform_event_wait(
-    platform_event_eventq_t* eventq, platform_event_cqe_t* cqe, int timeout) {
+int platform_eventqueue_wait(
+    platform_eventqueue_t* eventq, platform_event_cqe_t* cqe, int timeout) {
     struct epoll_event epoll_events[PLATFORM_EVENT_CQE_NUM] = {0};
     memset(cqe, 0, sizeof(platform_event_cqe_t) * PLATFORM_EVENT_CQE_NUM);
 
@@ -96,15 +96,15 @@ int platform_event_wait(
 
 #if defined(__APPLE__)
 
-void platform_event_eventq_init(platform_event_eventq_t* eventq) {
+void platform_eventqueue_init(platform_eventqueue_t* eventq) {
     *eventq = kqueue();
 }
 
-void platform_event_add(
-    platform_event_eventq_t* eventq,
-    platform_sock_t          sock,
-    int                      events,
-    void*                    ud) {
+void platform_eventqueue_add(
+    platform_eventqueue_t* eventq,
+    platform_sock_t        sock,
+    int                    events,
+    void*                  ud) {
     struct kevent ke = {0};
 
     if (events & PLATFORM_EVENT_RD_FLAG) {
@@ -117,11 +117,11 @@ void platform_event_add(
     }
 }
 
-void platform_event_mod(
-    platform_event_eventq_t* eventq,
-    platform_sock_t          sock,
-    int                      events,
-    void*                    ud) {
+void platform_eventqueue_mod(
+    platform_eventqueue_t* eventq,
+    platform_sock_t        sock,
+    int                    events,
+    void*                  ud) {
     struct kevent ke = {0};
 
     if (events & PLATFORM_EVENT_RD_FLAG) {
@@ -134,7 +134,8 @@ void platform_event_mod(
     }
 }
 
-void platform_event_del(platform_event_eventq_t* eventq, platform_sock_t sock) {
+void platform_eventqueue_del(
+    platform_eventqueue_t* eventq, platform_sock_t sock) {
     struct kevent ke = {0};
 
     EV_SET(&ke, sock, EVFILT_READ, EV_DELETE, 0, 0, NULL);
@@ -144,8 +145,8 @@ void platform_event_del(platform_event_eventq_t* eventq, platform_sock_t sock) {
     kevent(*eventq, &ke, 1, NULL, 0, NULL);
 }
 
-int platform_event_wait(
-    platform_event_eventq_t* eventq, platform_event_cqe_t* cqe, int timeout) {
+int platform_eventqueue_wait(
+    platform_eventqueue_t* eventq, platform_event_cqe_t* cqe, int timeout) {
     struct kevent epoll_events[PLATFORM_EVENT_CQE_NUM];
 
     memset(cqe, 0, sizeof(platform_event_cqe_t) * PLATFORM_EVENT_CQE_NUM);

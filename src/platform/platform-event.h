@@ -23,9 +23,9 @@ _Pragma("once")
 
 #include "platform-types.h"
 
-extern void platform_event_eventq_init(platform_event_eventq_t* eventq);
-extern void platform_event_eventq_destroy(platform_event_eventq_t* eventq);
-extern void platform_event_add(platform_event_eventq_t* eventq, platform_sock_t sock, int events, void* ud);
-extern void platform_event_mod(platform_event_eventq_t* eventq, platform_sock_t sock, int events, void* ud);
-extern void platform_event_del(platform_event_eventq_t* eventq, platform_sock_t sock);
-extern int  platform_event_wait(platform_event_eventq_t* eventq, platform_event_cqe_t* cqe, int timeout);
+extern void platform_eventqueue_init(platform_eventqueue_t* eventq);
+extern void platform_eventqueue_destroy(platform_eventqueue_t* eventq);
+extern void platform_eventqueue_add(platform_eventqueue_t* eventq, platform_sock_t sock, int events, void* ud);
+extern void platform_eventqueue_mod(platform_eventqueue_t* eventq, platform_sock_t sock, int events, void* ud);
+extern void platform_eventqueue_del(platform_eventqueue_t* eventq, platform_sock_t sock);
+extern int  platform_eventqueue_wait(platform_eventqueue_t* eventq, platform_event_cqe_t* cqe, int timeout);
