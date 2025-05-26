@@ -41,6 +41,7 @@ set(SRCS
 	src/xcomm-thrdpool.c
 	src/xcomm-ringbuffer.c
 	src/xcomm-bswap.c
+	src/xcomm-poller.c
 
 	src/modules/dumper/xcomm-dumper.c
 	src/modules/dumper/xcomm-dumper-module.c
