@@ -23,5 +23,5 @@ _Pragma("once")
 
 #include <stdint.h>
 
-extern int      xcomm_varint_encode(uint64_t value, char* buf);
-extern uint64_t xcomm_varint_decode(char* buf, int* pos);
+extern int      xcomm_varint_encode(uint64_t value, uint8_t* buf);
+extern uint64_t xcomm_varint_decode(uint8_t* buf, int* pos);
