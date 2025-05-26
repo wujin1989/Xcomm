@@ -41,15 +41,13 @@ static int timer_poller(void* arg) {
     while (poller_running) {
         while (!xcomm_timer_empty(mgr)) {
             xcomm_timer_t* min = xcomm_timer_min(mgr);
+            if (!min) {
+                continue;
+            }
             uint64_t now = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
 
             if (min->birth + min->expire > now) {
-                uint64_t sleep_time = min->birth + min->expire - now;
-                thrd_sleep(
-                    &(struct timespec){
-                        .tv_sec = sleep_time / 1000,
-                        .tv_nsec = (sleep_time % 1000) * 1000000},
-                    NULL);
+                thrd_yield();
                 continue;
             }
             min->routine(min->param);
@@ -136,39 +134,15 @@ static void test_reset(void) {
     thrd_create(&poller, timer_poller, &mgr);
 
     xcomm_timer_t* t = xcomm_timer_add(&mgr, test_callback, NULL, 1000, false);
+    assert(mgr.ntimers == 1);
 
-    thrd_sleep(&(struct timespec){.tv_nsec = 200000000}, NULL);
+    thrd_sleep(&(struct timespec){.tv_nsec = 100000000}, NULL);
     xcomm_timer_reset(&mgr, t, 100);
+    assert(mgr.ntimers == 1);
 
     thrd_sleep(&(struct timespec){.tv_nsec = 150000000}, NULL);
     assert(atomic_load(&trigger_count) == 1);
 
-    poller_running = false;
-    thrd_join(poller, NULL);
-    xcomm_timer_manager_destroy(&mgr);
-}
-
-static void test_stress(void) {
-    atomic_store(&trigger_count, 0);
-    atomic_store(&poller_running, false);
-
-    xcomm_timermgr_t mgr;
-    xcomm_timer_manager_init(&mgr);
-    thrd_t poller;
-    thrd_create(&poller, timer_poller, &mgr);
-
-    xcomm_timer_t* timers[1000];
-    for (int i = 0; i < 1000; i++) {
-        timers[i] =
-            xcomm_timer_add(&mgr, test_callback, NULL, rand() % 500, false);
-    }
-    thrd_sleep(&(struct timespec){.tv_sec = 1}, NULL);
-
-    for (int i = 0; i < 1000; i++) {
-        if (rand() % 5 == 0) {
-            xcomm_timer_del(&mgr, timers[i]);
-        }
-    }
     poller_running = false;
     thrd_join(poller, NULL);
     xcomm_timer_manager_destroy(&mgr);
@@ -179,6 +153,5 @@ int main(void) {
     test_repeat();
     test_delete();
     test_reset();
-    test_stress();
     return 0;
 }

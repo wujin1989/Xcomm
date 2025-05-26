@@ -24,52 +24,100 @@
 #include <assert.h>
 #include <stdatomic.h>
 
+#include "xcomm-wg.h"
 #include "xcomm-thrdpool.h"
 
-static atomic_int task_counter = 0;
+typedef struct test_task_ctx_s {
+    atomic_int* counter;
+    xcomm_wg_t* wg;
+    int         delay_ms;
+} test_task_ctx_t;
 
 static void test_task(void* arg) {
-    int delay_ms = *(int*)arg;
-    thrd_sleep(&(struct timespec){.tv_nsec = delay_ms * 1000000}, NULL);
-    atomic_fetch_add(&task_counter, 1);
+    test_task_ctx_t* ctx = (test_task_ctx_t*)arg;
+
+    struct timespec ts = {
+        .tv_sec = ctx->delay_ms / 1000,
+        .tv_nsec = (ctx->delay_ms % 1000) * 1000000};
+    thrd_sleep(&ts, NULL);
+
+    atomic_fetch_add(ctx->counter, 1);
+    xcomm_wg_done(ctx->wg);
+}
+
+static void test_task2(void* arg) {
+    test_task_ctx_t* ctx = (test_task_ctx_t*)arg;
+    xcomm_wg_done(ctx->wg);
+
+    struct timespec ts = {
+        .tv_sec = ctx->delay_ms / 1000,
+        .tv_nsec = (ctx->delay_ms % 1000) * 1000000};
+    thrd_sleep(&ts, NULL);
+
+    atomic_fetch_add(ctx->counter, 1);
 }
 
 static void test_basic(void) {
     xcomm_thrdpool_t pool;
     xcomm_thrdpool_init(&pool, 2);
 
-    int delay = 100;
-    xcomm_thrdpool_post(&pool, test_task, &delay);
-    thrd_sleep(&(struct timespec){.tv_sec = 1}, NULL);
+    atomic_int task_counter = 0;
+    xcomm_wg_t wg;
+    xcomm_wg_init(&wg);
+    xcomm_wg_add(&wg, 1);
+
+    test_task_ctx_t ctx = {
+        .counter = &task_counter, .wg = &wg, .delay_ms = 100};
+
+    xcomm_thrdpool_post(&pool, test_task, &ctx);
+    xcomm_wg_wait(&wg);
 
     assert(atomic_load(&task_counter) == 1);
+
     xcomm_thrdpool_destroy(&pool);
+    xcomm_wg_destroy(&wg);
 }
 
 static void test_concurrent(void) {
     xcomm_thrdpool_t pool;
     xcomm_thrdpool_init(&pool, 4);
 
-    int delays[100];
-    for (int i = 0; i < 100; i++) {
-        delays[i] = 10;
-        xcomm_thrdpool_post(&pool, test_task, &delays[i]);
-    }
-    thrd_sleep(&(struct timespec){.tv_sec = 2}, NULL);
-    assert(atomic_load(&task_counter) == 100 + 1);
+    atomic_int task_counter = 0;
+    xcomm_wg_t wg;
+    xcomm_wg_init(&wg);
+    xcomm_wg_add(&wg, 100);
 
+    test_task_ctx_t* contexts = malloc(sizeof(test_task_ctx_t) * 100);
+    for (int i = 0; i < 100; i++) {
+        contexts[i] = (test_task_ctx_t){
+            .counter = &task_counter, .wg = &wg, .delay_ms = 10};
+        xcomm_thrdpool_post(&pool, test_task, &contexts[i]);
+    }
+    xcomm_wg_wait(&wg);
+    assert(atomic_load(&task_counter) == 100);
+
+    free(contexts);
     xcomm_thrdpool_destroy(&pool);
+    xcomm_wg_destroy(&wg);
 }
 
 static void test_destroy(void) {
     xcomm_thrdpool_t pool;
     xcomm_thrdpool_init(&pool, 2);
 
-    int delay = 2000;
-    xcomm_thrdpool_post(&pool, test_task, &delay);
+    atomic_int task_counter = 0;
+    xcomm_wg_t wg;
+    xcomm_wg_init(&wg);
+    xcomm_wg_add(&wg, 1);
+
+    test_task_ctx_t ctx = {
+        .counter = &task_counter, .wg = &wg, .delay_ms = 500};
+    xcomm_thrdpool_post(&pool, test_task2, &ctx);
+    xcomm_wg_wait(&wg);
     xcomm_thrdpool_destroy(&pool);
 
-    assert(atomic_load(&task_counter) == 101);
+    assert(atomic_load(&task_counter) == 1);
+    xcomm_wg_destroy(&wg);
 }
 
 int main(void) {

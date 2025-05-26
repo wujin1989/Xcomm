@@ -76,8 +76,9 @@ bool xcomm_timer_empty(xcomm_timermgr_t* timermgr) {
 
 xcomm_timer_t* xcomm_timer_min(xcomm_timermgr_t* timermgr) {
     mtx_lock(&timermgr->mtx);
-    xcomm_timer_t* timer =
-        xcomm_heap_data(xcomm_heap_min(&timermgr->heap), xcomm_timer_t, node);
+    xcomm_heap_node_t* min_node = xcomm_heap_min(&timermgr->heap);
+    xcomm_timer_t*     timer =
+        min_node ? xcomm_heap_data(min_node, xcomm_timer_t, node) : NULL;
     mtx_unlock(&timermgr->mtx);
     return timer;
 }
