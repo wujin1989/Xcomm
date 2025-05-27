@@ -19,4 +19,28 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-poller.h"
+#include "xcomm-eventloop.h"
+
+void xcomm_eventloop_init(xcomm_eventloop_t* loop) {
+}
+
+void xcomm_eventloop_destroy(xcomm_eventloop_t* loop) {
+}
+
+void xcomm_eventloop_loop(xcomm_eventloop_t* loop) {
+}
+
+void xcomm_eventloop_wakeup(xcomm_eventloop_t* loop) {
+}
+
+void xcomm_eventloop_register(
+    xcomm_eventloop_t* loop, platform_sock_t fd, xcomm_event_t* event) {
+}
+
+void xcomm_eventloop_update(
+    xcomm_eventloop_t* loop, platform_sock_t fd, xcomm_event_t* event) {
+}
+
+void xcomm_eventloop_unregister(xcomm_eventloop_t* loop, platform_sock_t fd) {
+
+}
