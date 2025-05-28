@@ -22,33 +22,36 @@
 _Pragma("once")
 
 #include "xcomm-list.h"
+#include "xcomm-queue.h"
 #include "xcomm-timer.h"
+#include "xcomm-rbtree.h"
+
 #include "platform/platform-types.h"
 
 typedef struct xcomm_eventloop_s xcomm_eventloop_t;
 typedef struct xcomm_event_s     xcomm_event_t;
 
-typedef struct xcomm_eventloop_s {
+struct xcomm_eventloop_s {
     platform_eventqueue_t eventq;
     thrd_t                tid;
-    platform_sock_t       evfds[2];
-    xcomm_list_t          evlist;
-    mtx_t                 evmtx;
-    bool                  active;
-    xcomm_list_t          chlist;
+    xcomm_channel_t       wakeup_channel;
+    xcomm_queue_t         taskque;
+    mtx_t                 taskmtx;
+    bool                  running;
+    xcomm_rbtree_t        channels;
     xcomm_timermgr_t*     timermgr;
-} xcomm_eventloop_t;
+};
 
 struct xcomm_event_s {
+    platform_sock_t       sock;
     platform_event_flag_t events;
-    void (*callback)(void* context, platform_event_flag_t events);
-    void* context;
+    void*                 userdata;
 };
 
 extern void xcomm_eventloop_init(xcomm_eventloop_t* loop);
 extern void xcomm_eventloop_destroy(xcomm_eventloop_t* loop);
-extern void xcomm_eventloop_loop(xcomm_eventloop_t* loop);
+extern void xcomm_eventloop_run(xcomm_eventloop_t* loop);
 extern void xcomm_eventloop_wakeup(xcomm_eventloop_t* loop);
-extern void xcomm_eventloop_register(xcomm_eventloop_t* loop, platform_sock_t fd, xcomm_event_t* event);
-extern void xcomm_eventloop_update(xcomm_eventloop_t* loop, platform_sock_t fd, xcomm_event_t* event);
-extern void xcomm_eventloop_unregister(xcomm_eventloop_t* loop, platform_sock_t fd);
+extern void xcomm_eventloop_register(xcomm_eventloop_t* loop, xcomm_event_t* event);
+extern void xcomm_eventloop_update(xcomm_eventloop_t* loop, xcomm_event_t* event);
+extern void xcomm_eventloop_unregister(xcomm_eventloop_t* loop, xcomm_event_t* event);

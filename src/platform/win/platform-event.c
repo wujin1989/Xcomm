@@ -33,7 +33,7 @@ void platform_eventqueue_destroy(platform_eventqueue_t* eventq) {
 void platform_eventqueue_add(
     platform_eventqueue_t* eventq,
     platform_sock_t        sock,
-    int                    events,
+    platform_event_flag_t  events,
     void*                  ud) {
     struct epoll_event ee = {0};
 
@@ -50,7 +50,7 @@ void platform_eventqueue_add(
 void platform_eventqueue_mod(
     platform_eventqueue_t* eventq,
     platform_sock_t        sock,
-    int                    events,
+    platform_event_flag_t  events,
     void*                  ud) {
     struct epoll_event ee = {0};
 

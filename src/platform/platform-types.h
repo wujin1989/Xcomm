@@ -134,6 +134,7 @@ struct platform_event_cqe_s {
 enum platform_event_flag_e {
     PLATFORM_EVENT_RD_FLAG = 1,
     PLATFORM_EVENT_WR_FLAG = 2,
+    PLATFORM_EVENT_RW_FLAG = 3,
 };
 
 enum platform_uart_baudrate_e {

@@ -42,6 +42,9 @@ set(SRCS
 	src/xcomm-ringbuffer.c
 	src/xcomm-bswap.c
 	src/xcomm-eventloop.c
+	src/xcomm-channel.c
+	src/xcomm-tcpchannel.c
+	src/xcomm-udpchannel.c
 
 	src/modules/dumper/xcomm-dumper.c
 	src/modules/dumper/xcomm-dumper-module.c
@@ -50,6 +53,7 @@ set(SRCS
 	src/modules/serial/xcomm-serial-module.c
 	
 	src/modules/tcp/xcomm-sync-tcp.c
+	src/modules/tcp/xcomm-async-tcp.c
 	src/modules/tcp/xcomm-tcp-module.c
 
 	src/modules/melsec/xcomm-melsec-1c.c

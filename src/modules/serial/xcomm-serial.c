@@ -23,6 +23,30 @@
 #include "xcomm-logger.h"
 #include "platform/platform-uart.h"
 
+static const platform_uart_baudrate_t baudrate_map[] = {
+    [XCOMM_SERIAL_BAUDRATE_9600]   = PLATFORM_UART_BAUDRATE_9600,
+    [XCOMM_SERIAL_BAUDRATE_19200]  = PLATFORM_UART_BAUDRATE_19200,
+    [XCOMM_SERIAL_BAUDRATE_38400]  = PLATFORM_UART_BAUDRATE_38400,
+    [XCOMM_SERIAL_BAUDRATE_57600]  = PLATFORM_UART_BAUDRATE_57600,
+    [XCOMM_SERIAL_BAUDRATE_115200] = PLATFORM_UART_BAUDRATE_115200,
+};
+
+static const platform_uart_parity_t parity_map[] = {
+    [XCOMM_SERIAL_PARITY_NO]   = PLATFORM_UART_PARITY_NO,
+    [XCOMM_SERIAL_PARITY_ODD]  = PLATFORM_UART_PARITY_ODD,
+    [XCOMM_SERIAL_PARITY_EVEN] = PLATFORM_UART_PARITY_EVEN,
+};
+
+static const platform_uart_databits_t databits_map[] = {
+    [XCOMM_SERIAL_DATABITS_CS7] = PLATFORM_UART_DATABITS_CS7,
+    [XCOMM_SERIAL_DATABITS_CS8] = PLATFORM_UART_DATABITS_CS8,
+};
+
+static const platform_uart_stopbits_t stopbits_map[] = {
+    [XCOMM_SERIAL_STOPBITS_ONE] = PLATFORM_UART_STOPBITS_ONE,
+    [XCOMM_SERIAL_STOPBITS_TWO] = PLATFORM_UART_STOPBITS_TWO,
+};
+
 void xcomm_serial_close(xcomm_serial_t* serial) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
@@ -50,12 +74,13 @@ xcomm_serial_t* xcomm_serial_open(xcomm_serial_config_t* config) {
         free(serial);
         return NULL;
     }
-    /**
-     * avoiding "strict aliasing rule" 
-     */
-    platform_uart_config_t uconfig;
-    memcpy(&uconfig, config, sizeof(platform_uart_config_t));
-
+    platform_uart_config_t uconfig = {
+        .device   = config->device,
+        .baudrate = baudrate_map[config->baudrate],
+        .parity   = parity_map[config->parity],
+        .databits = databits_map[config->databits],
+        .stopbits = stopbits_map[config->stopbits],
+    };
     platform_uart_t uartobj = platform_uart_open(&uconfig);
     if (uartobj != PLATFORM_UA_ERROR_INVALID_UART) {
         memcpy(serial->opaque, &uartobj, sizeof(platform_uart_t));

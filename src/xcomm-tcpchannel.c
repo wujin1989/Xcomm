@@ -19,13 +19,5 @@
  *  IN THE SOFTWARE.
  */
 
-_Pragma("once")
+#include "xcomm-tcpchannel.h"
 
-#include "platform-types.h"
-
-extern void platform_eventqueue_init(platform_eventqueue_t* eventq);
-extern void platform_eventqueue_destroy(platform_eventqueue_t* eventq);
-extern void platform_eventqueue_add(platform_eventqueue_t* eventq, platform_sock_t sock, platform_event_flag_t events, void* ud);
-extern void platform_eventqueue_mod(platform_eventqueue_t* eventq, platform_sock_t sock, platform_event_flag_t events, void* ud);
-extern void platform_eventqueue_del(platform_eventqueue_t* eventq, platform_sock_t sock);
-extern int  platform_eventqueue_wait(platform_eventqueue_t* eventq, platform_event_cqe_t* cqe, int timeout);

@@ -20,27 +20,45 @@
  */
 
 #include "xcomm-eventloop.h"
+#include "platform/platform-event.h"
 
 void xcomm_eventloop_init(xcomm_eventloop_t* loop) {
+    poller->pfd = platform_socket_pollfd_create();
+    poller->tid = thrd_current();
+    poller->active = true;
+    poller->timermgr = cdk_timer_manager_create();
+
+    cdk_list_init(&poller->evlist);
+    cdk_list_init(&poller->chlist);
+
+    mtx_init(&poller->evmtx, mtx_plain);
+    platform_socket_socketpair(AF_INET, SOCK_STREAM, 0, poller->evfds);
+    platform_socket_nonblock(poller->evfds[1]);
+    platform_event_add(
+        poller->pfd, poller->evfds[1], EVENT_RD, &poller->evfds[1]);
+
+    platform_eventqueue_init(&loop->eventq);
+    loop->tid = thrd_current();
+
 }
 
 void xcomm_eventloop_destroy(xcomm_eventloop_t* loop) {
 }
 
-void xcomm_eventloop_loop(xcomm_eventloop_t* loop) {
+void xcomm_eventloop_run(xcomm_eventloop_t* loop) {
 }
 
 void xcomm_eventloop_wakeup(xcomm_eventloop_t* loop) {
 }
 
 void xcomm_eventloop_register(
-    xcomm_eventloop_t* loop, platform_sock_t fd, xcomm_event_t* event) {
+    xcomm_eventloop_t* loop, xcomm_event_t* event) {
 }
 
 void xcomm_eventloop_update(
-    xcomm_eventloop_t* loop, platform_sock_t fd, xcomm_event_t* event) {
+    xcomm_eventloop_t* loop, xcomm_event_t* event) {
 }
 
-void xcomm_eventloop_unregister(xcomm_eventloop_t* loop, platform_sock_t fd) {
+void xcomm_eventloop_unregister(xcomm_eventloop_t* loop, xcomm_event_t* event) {
 
 }
