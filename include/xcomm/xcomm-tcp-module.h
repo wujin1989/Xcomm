@@ -21,12 +21,24 @@
 
 _Pragma("once")
 
+#include <stdbool.h>
+
 typedef struct xcomm_sync_tcp_module_s  xcomm_sync_tcp_module_t;
 typedef struct xcomm_async_tcp_module_s xcomm_async_tcp_module_t;
 typedef struct xcomm_socket_s           xcomm_socket_t;
+typedef struct xcomm_channel_s          xcomm_channel_t;
+typedef struct xcomm_handler_s          xcomm_handler_t;
 
 struct xcomm_socket_s {
     void* opaque;
+};
+
+struct xcomm_channel_s {
+    void* opaque;
+};
+
+struct xcomm_handler_s {
+    void* userdata;
 };
 
 struct xcomm_sync_tcp_module_s {
@@ -44,12 +56,11 @@ struct xcomm_sync_tcp_module_s {
 
 struct xcomm_async_tcp_module_s {
     const char* restrict name;
+
     void (*dial)(const char* restrict host, const char* restrict port, xcomm_handler_t* handler);
     void (*listen)(const char* restrict host, const char* restrict port, xcomm_handler_t* handler);
-    bool (*send)(xcomm_channel_t* channel, void* buf, size_t len);
+    void (*send)(xcomm_channel_t* channel, void* buf, size_t len);
     void (*close)(xcomm_channel_t* channel);
-    void (*post_task)(void (*routine)(void*), void* param);
-    void (*add_timer)(void (*routine)(void*), void* param, size_t expire, bool repeat);
 };
 
 extern xcomm_sync_tcp_module_t  xcomm_sync_tcp;
