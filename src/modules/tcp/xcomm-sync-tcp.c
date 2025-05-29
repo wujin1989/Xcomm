@@ -27,7 +27,7 @@
 
 static atomic_int refcnt;
 
-void xcomm_sync_tcp_close(xcomm_socket_t* socketptr) {
+void xcomm_sync_tcp_close(xcomm_tcp_socket_t* socketptr) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
     platform_sock_t* sockptr = socketptr->opaque;
@@ -44,10 +44,11 @@ void xcomm_sync_tcp_close(xcomm_socket_t* socketptr) {
     xcomm_logi("%s leave.\n", __FUNCTION__);
 }
 
-xcomm_socket_t* xcomm_sync_tcp_dial(const char* restrict host, const char* restrict port) {
+xcomm_tcp_socket_t*
+xcomm_sync_tcp_dial(const char* restrict host, const char* restrict port) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
-    xcomm_socket_t* sockptr = malloc(sizeof(xcomm_socket_t));
+    xcomm_tcp_socket_t* sockptr = malloc(sizeof(xcomm_tcp_socket_t));
     if (!sockptr) {
         xcomm_loge("no memory.\n");
         return NULL;
@@ -78,11 +79,11 @@ xcomm_socket_t* xcomm_sync_tcp_dial(const char* restrict host, const char* restr
     return sockptr;
 }
 
-xcomm_socket_t*
+xcomm_tcp_socket_t*
 xcomm_sync_tcp_listen(const char* restrict host, const char* restrict port) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
-    xcomm_socket_t* sockptr = malloc(sizeof(xcomm_socket_t));
+    xcomm_tcp_socket_t* sockptr = malloc(sizeof(xcomm_tcp_socket_t));
     if (!sockptr) {
         xcomm_loge("no memory.\n");
         return NULL;
@@ -112,13 +113,13 @@ xcomm_sync_tcp_listen(const char* restrict host, const char* restrict port) {
     return sockptr;
 }
 
-xcomm_socket_t* xcomm_sync_tcp_accept(xcomm_socket_t* socketptr) {
+xcomm_tcp_socket_t* xcomm_sync_tcp_accept(xcomm_tcp_socket_t* socketptr) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
     platform_sock_t* srvptr = socketptr->opaque;
     platform_sock_t  srvobj = *srvptr;
 
-    xcomm_socket_t* cliptr = malloc(sizeof(xcomm_socket_t));
+    xcomm_tcp_socket_t* cliptr = malloc(sizeof(xcomm_tcp_socket_t));
     if (!cliptr) {
         xcomm_loge("no memory.\n");
         return NULL;
@@ -144,7 +145,7 @@ xcomm_socket_t* xcomm_sync_tcp_accept(xcomm_socket_t* socketptr) {
     return cliptr;
 }
 
-int xcomm_sync_tcp_send(xcomm_socket_t* socketptr, void* buf, int len) {
+int xcomm_sync_tcp_send(xcomm_tcp_socket_t* socketptr, void* buf, int len) {
     platform_sock_t* sockptr = socketptr->opaque;
     platform_sock_t  sockobj = *sockptr;
 
@@ -155,7 +156,7 @@ int xcomm_sync_tcp_send(xcomm_socket_t* socketptr, void* buf, int len) {
     return ret;
 }
 
-int xcomm_sync_tcp_recv(xcomm_socket_t* socketptr, void* buf, int len) {
+int xcomm_sync_tcp_recv(xcomm_tcp_socket_t* socketptr, void* buf, int len) {
     platform_sock_t* sockptr = socketptr->opaque;
     platform_sock_t  sockobj = *sockptr;
 
@@ -166,7 +167,8 @@ int xcomm_sync_tcp_recv(xcomm_socket_t* socketptr, void* buf, int len) {
     return ret;
 }
 
-void xcomm_sync_tcp_set_sndtimeout(xcomm_socket_t* socketptr, int timeout_ms) {
+void xcomm_sync_tcp_set_sndtimeout(
+    xcomm_tcp_socket_t* socketptr, int timeout_ms) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
     platform_sock_t* sockptr = socketptr->opaque;
@@ -177,7 +179,8 @@ void xcomm_sync_tcp_set_sndtimeout(xcomm_socket_t* socketptr, int timeout_ms) {
     xcomm_logi("%s leave.\n", __FUNCTION__);
 }
 
-void xcomm_sync_tcp_set_rcvtimeout(xcomm_socket_t* socketptr, int timeout_ms) {
+void xcomm_sync_tcp_set_rcvtimeout(
+    xcomm_tcp_socket_t* socketptr, int timeout_ms) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
     platform_sock_t* sockptr = socketptr->opaque;

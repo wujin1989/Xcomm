@@ -20,6 +20,7 @@
  */
 
 #include "xcomm-sync-tcp.h"
+#include "xcomm-async-tcp.h"
 #include "xcomm/xcomm-tcp-module.h"
 
 xcomm_sync_tcp_module_t xcomm_sync_tcp = {
@@ -35,5 +36,18 @@ xcomm_sync_tcp_module_t xcomm_sync_tcp = {
 };
 
 xcomm_async_tcp_module_t xcomm_async_tcp = {
-    .name = "Xcomm Async TCP Module",
+    .name                   = "Xcomm Async TCP Module",
+    .dial                   = xcomm_async_tcp_dial,
+    .listen                 = xcomm_async_tcp_listen,
+    .set_recv_cb            = xcomm_async_tcp_set_recv_cb,
+    .set_send_cb            = xcomm_async_tcp_set_send_cb,
+    .set_heartbeat_cb       = xcomm_async_tcp_set_heartbeat_cb,
+    .set_close_cb           = xcomm_async_tcp_set_close_cb,
+    .send                   = xcomm_async_tcp_send,
+    .close                  = xcomm_async_tcp_close,
+    .set_conntimeo          = xcomm_async_tcp_set_conntimeo,
+    .set_sendtimeo          = xcomm_async_tcp_set_sendtimeo,
+    .set_recvtimeo          = xcomm_async_tcp_set_recvtimeo,
+    .set_heartbeat_interval = xcomm_async_tcp_set_heartbeat_interval,
+    .set_packetizer         = xcomm_async_tcp_set_packetizer,
 };

@@ -19,12 +19,12 @@
  *  IN THE SOFTWARE.
  */
 
-_Pragma("once")
+#include "xcomm.h"
 
-#include "xcomm/xcomm-tcp-module.h"
-#include "xcomm/xcomm-dumper-module.h"
-#include "xcomm/xcomm-melsec-module.h"
-#include "xcomm/xcomm-serial-module.h"
+void xcomm_startup(int concurrency) {
 
-extern void xcomm_startup(int concurrency);
-extern void xcomm_cleanup(void);
+}
+
+void xcomm_cleanup(void) {
+
+}

@@ -21,62 +21,61 @@
 
 _Pragma("once")
 
+#include <stddef.h>
 #include <stdbool.h>
 
 typedef struct xcomm_sync_tcp_module_s  xcomm_sync_tcp_module_t;
 typedef struct xcomm_async_tcp_module_s xcomm_async_tcp_module_t;
-typedef struct xcomm_socket_s           xcomm_socket_t;
-typedef struct xcomm_channel_s          xcomm_channel_t;
-typedef struct xcomm_handler_s          xcomm_handler_t;
+typedef struct xcomm_tcp_socket_s       xcomm_tcp_socket_t;
+typedef struct xcomm_tcp_channel_s      xcomm_tcp_channel_t;
+typedef struct xcomm_tcp_packetizer_s   xcomm_tcp_packetizer_t;
 
-struct xcomm_socket_s {
+struct xcomm_tcp_socket_s {
     void* opaque;
 };
 
-struct xcomm_channel_s {
+struct xcomm_tcp_channel_s {
     void* opaque;
 };
 
-struct xcomm_handler_s {
-    void* userdata;
+struct xcomm_tcp_packetizer_s {
+
 };
 
 struct xcomm_sync_tcp_module_s {
     const char* restrict name;
 
-    xcomm_socket_t* (*dial)(const char* restrict host, const char* restrict port);
-    xcomm_socket_t* (*listen)(const char* restrict host, const char* restrict port);
-    xcomm_socket_t* (*accept)(xcomm_socket_t* socket);
-    int  (*send)(xcomm_socket_t* sock, void* buf, int len);
-    int  (*recv)(xcomm_socket_t* sock, void* buf, int len);
-    void (*close)(xcomm_socket_t* sock);
-    void (*set_sndtimeo)(xcomm_socket_t* sock, int timeout_ms);
-    void (*set_rcvtimeo)(xcomm_socket_t* sock, int timeout_ms);
+    xcomm_tcp_socket_t* (*dial)(const char* restrict host, const char* restrict port);
+    xcomm_tcp_socket_t* (*listen)(const char* restrict host, const char* restrict port);
+    xcomm_tcp_socket_t* (*accept)(xcomm_tcp_socket_t* socket);
+    int  (*send)(xcomm_tcp_socket_t* sock, void* buf, int len);
+    int  (*recv)(xcomm_tcp_socket_t* sock, void* buf, int len);
+    void (*close)(xcomm_tcp_socket_t* sock);
+    void (*set_sndtimeo)(xcomm_tcp_socket_t* sock, int timeout_ms);
+    void (*set_rcvtimeo)(xcomm_tcp_socket_t* sock, int timeout_ms);
 };
 
 struct xcomm_async_tcp_module_s {
     const char* restrict name;
 
-    void (*dial)(const char* restrict host, const char* restrict port, xcomm_handler_t* handler);
-    void (*listen)(const char* restrict host, const char* restrict port, xcomm_handler_t* handler);
-    void (*send)(xcomm_channel_t* channel, void* buf, size_t len);
-    void (*close)(xcomm_channel_t* channel);
+    void (*dial)(const char* restrict host, const char* restrict port, void (*on_connect)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
+    void (*listen)(const char* restrict host, const char* restrict port, void (*on_accept)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
+
+    void (*set_recv_cb)(xcomm_tcp_channel_t* channel, void (*on_recv)(xcomm_tcp_channel_t* channel, void* buf, size_t len, void* userdata), void* userdata);
+    void (*set_send_cb)(xcomm_tcp_channel_t* channel, void (*on_send_complete)(xcomm_tcp_channel_t* channel, void* buf, size_t len, void* userdata), void* userdata);
+    void (*set_heartbeat_cb)(xcomm_tcp_channel_t* channel, void (*on_heartbeat)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
+    void (*set_close_cb)(xcomm_tcp_channel_t* channel, void (*on_close)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
+
+    void (*send)(xcomm_tcp_channel_t* channel, void* buf, size_t len);
+    void (*close)(xcomm_tcp_channel_t* channel);
+
+    void (*set_conntimeo)(xcomm_tcp_channel_t* channel, int timeout_ms);
+    void (*set_sendtimeo)(xcomm_tcp_channel_t* channel, int timeout_ms);
+    void (*set_recvtimeo)(xcomm_tcp_channel_t* channel, int timeout_ms);
+    void (*set_heartbeat_interval)(xcomm_tcp_channel_t* channel, int interval_ms);
+    
+    void (*set_packetizer)(xcomm_tcp_packetizer_t* packetizer);
 };
 
 extern xcomm_sync_tcp_module_t  xcomm_sync_tcp;
 extern xcomm_async_tcp_module_t xcomm_async_tcp;
-
-
-
-extern void cdk_net_ntop(struct sockaddr_storage* ss, cdk_address_t* ai);
-extern void cdk_net_pton(cdk_address_t* ai, struct sockaddr_storage* ss);
-extern void cdk_net_address_make(cdk_sock_t sock, struct sockaddr_storage* ss, char* host, char* port);
-extern void cdk_net_address_retrieve(cdk_sock_t sock, cdk_address_t* ai, bool peer);
-extern void cdk_net_concurrency_configure(int ncpus); 
-extern void cdk_net_listen(const char* protocol, const char* host, const char* port, cdk_handler_t* handler);
-extern void cdk_net_dial(const char* protocol, const char* host, const char* port, cdk_handler_t* handler);
-extern bool cdk_net_send(cdk_channel_t* channel, void* data, size_t size);
-extern void cdk_net_post_event(cdk_poller_t* poller, void (*task)(void*), void* arg, bool totail);
-extern void cdk_net_timer_create(void (*routine)(void*), void* param, size_t expire, bool repeat);
-extern void cdk_net_close(cdk_channel_t* channel);
-extern void cdk_net_exit(void);

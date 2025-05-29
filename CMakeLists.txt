@@ -23,6 +23,7 @@ include_directories(${CMAKE_CURRENT_SOURCE_DIR}/include)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR}/src)
 
 set(SRCS
+	src/xcomm.c
 	src/xcomm-base64.c
 	src/xcomm-heap.c
 	src/xcomm-list.c
