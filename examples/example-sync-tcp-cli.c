@@ -27,7 +27,7 @@
 int main(void) {
     char sbuf[64] = "ping";
     char rbuf[64] = {0};
-    xcomm_socket_t* socket =
+    xcomm_tcp_socket_t* socket =
         xcomm_sync_tcp.dial("127.0.0.1", "1234");
     
     xcomm_sync_tcp.send(socket, sbuf, sizeof(sbuf));
