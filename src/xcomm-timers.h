@@ -24,13 +24,12 @@ _Pragma("once")
 #include "xcomm-heap.h"
 #include "deprecated/c11-threads.h"
 
-typedef struct xcomm_timer_s    xcomm_timer_t;
-typedef struct xcomm_timermgr_s xcomm_timermgr_t;
+typedef struct xcomm_timer_s  xcomm_timer_t;
+typedef struct xcomm_timers_s xcomm_timers_t;
 
-struct xcomm_timermgr_s {
+struct xcomm_timers_s {
     xcomm_heap_t heap;
     size_t       ntimers;
-    mtx_t        mtx;
 };
 
 struct xcomm_timer_s {
@@ -43,10 +42,9 @@ struct xcomm_timer_s {
     xcomm_heap_node_t node;
 };
 
-extern void xcomm_timer_manager_init(xcomm_timermgr_t* timermgr);
-extern void xcomm_timer_manager_destroy(xcomm_timermgr_t* timermgr);
-extern void xcomm_timer_del(xcomm_timermgr_t* timermgr, xcomm_timer_t* timer);
-extern void xcomm_timer_reset(xcomm_timermgr_t* timermgr, xcomm_timer_t* timer, size_t expire_ms);
-extern bool xcomm_timer_empty(xcomm_timermgr_t* timermgr);
-extern xcomm_timer_t* xcomm_timer_min(xcomm_timermgr_t* timermgr);
-extern xcomm_timer_t* xcomm_timer_add(xcomm_timermgr_t* timermgr, void (*routine)(void*), void* param, size_t expire_ms, bool repeat);
+extern void xcomm_timers_init(xcomm_timers_t* timers);
+extern void xcomm_timers_del(xcomm_timers_t* timers, xcomm_timer_t* timer);
+extern void xcomm_timers_reset(xcomm_timers_t* timers, xcomm_timer_t* timer, size_t expire_ms);
+extern bool xcomm_timers_empty(xcomm_timers_t* timers);
+extern xcomm_timer_t* xcomm_timers_min(xcomm_timers_t* timers);
+extern xcomm_timer_t* xcomm_timers_add(xcomm_timers_t* timers, void (*routine)(void*), void* param, size_t expire_ms, bool repeat);

@@ -66,6 +66,7 @@ extern int xcomm_rbtree_keycmp_u16(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k
 extern int xcomm_rbtree_keycmp_u32(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2);
 extern int xcomm_rbtree_keycmp_u64(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2);
 extern int xcomm_rbtree_keycmp_str(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2);
+extern int xcomm_rbtree_keycmp_ptr(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2);
 
 extern void xcomm_rbtree_init(xcomm_rbtree_t* tree, int (*keycmp)(xcomm_rbtree_key_t*, xcomm_rbtree_key_t*));
 extern void xcomm_rbtree_insert(xcomm_rbtree_t* tree, xcomm_rbtree_node_t* node);

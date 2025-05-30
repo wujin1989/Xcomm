@@ -56,9 +56,8 @@ void platform_event_mod(platform_event_sq_t* sq, platform_event_sqe_t* sqe) {
     epoll_ctl(*sq, EPOLL_CTL_MOD, sqe->handle, (struct epoll_event*)&ee);
 }
 
-void platform_event_del(
-    platform_event_sq_t* sq, platform_event_handle_t handle) {
-    epoll_ctl(*sq, EPOLL_CTL_DEL, handle, NULL);
+void platform_event_del(platform_event_sq_t* sq, platform_event_sqe_t* sqe) {
+    epoll_ctl(*sq, EPOLL_CTL_DEL, &sqe->handle, NULL);
 }
 
 int platform_event_wait(

@@ -19,29 +19,18 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-timer.h"
 #include "xcomm-eventloop.h"
 
 #include "platform/platform-event.h"
 #include "platform/platform-socket.h"
 
-static void _eventloop_post_routine(
-    xcomm_eventloop_t* loop, void (*task)(void*), void* arg, bool totail) {
-    cdk_async_event_t* async_event = malloc(sizeof(cdk_async_event_t));
-    if (!async_event) {
-        return;
-    }
-    async_event->task = task;
-    async_event->arg = arg;
+#define xcomm_eventloop_container_of(x, t, m) ((t*)((char*)(x)-offsetof(t, m)))
 
-    mtx_lock(&poller->evmtx);
-    if (totail) {
-        cdk_list_insert_tail(&poller->evlist, &async_event->node);
-    } else {
-        cdk_list_insert_head(&poller->evlist, &async_event->node);
-    }
-    mtx_unlock(&poller->evmtx);
-    poller_wakeup(poller);
+static void _io_event_cb(void* context) {
+    xcomm_eventloop_t* loop = (xcomm_eventloop_t*)context;
+
+    char buf;
+    platform_socket_recv(loop->wkup[1], &buf, sizeof(buf));
 }
 
 void xcomm_eventloop_init(xcomm_eventloop_t* loop) {
@@ -50,56 +39,80 @@ void xcomm_eventloop_init(xcomm_eventloop_t* loop) {
     
     mtx_init(&loop->rt_mtx, mtx_plain);
     
-    xcomm_queue_init(&loop->rt_evts);
-    xcomm_queue_init(&loop->ch_evts);
-    xcomm_timer_manager_init(&loop->tm_mgr);
+    xcomm_list_init(&loop->rt_evts);
+    xcomm_rbtree_init(&loop->io_evts, xcomm_rbtree_keycmp_ptr);
+    xcomm_timers_init(&loop->tm_evts);
 
     platform_event_init(&loop->sq);
-    platform_socket_socketpair(AF_INET, SOCK_STREAM, 0, loop->wakeup);
-    platform_socket_enable_nonblocking(loop->wakeup[1], true);
+    platform_socket_socketpair(AF_INET, SOCK_STREAM, 0, loop->wkup);
+    platform_socket_enable_nonblocking(loop->wkup[1], true);
 
-    xcomm_event_t* event = malloc(sizeof(xcomm_event_t));
+    xcomm_event_io_t* event = malloc(sizeof(xcomm_event_io_t));
     if (!event) {
         return;
     }
     platform_event_sqe_t sqe = {
         .op = PLATFORM_EVENT_RD_OP, 
-        .handle = (platform_event_handle_t)loop->wakeup[1],
+        .fd = (platform_event_fd_t)loop->wkup[1],
         .ud = event
     };
-    event->type = XCOMM_EVENT_CHANNEL;
-    event->sqe = sqe;
-    event->context = &loop->wakeup[1];
-    event->execute_cb = ;
-    event->cleanup_cb = ;
+    event->base.type = XCOMM_EVENT_TYPE_IO;
+    event->base.context = loop;
+    event->base.execute = _io_event_cb;
+    event->base.cleanup = NULL;
 
+    event->sqe = sqe;
     platform_event_add(loop->sq, &sqe);
 }
 
 void xcomm_eventloop_wakeup(xcomm_eventloop_t* loop) {
+    char buf = 'W';
+    platform_socket_send(loop->wkup[0], &buf, sizeof(buf));
 }
 
 void xcomm_eventloop_register(
-    xcomm_eventloop_t* loop, xcomm_event_t* event) {
+    xcomm_eventloop_t* loop, xcomm_event_base_t* event) {
     switch (event->type) {
-    case XCOMM_EVENT_ROUTINE:
-    case XCOMM_EVENT_CHANNEL:
-        platform_event_add(loop->sq, &event->sqe);
+    case XCOMM_EVENT_TYPE_IO: {
+        xcomm_event_io_t* io_evt =
+            xcomm_eventloop_container_of(event, xcomm_event_io_t, base);
+
+        platform_event_add(loop->sq, &io_evt->sqe);
         break;
+    }
+    case XCOMM_EVENT_TYPE_RT: {
+        xcomm_event_rt_t* rt_evt =
+            xcomm_eventloop_container_of(event, xcomm_event_rt_t, base);
+
+        mtx_lock(&loop->rt_mtx);
+        xcomm_list_insert_tail(&loop->rt_evts, event);
+        mtx_unlock(&loop->rt_mtx);
+
+        xcomm_eventloop_wakeup(loop);
+        break;
+    }
+    case XCOMM_EVENT_TYPE_TM: {
+        xcomm_event_tm_t* tm_evt =
+            xcomm_eventloop_container_of(event, xcomm_event_tm_t, base);
+
+        xcomm_timers_add(&loop->tm_evts, event);
+        break;
+    }
     default:
         break;
     }
 }
 
 void xcomm_eventloop_update(
-    xcomm_eventloop_t* loop, xcomm_event_t* event) {
+    xcomm_eventloop_t* loop, xcomm_event_base_t* event) {
     platform_event_sqe_t sqe = {
         .op = event->operate, .handle = event->handle, .ud = event->userdata};
     platform_event_mod(loop->sq, &sqe);
 }
 
-void xcomm_eventloop_unregister(xcomm_eventloop_t* loop, xcomm_event_t* event) {
-    platform_event_del(loop->sq, event->handle);
+void xcomm_eventloop_unregister(
+    xcomm_eventloop_t* loop, xcomm_event_base_t* event) {
+    
 }
 
 void xcomm_eventloop_run(xcomm_eventloop_t* loop) {
@@ -112,7 +125,7 @@ void xcomm_eventloop_run(xcomm_eventloop_t* loop) {
             xcomm_event_t* event = cqes[i].ud;
 
             if (event && event->execute_cb) {
-                event->execute_cb(event->context);
+                event->execute(event->context);
             }
         }
         if (!_timeout_update(poller)) {

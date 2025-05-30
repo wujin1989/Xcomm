@@ -35,7 +35,7 @@ set(SRCS
 	src/xcomm-utils.c
 	src/xcomm-varint.c
 	src/xcomm-stack.c
-	src/xcomm-timer.c
+	src/xcomm-timers.c
 	src/xcomm-rwlock.c
 	src/xcomm-spinlock.c
 	src/xcomm-wg.c

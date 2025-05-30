@@ -46,9 +46,9 @@ add_executable(test-thrdpool "test-thrdpool.c")
 target_link_libraries(test-thrdpool PUBLIC xcomm)
 add_test(NAME thrdpool COMMAND test-thrdpool)
 
-add_executable(test-timer "test-timer.c")
-target_link_libraries(test-timer PUBLIC xcomm)
-add_test(NAME timer COMMAND test-timer)
+add_executable(test-timers "test-timers.c")
+target_link_libraries(test-timers PUBLIC xcomm)
+add_test(NAME timers COMMAND test-timers)
 
 add_executable(test-varint "test-varint.c")
 target_link_libraries(test-varint PUBLIC xcomm)

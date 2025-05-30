@@ -22,38 +22,53 @@
 _Pragma("once")
 
 #include "xcomm-list.h"
-#include "xcomm-queue.h"
-#include "xcomm-timer.h"
+#include "xcomm-timers.h"
 #include "xcomm-rbtree.h"
 
 #include "platform/platform-types.h"
 
-typedef struct xcomm_eventloop_s xcomm_eventloop_t;
-typedef enum xcomm_event_type_e  xcomm_event_type_t;
-typedef struct xcomm_event_s     xcomm_event_t;
+typedef struct xcomm_eventloop_s  xcomm_eventloop_t;
+typedef enum xcomm_event_type_e   xcomm_event_type_t;
+typedef struct xcomm_event_base_s xcomm_event_base_t;
+typedef struct xcomm_event_io_s   xcomm_event_io_t;
+typedef struct xcomm_event_rt_s   xcomm_event_rt_t;
+typedef struct xcomm_event_tm_s   xcomm_event_tm_t;
 
 struct xcomm_eventloop_s {
     bool                running;
     thrd_t              tid;
     platform_event_sq_t sq;
-    platform_sock_t     wakeup[2];
-    xcomm_timermgr_t    tm_mgr;
+    platform_sock_t     wkup[2];
     mtx_t               rt_mtx;
-    xcomm_queue_t       rt_evts;
-    xcomm_queue_t       ch_evts;
+    xcomm_list_t        rt_evts;
+    xcomm_rbtree_t      io_evts;
+    xcomm_timers_t      tm_evts;
 };
 
 enum xcomm_event_type_e {
-    XCOMM_EVENT_ROUTINE = 1, 
-    XCOMM_EVENT_CHANNEL = 2,
+    XCOMM_EVENT_TYPE_IO = 1, 
+    XCOMM_EVENT_TYPE_RT = 2,
+    XCOMM_EVENT_TYPE_TM = 3,
 };
 
-struct xcomm_event_s {
+struct xcomm_event_base_s {
     xcomm_event_type_t type;
-    void (*execute_cb)(void* context);
-    void (*cleanup_cb)(void* context);
-    void* context;
 
+    void (*execute)(void* context, platform_event_op_t op);
+    void (*cleanup)(void* context, platform_event_op_t op);
+    void* context;
+};
+
+struct xcomm_event_tm_s {
+    xcomm_event_base_t base;
+};
+
+struct xcomm_event_rt_s {
+    xcomm_event_base_t base;
+};
+
+struct xcomm_event_io_s {
+    xcomm_event_base_t   base;
     platform_event_sqe_t sqe;
 };
 
@@ -61,6 +76,6 @@ extern void xcomm_eventloop_init(xcomm_eventloop_t* loop);
 extern void xcomm_eventloop_destroy(xcomm_eventloop_t* loop);
 extern void xcomm_eventloop_run(xcomm_eventloop_t* loop);
 extern void xcomm_eventloop_wakeup(xcomm_eventloop_t* loop);
-extern void xcomm_eventloop_register(xcomm_eventloop_t* loop, xcomm_event_t* event);
-extern void xcomm_eventloop_update(xcomm_eventloop_t* loop, xcomm_event_t* event);
-extern void xcomm_eventloop_unregister(xcomm_eventloop_t* loop, xcomm_event_t* event);
+extern void xcomm_eventloop_register(xcomm_eventloop_t* loop, xcomm_event_base_t* event);
+extern void xcomm_eventloop_update(xcomm_eventloop_t* loop, xcomm_event_base_t* event);
+extern void xcomm_eventloop_unregister(xcomm_eventloop_t* loop, xcomm_event_base_t* event);

@@ -289,6 +289,19 @@ int xcomm_rbtree_keycmp_str(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
     return strcmp(k1->str, k2->str);
 }
 
+int xcomm_rbtree_keycmp_ptr(xcomm_rbtree_key_t* k1, xcomm_rbtree_key_t* k2) {
+    uintptr_t p1 = (uintptr_t)k1->ptr;
+    uintptr_t p2 = (uintptr_t)k2->ptr;
+
+    if (p1 < p2) {
+        return -1;
+    }
+    if (p1 > p2) {
+        return 1;
+    }
+    return 0;
+}
+
 void xcomm_rbtree_init(
     xcomm_rbtree_t* tree,
     int (*keycmp)(xcomm_rbtree_key_t*, xcomm_rbtree_key_t*)) {

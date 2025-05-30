@@ -118,7 +118,7 @@ typedef HANDLE  platform_uart_t;
 typedef SSIZE_T ssize_t;
 #endif
 
-typedef platform_sock_t                platform_event_handle_t;
+typedef platform_sock_t                platform_event_fd_t;
 typedef enum platform_event_op_e       platform_event_op_t;
 typedef struct platform_event_cqe_s    platform_event_cqe_t;
 typedef struct platform_event_sqe_s    platform_event_sqe_t;
@@ -133,10 +133,14 @@ struct platform_event_cqe_s {
     void*               ud;
 };
 
+struct platform_event_fd_s {
+
+};
+
 struct platform_event_sqe_s {
-    platform_event_op_t     op;
-    platform_event_handle_t handle;
-    void*                   ud;
+    platform_event_op_t op;
+    platform_event_fd_t fd;
+    void*               ud;
 };
 
 enum platform_event_op_e {
