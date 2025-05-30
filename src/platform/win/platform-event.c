@@ -22,73 +22,65 @@
 #include "platform/platform-event.h"
 #include "wepoll/wepoll.h"
 
-void platform_eventqueue_init(platform_eventqueue_t* eventq) {
-    *eventq = epoll_create1(0);
+void platform_event_init(platform_event_sq_t* sq) {
+    *sq = epoll_create1(0);
 }
 
-void platform_eventqueue_destroy(platform_eventqueue_t* eventq) {
-    epoll_close(*eventq);
+void platform_event_destroy(platform_event_sq_t* sq) {
+    epoll_close(*sq);
 }
 
-void platform_eventqueue_add(
-    platform_eventqueue_t* eventq,
-    platform_sock_t        sock,
-    platform_event_flag_t  events,
-    void*                  ud) {
+void platform_event_add(platform_event_sq_t* sq, platform_event_sqe_t* sqe) {
     struct epoll_event ee = {0};
 
-    if (events & PLATFORM_EVENT_RD_FLAG) {
+    if (sqe->op & PLATFORM_EVENT_RD_OP) {
         ee.events |= EPOLLIN;
     }
-    if (events & PLATFORM_EVENT_WR_FLAG) {
+    if (sqe->op & PLATFORM_EVENT_WR_OP) {
         ee.events |= EPOLLOUT;
     }
-    ee.data.ptr = ud;
-    epoll_ctl(*eventq, EPOLL_CTL_ADD, sock, (struct epoll_event*)&ee);
+    ee.data.ptr = sqe->ud;
+    epoll_ctl(*sq, EPOLL_CTL_ADD, sqe->handle, (struct epoll_event*)&ee);
 }
 
-void platform_eventqueue_mod(
-    platform_eventqueue_t* eventq,
-    platform_sock_t        sock,
-    platform_event_flag_t  events,
-    void*                  ud) {
+void platform_event_mod(platform_event_sq_t* sq, platform_event_sqe_t* sqe) {
     struct epoll_event ee = {0};
 
-    if (events & PLATFORM_EVENT_RD_FLAG) {
+    if (sqe->op & PLATFORM_EVENT_RD_OP) {
         ee.events |= EPOLLIN;
     }
-    if (events & PLATFORM_EVENT_WR_FLAG) {
+    if (sqe->op & PLATFORM_EVENT_WR_OP) {
         ee.events |= EPOLLOUT;
     }
-    ee.data.ptr = ud;
-    epoll_ctl(*eventq, EPOLL_CTL_MOD, sock, (struct epoll_event*)&ee);
+    ee.data.ptr = sqe->ud;
+    epoll_ctl(*sq, EPOLL_CTL_MOD, sqe->handle, (struct epoll_event*)&ee);
 }
 
-void platform_eventqueue_del(
-    platform_eventqueue_t* eventq, platform_sock_t sock) {
-    epoll_ctl(*eventq, EPOLL_CTL_DEL, sock, NULL);
+void platform_event_del(
+    platform_event_sq_t* sq, platform_event_handle_t handle) {
+    epoll_ctl(*sq, EPOLL_CTL_DEL, handle, NULL);
 }
 
-int platform_eventqueue_wait(
-    platform_eventqueue_t* eventq, platform_event_cqe_t* cqe, int timeout) {
-    struct epoll_event epoll_events[PLATFORM_EVENT_CQE_NUM] = {0};
+int platform_event_wait(
+    platform_event_sq_t* sq, platform_event_cqe_t* cqe, int timeout) {
+    struct epoll_event events[PLATFORM_EVENT_CQE_NUM] = {0};
     memset(cqe, 0, sizeof(platform_event_cqe_t) * PLATFORM_EVENT_CQE_NUM);
 
     int n = 0;
     do {
-        n = epoll_wait(*eventq, epoll_events, PLATFORM_EVENT_CQE_NUM, timeout);
+        n = epoll_wait(*sq, events, PLATFORM_EVENT_CQE_NUM, timeout);
     } while (n == -1 && errno == EINTR);
 
     if (n < 0) {
         return 0;
     }
     for (int i = 0; i < n; i++) {
-        cqe[i].ptr = epoll_events[i].data.ptr;
-        if (epoll_events[i].events & (EPOLLIN | EPOLLHUP | EPOLLERR)) {
-            cqe[i].events |= PLATFORM_EVENT_RD_FLAG;
+        cqe[i].ud = events[i].data.ptr;
+        if (events[i].events & (EPOLLIN | EPOLLHUP | EPOLLERR)) {
+            cqe[i].op |= PLATFORM_EVENT_RD_OP;
         }
-        if (epoll_events[i].events & (EPOLLOUT | EPOLLHUP | EPOLLERR)) {
-            cqe[i].events |= PLATFORM_EVENT_WR_FLAG;
+        if (events[i].events & (EPOLLOUT | EPOLLHUP | EPOLLERR)) {
+            cqe[i].op |= PLATFORM_EVENT_WR_OP;
         }
     }
     return n;

@@ -26,10 +26,10 @@ _Pragma("once")
 extern void xcomm_async_tcp_dial(const char* restrict host, const char* restrict port, void (*on_connect)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
 extern void xcomm_async_tcp_listen(const char* restrict host, const char* restrict port, void (*on_accept)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
 
-extern void xcomm_async_tcp_set_recv_cb(xcomm_tcp_channel_t* channel, void (*on_recv)(xcomm_tcp_channel_t* channel, void* buf, size_t len, void* userdata), void* userdata);
-extern void xcomm_async_tcp_set_send_cb(xcomm_tcp_channel_t* channel, void (*on_send_complete)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
-extern void xcomm_async_tcp_set_close_cb(xcomm_tcp_channel_t* channel, void (*on_close)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
-extern void xcomm_async_tcp_set_heartbeat_cb(xcomm_tcp_channel_t* channel, void (*on_heartbeat)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
+extern void xcomm_async_tcp_set_recv_cb(xcomm_tcp_channel_t* channel, void (*recv_cb)(xcomm_tcp_channel_t* channel, void* buf, size_t len, void* userdata), void* userdata);
+extern void xcomm_async_tcp_set_send_complete_cb(xcomm_tcp_channel_t* channel, void (*send_complete_cb)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
+extern void xcomm_async_tcp_set_close_cb(xcomm_tcp_channel_t* channel, void (*close_cb)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
+extern void xcomm_async_tcp_set_heartbeat_cb(xcomm_tcp_channel_t* channel, void (*heartbeat_cb)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
 
 extern void xcomm_async_tcp_send(xcomm_tcp_channel_t* channel, void* buf, size_t len);
 extern void xcomm_async_tcp_close(xcomm_tcp_channel_t* channel);

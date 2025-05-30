@@ -19,13 +19,4 @@
  *  IN THE SOFTWARE.
  */
 
-_Pragma("once")
-
-#include "platform-types.h"
-
-extern void platform_event_init(platform_event_sq_t* sq);
-extern void platform_event_destroy(platform_event_sq_t* sq);
-extern void platform_event_add(platform_event_sq_t* sq, platform_event_sqe_t* sqe);
-extern void platform_event_mod(platform_event_sq_t* sq, platform_event_sqe_t* sqe);
-extern void platform_event_del(platform_event_sq_t* sq, platform_event_handle_t handle);
-extern int  platform_event_wait(platform_event_sq_t* sq, platform_event_cqe_t* cqe, int timeout);
+#include "xcomm-utils.h"

@@ -21,73 +21,65 @@
 
 #include "platform/platform-event.h"
 
-void platform_eventqueue_destroy(platform_eventqueue_t* eventq) {
-    close(*eventq);
+void platform_event_destroy(platform_event_sq_t* sq) {
+    close(*sq);
 }
 
 #if defined(__linux__)
-void platform_eventqueue_init(platform_eventqueue_t* eventq) {
-    *eventq = epoll_create1(0);
+void platform_event_init(platform_event_sq_t* sq) {
+    *sq = epoll_create1(0);
 }
 
-void platform_eventqueue_add(
-    platform_eventqueue_t* eventq,
-    platform_sock_t        sock,
-    platform_event_flag_t  events,
-    void*                  ud) {
+void platform_event_add(platform_event_sq_t* sq, platform_event_sqe_t* sqe) {
     struct epoll_event ee = {0};
 
-    if (events & PLATFORM_EVENT_RD_FLAG) {
+    if (sqe->op & PLATFORM_EVENT_RD_OP) {
         ee.events |= EPOLLIN;
     }
-    if (events & PLATFORM_EVENT_WR_FLAG) {
+    if (sqe->op & PLATFORM_EVENT_WR_OP) {
         ee.events |= EPOLLOUT;
     }
-    ee.data.ptr = ud;
-    epoll_ctl(*eventq, EPOLL_CTL_ADD, sock, (struct epoll_event*)&ee);
+    ee.data.ptr = sqe->ud;
+    epoll_ctl(*sq, EPOLL_CTL_ADD, sqe->handle, (struct epoll_event*)&ee);
 }
 
-void platform_eventqueue_mod(
-    platform_eventqueue_t* eventq,
-    platform_sock_t        sock,
-    platform_event_flag_t  events,
-    void*                  ud) {
+void platform_event_mod(platform_event_sq_t* sq, platform_event_sqe_t* sqe) {
     struct epoll_event ee = {0};
 
-    if (events & PLATFORM_EVENT_RD_FLAG) {
+    if (sqe->op & PLATFORM_EVENT_RD_OP) {
         ee.events |= EPOLLIN;
     }
-    if (events & PLATFORM_EVENT_WR_FLAG) {
+    if (sqe->op & PLATFORM_EVENT_WR_OP) {
         ee.events |= EPOLLOUT;
     }
-    ee.data.ptr = ud;
-    epoll_ctl(*eventq, EPOLL_CTL_MOD, sock, (struct epoll_event*)&ee);
+    ee.data.ptr = sqe->ud;
+    epoll_ctl(*sq, EPOLL_CTL_MOD, sqe->handle, (struct epoll_event*)&ee);
 }
 
-void platform_eventqueue_del(
-    platform_eventqueue_t* eventq, platform_sock_t sock) {
-    epoll_ctl(*eventq, EPOLL_CTL_DEL, sock, NULL);
+void platform_event_del(
+    platform_event_sq_t* sq, platform_event_handle_t handle) {
+    epoll_ctl(*sq, EPOLL_CTL_DEL, handle, NULL);
 }
 
-int platform_eventqueue_wait(
-    platform_eventqueue_t* eventq, platform_event_cqe_t* cqe, int timeout) {
-    struct epoll_event epoll_events[PLATFORM_EVENT_CQE_NUM] = {0};
+int platform_event_wait(
+    platform_event_sq_t* sq, platform_event_cqe_t* cqe, int timeout) {
+    struct epoll_event events[PLATFORM_EVENT_CQE_NUM] = {0};
     memset(cqe, 0, sizeof(platform_event_cqe_t) * PLATFORM_EVENT_CQE_NUM);
 
     int n = 0;
     do {
-        n = epoll_wait(*eventq, epoll_events, PLATFORM_EVENT_CQE_NUM, timeout);
+        n = epoll_wait(*sq, events, PLATFORM_EVENT_CQE_NUM, timeout);
     } while (n == -1 && errno == EINTR);
     if (n < 0) {
         return 0;
     }
     for (int i = 0; i < n; i++) {
-        cqe[i].ptr = epoll_events[i].data.ptr;
-        if (epoll_events[i].events & (EPOLLIN | EPOLLHUP | EPOLLERR)) {
-            cqe[i].events |= PLATFORM_EVENT_RD_FLAG;
+        cqe[i].ud = events[i].data.ptr;
+        if (events[i].events & (EPOLLIN | EPOLLHUP | EPOLLERR)) {
+            cqe[i].op |= PLATFORM_EVENT_RD_OP;
         }
-        if (epoll_events[i].events & (EPOLLOUT | EPOLLHUP | EPOLLERR)) {
-            cqe[i].events |= PLATFORM_EVENT_WR_FLAG;
+        if (events[i].events & (EPOLLOUT | EPOLLHUP | EPOLLERR)) {
+            cqe[i].op |= PLATFORM_EVENT_WR_OP;
         }
     }
     return n;
@@ -95,66 +87,57 @@ int platform_eventqueue_wait(
 #endif
 
 #if defined(__APPLE__)
-
-void platform_eventqueue_init(platform_eventqueue_t* eventq) {
-    *eventq = kqueue();
+void platform_event_init(platform_event_sq_t* sq) {
+    *sq = kqueue();
 }
 
-void platform_eventqueue_add(
-    platform_eventqueue_t* eventq,
-    platform_sock_t        sock,
-    platform_event_flag_t  events,
-    void*                  ud) {
+void platform_event_add(platform_event_sq_t* sq, platform_event_sqe_t* sqe) {
     struct kevent ke = {0};
 
-    if (events & PLATFORM_EVENT_RD_FLAG) {
-        EV_SET(&ke, sock, EVFILT_READ, EV_ADD, 0, 0, ud);
-        kevent(*eventq, &ke, 1, NULL, 0, NULL);
+    if (sqe->op & PLATFORM_EVENT_RD_OP) {
+        EV_SET(&ke, sqe->handle, EVFILT_READ, EV_ADD, 0, 0, sqe->ud);
+        kevent(*sq, &ke, 1, NULL, 0, NULL);
     }
-    if (events & PLATFORM_EVENT_WR_FLAG) {
-        EV_SET(&ke, sock, EVFILT_WRITE, EV_ADD, 0, 0, ud);
-        kevent(*eventq, &ke, 1, NULL, 0, NULL);
+    if (sqe->op & PLATFORM_EVENT_WR_OP) {
+        EV_SET(&ke, sqe->handle, EVFILT_WRITE, EV_ADD, 0, 0, sqe->ud);
+        kevent(*sq, &ke, 1, NULL, 0, NULL);
     }
 }
 
-void platform_eventqueue_mod(
-    platform_eventqueue_t* eventq,
-    platform_sock_t        sock,
-    platform_event_flag_t  events,
-    void*                  ud) {
+void platform_event_mod(platform_event_sq_t* sq, platform_event_sqe_t* sqe) {
     struct kevent ke = {0};
 
-    if (events & PLATFORM_EVENT_RD_FLAG) {
-        EV_SET(&ke, sock, EVFILT_READ, EV_ADD, 0, 0, ud);
-        kevent(*eventq, &ke, 1, NULL, 0, NULL);
+    if (sqe->op & PLATFORM_EVENT_RD_OP) {
+        EV_SET(&ke, sqe->handle, EVFILT_READ, EV_ADD, 0, 0, sqe->ud);
+        kevent(*sq, &ke, 1, NULL, 0, NULL);
     }
-    if (events & PLATFORM_EVENT_WR_FLAG) {
-        EV_SET(&ke, sock, EVFILT_WRITE, EV_ADD, 0, 0, ud);
-        kevent(*eventq, &ke, 1, NULL, 0, NULL);
+    if (sqe->op & PLATFORM_EVENT_WR_OP) {
+        EV_SET(&ke, sqe->handle, EVFILT_WRITE, EV_ADD, 0, 0, sqe->ud);
+        kevent(*sq, &ke, 1, NULL, 0, NULL);
     }
 }
 
-void platform_eventqueue_del(
-    platform_eventqueue_t* eventq, platform_sock_t sock) {
+void platform_event_del(
+    platform_event_sq_t* sq, platform_event_handle_t handle) {
     struct kevent ke = {0};
 
-    EV_SET(&ke, sock, EVFILT_READ, EV_DELETE, 0, 0, NULL);
-    kevent(*eventq, &ke, 1, NULL, 0, NULL);
+    EV_SET(&ke, handle, EVFILT_READ, EV_DELETE, 0, 0, NULL);
+    kevent(*sq, &ke, 1, NULL, 0, NULL);
 
-    EV_SET(&ke, sock, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
-    kevent(*eventq, &ke, 1, NULL, 0, NULL);
+    EV_SET(&ke, handle, EVFILT_WRITE, EV_DELETE, 0, 0, NULL);
+    kevent(*sq, &ke, 1, NULL, 0, NULL);
 }
 
-int platform_eventqueue_wait(
-    platform_eventqueue_t* eventq, platform_event_cqe_t* cqe, int timeout) {
-    struct kevent epoll_events[PLATFORM_EVENT_CQE_NUM];
+int platform_event_wait(
+    platform_event_sq_t* sq, platform_event_cqe_t* cqe, int timeout) {
+    struct kevent events[PLATFORM_EVENT_CQE_NUM];
 
     memset(cqe, 0, sizeof(platform_event_cqe_t) * PLATFORM_EVENT_CQE_NUM);
     struct timespec ts = {0, 0};
     ts.tv_sec  = (timeout / 1000UL);
     ts.tv_nsec = ((timeout % 1000UL) * 1000000UL);
 
-    int n = kevent(*eventq, NULL, 0, epoll_events, PLATFORM_EVENT_CQE_NUM, &ts);
+    int n = kevent(*sq, NULL, 0, events, PLATFORM_EVENT_CQE_NUM, &ts);
     /**
      * In systems utilizing the kqueue mechanism, read and write events are
      * handled independently, differing from the behavior of epoll. With epoll,
@@ -171,12 +154,12 @@ int platform_eventqueue_wait(
      * employing bitwise operations within a single event mask.
      */
     for (int i = 0; i < n; i++) {
-        cqe[i].ptr = epoll_events[i].udata;
-        if (epoll_events[i].filter == EVFILT_READ) {
-            cqe[i].events |= PLATFORM_EVENT_RD_FLAG;
+        cqe[i].ud = events[i].udata;
+        if (events[i].filter == EVFILT_READ) {
+            cqe[i].op |= PLATFORM_EVENT_RD_OP;
         }
-        if (epoll_events[i].filter == EVFILT_WRITE) {
-            cqe[i].events |= PLATFORM_EVENT_WR_FLAG;
+        if (events[i].filter == EVFILT_WRITE) {
+            cqe[i].op |= PLATFORM_EVENT_WR_OP;
         }
     }
     return n;

@@ -61,10 +61,10 @@ struct xcomm_async_tcp_module_s {
     void (*dial)(const char* restrict host, const char* restrict port, void (*on_connect)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
     void (*listen)(const char* restrict host, const char* restrict port, void (*on_accept)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
 
-    void (*set_recv_cb)(xcomm_tcp_channel_t* channel, void (*on_recv)(xcomm_tcp_channel_t* channel, void* buf, size_t len, void* userdata), void* userdata);
-    void (*set_send_cb)(xcomm_tcp_channel_t* channel, void (*on_send_complete)(xcomm_tcp_channel_t* channel, void* buf, size_t len, void* userdata), void* userdata);
-    void (*set_heartbeat_cb)(xcomm_tcp_channel_t* channel, void (*on_heartbeat)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
-    void (*set_close_cb)(xcomm_tcp_channel_t* channel, void (*on_close)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
+    void (*set_recv_cb)(xcomm_tcp_channel_t* channel, void (*recv_cb)(xcomm_tcp_channel_t* channel, void* buf, size_t len, void* userdata), void* userdata);
+    void (*set_send_complete_cb)(xcomm_tcp_channel_t* channel, void (*send_complete_cb)(xcomm_tcp_channel_t* channel, void* buf, size_t len, void* userdata), void* userdata);
+    void (*set_heartbeat_cb)(xcomm_tcp_channel_t* channel, void (*heartbeat_cb)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
+    void (*set_close_cb)(xcomm_tcp_channel_t* channel, void (*close_cb)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
 
     void (*send)(xcomm_tcp_channel_t* channel, void* buf, size_t len);
     void (*close)(xcomm_tcp_channel_t* channel);

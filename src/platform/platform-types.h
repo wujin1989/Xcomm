@@ -103,23 +103,25 @@ typedef uint64_t platform_tid_t;
 typedef pid_t platform_tid_t;
 #endif
 
-typedef int   platform_sock_t;
-typedef pid_t platform_pid_t;
-typedef int   platform_eventqueue_t;
-typedef int   platform_uart_t;
+typedef int                      platform_sock_t;
+typedef pid_t                    platform_pid_t;
+typedef int                      platform_event_sq_t;
+typedef int                      platform_uart_t;
 #endif
 
 #if defined(_WIN32)
 typedef DWORD   platform_tid_t;
 typedef DWORD   platform_pid_t;
-typedef HANDLE  platform_eventqueue_t;
+typedef HANDLE  platform_event_sq_t;
 typedef SOCKET  platform_sock_t;
 typedef HANDLE  platform_uart_t;
 typedef SSIZE_T ssize_t;
 #endif
 
-typedef enum platform_event_flag_e     platform_event_flag_t;
+typedef platform_sock_t                platform_event_handle_t;
+typedef enum platform_event_op_e       platform_event_op_t;
 typedef struct platform_event_cqe_s    platform_event_cqe_t;
+typedef struct platform_event_sqe_s    platform_event_sqe_t;
 typedef struct platform_uart_config_s  platform_uart_config_t;
 typedef enum platform_uart_baudrate_e  platform_uart_baudrate_t;
 typedef enum platform_uart_parity_e    platform_uart_parity_t;
@@ -127,14 +129,21 @@ typedef enum platform_uart_databits_e  platform_uart_databits_t;
 typedef enum platform_uart_stopbits_e  platform_uart_stopbits_t;
 
 struct platform_event_cqe_s {
-    uint32_t events;
-    void*    ptr;
+    platform_event_op_t op;
+    void*               ud;
 };
 
-enum platform_event_flag_e {
-    PLATFORM_EVENT_RD_FLAG = 1,
-    PLATFORM_EVENT_WR_FLAG = 2,
-    PLATFORM_EVENT_RW_FLAG = 3,
+struct platform_event_sqe_s {
+    platform_event_op_t     op;
+    platform_event_handle_t handle;
+    void*                   ud;
+};
+
+enum platform_event_op_e {
+    PLATFORM_EVENT_NO_OP = 0,
+    PLATFORM_EVENT_RD_OP = 1,
+    PLATFORM_EVENT_WR_OP = 2,
+    PLATFORM_EVENT_RW_OP = 3,
 };
 
 enum platform_uart_baudrate_e {

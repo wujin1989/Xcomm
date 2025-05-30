@@ -29,23 +29,32 @@ _Pragma("once")
 #include "platform/platform-types.h"
 
 typedef struct xcomm_eventloop_s xcomm_eventloop_t;
+typedef enum xcomm_event_type_e  xcomm_event_type_t;
 typedef struct xcomm_event_s     xcomm_event_t;
 
 struct xcomm_eventloop_s {
-    platform_eventqueue_t eventq;
-    thrd_t                tid;
-    xcomm_channel_t       wakeup_channel;
-    xcomm_queue_t         taskque;
-    mtx_t                 taskmtx;
-    bool                  running;
-    xcomm_rbtree_t        channels;
-    xcomm_timermgr_t*     timermgr;
+    bool                running;
+    thrd_t              tid;
+    platform_event_sq_t sq;
+    platform_sock_t     wakeup[2];
+    xcomm_timermgr_t    tm_mgr;
+    mtx_t               rt_mtx;
+    xcomm_queue_t       rt_evts;
+    xcomm_queue_t       ch_evts;
+};
+
+enum xcomm_event_type_e {
+    XCOMM_EVENT_ROUTINE = 1, 
+    XCOMM_EVENT_CHANNEL = 2,
 };
 
 struct xcomm_event_s {
-    platform_sock_t       sock;
-    platform_event_flag_t events;
-    void*                 userdata;
+    xcomm_event_type_t type;
+    void (*execute_cb)(void* context);
+    void (*cleanup_cb)(void* context);
+    void* context;
+
+    platform_event_sqe_t sqe;
 };
 
 extern void xcomm_eventloop_init(xcomm_eventloop_t* loop);
