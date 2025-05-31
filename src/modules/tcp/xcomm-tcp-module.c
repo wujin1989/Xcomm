@@ -24,30 +24,39 @@
 #include "xcomm/xcomm-tcp-module.h"
 
 xcomm_sync_tcp_module_t xcomm_sync_tcp = {
-    .name         = "Xcomm Sync TCP Module",
-    .dial         = xcomm_sync_tcp_dial,
-    .listen       = xcomm_sync_tcp_listen,
-    .accept       = xcomm_sync_tcp_accept,
-    .send         = xcomm_sync_tcp_send,
-    .recv         = xcomm_sync_tcp_recv,
-    .close        = xcomm_sync_tcp_close,
-    .set_sndtimeo = xcomm_sync_tcp_set_sndtimeout,
-    .set_rcvtimeo = xcomm_sync_tcp_set_rcvtimeout,
+    .name               = "Xcomm Sync TCP Module",
+
+    .dial               = xcomm_sync_tcp_dial,
+    .listen             = xcomm_sync_tcp_listen,
+
+    .accept             = xcomm_sync_tcp_accept,
+    .destroy_listener   = xcomm_sync_tcp_destroy_listener,
+
+    .send               = xcomm_sync_tcp_send,
+    .recv               = xcomm_sync_tcp_recv,
+    .destroy_connection = xcomm_sync_tcp_destroy_connection,
+    .set_sndtimeo       = xcomm_sync_tcp_set_sndtimeout,
+    .set_rcvtimeo       = xcomm_sync_tcp_set_rcvtimeout,
 };
 
 xcomm_async_tcp_module_t xcomm_async_tcp = {
-    .name                   = "Xcomm Async TCP Module",
-    .dial                   = xcomm_async_tcp_dial,
-    .listen                 = xcomm_async_tcp_listen,
-    .set_recv_cb            = xcomm_async_tcp_set_recv_cb,
-    .set_send_complete_cb   = xcomm_async_tcp_set_send_complete_cb,
-    .set_heartbeat_cb       = xcomm_async_tcp_set_heartbeat_cb,
-    .set_close_cb           = xcomm_async_tcp_set_close_cb,
-    .send                   = xcomm_async_tcp_send,
-    .close                  = xcomm_async_tcp_close,
-    .set_conntimeo          = xcomm_async_tcp_set_conntimeo,
-    .set_sendtimeo          = xcomm_async_tcp_set_sendtimeo,
-    .set_recvtimeo          = xcomm_async_tcp_set_recvtimeo,
-    .set_heartbeat_interval = xcomm_async_tcp_set_heartbeat_interval,
-    .set_packetizer         = xcomm_async_tcp_set_packetizer,
+    .name                      = "Xcomm Async TCP Module",
+
+    .dial                      = xcomm_async_tcp_dial,
+    .listen                    = xcomm_async_tcp_listen,
+
+    .set_accept_cb             = xcomm_async_tcp_set_accept_cb,
+    .set_destroy_listener_cb   = xcomm_async_tcp_set_destroy_listener_cb,
+    .destroy_listener          = xcomm_async_tcp_destroy_listener,
+
+    .set_recv_cb               = xcomm_async_tcp_set_recv_cb,
+    .set_send_completed_cb     = xcomm_async_tcp_set_send_completed_cb,
+    .set_heartbeat_cb          = xcomm_async_tcp_set_heartbeat_cb,
+    .set_destroy_connection_cb = xcomm_async_tcp_set_destroy_connection_cb,
+    .send                      = xcomm_async_tcp_send,
+    .set_conntimeo             = xcomm_async_tcp_set_conntimeo,
+    .set_sendtimeo             = xcomm_async_tcp_set_sendtimeo,
+    .set_recvtimeo             = xcomm_async_tcp_set_recvtimeo,
+    .set_heartbeat_interval    = xcomm_async_tcp_set_heartbeat_interval,
+    .set_packetizer            = xcomm_async_tcp_set_packetizer,
 };

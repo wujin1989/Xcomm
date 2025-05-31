@@ -19,148 +19,135 @@
  *  IN THE SOFTWARE.
  */
 
-#include <stdatomic.h>
-
 #include "xcomm-logger.h"
 #include "xcomm-sync-tcp.h"
 #include "platform/platform-socket.h"
 
-static atomic_int refcnt;
-
-void xcomm_sync_tcp_close(xcomm_tcp_socket_t* socketptr) {
+void xcomm_sync_tcp_destroy_listener(xcomm_tcp_listener_t* listener) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
-    platform_sock_t* sockptr = socketptr->opaque;
-    platform_sock_t  sockobj = *sockptr;
+    platform_sock_t* sock = listener->opaque;
+    platform_socket_close(*sock);
+    free(listener->opaque);
+    free(listener);
 
-    platform_socket_close(sockobj);
-    free(sockptr);
-    free(socketptr);
-
-    atomic_fetch_sub(&refcnt, 1);
-    if (!atomic_load(&refcnt)) {
-        platform_socket_cleanup();
-    }
     xcomm_logi("%s leave.\n", __FUNCTION__);
 }
 
-xcomm_tcp_socket_t*
+void xcomm_sync_tcp_destroy_connection(xcomm_tcp_connection_t* conn) {
+    xcomm_logi("%s enter.\n", __FUNCTION__);
+
+    platform_sock_t* sock = conn->opaque;
+    platform_socket_close(*sock);
+
+    free(conn->opaque);
+    free(conn);
+
+    xcomm_logi("%s leave.\n", __FUNCTION__);
+}
+
+xcomm_tcp_connection_t*
 xcomm_sync_tcp_dial(const char* restrict host, const char* restrict port) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
-    xcomm_tcp_socket_t* sockptr = malloc(sizeof(xcomm_tcp_socket_t));
-    if (!sockptr) {
+    xcomm_tcp_connection_t* conn = malloc(sizeof(xcomm_tcp_connection_t));
+    if (!conn) {
         xcomm_loge("no memory.\n");
         return NULL;
     }
-    sockptr->opaque = malloc(sizeof(platform_sock_t));
-    if (!sockptr->opaque) {
+    conn->opaque = malloc(sizeof(platform_sock_t));
+    if (!conn->opaque) {
         xcomm_loge("no memory.\n");
-        free(sockptr);
+        free(conn);
         return NULL;
-    }
-    if (!atomic_load(&refcnt)) {
-        platform_socket_startup();
     }
     bool noused;
-    platform_sock_t sockobj =
+    platform_sock_t sock =
         platform_socket_dial(host, port, SOCK_STREAM, &noused, false);
-    if (sockobj != PLATFORM_SO_ERROR_INVALID_SOCKET) {
-        memcpy(sockptr->opaque, &sockobj, sizeof(platform_sock_t));
+    if (sock != PLATFORM_SO_ERROR_INVALID_SOCKET) {
+        memcpy(conn->opaque, &sock, sizeof(platform_sock_t));
     } else {
         xcomm_loge("tcp dial error.\n");
-        free(sockptr->opaque);
-        free(sockptr);
+        free(conn->opaque);
+        free(conn);
         return NULL;
     }
-    atomic_fetch_add(&refcnt, 1);
-
     xcomm_logi("%s leave.\n", __FUNCTION__);
-    return sockptr;
+    return conn;
 }
 
-xcomm_tcp_socket_t*
+xcomm_tcp_listener_t*
 xcomm_sync_tcp_listen(const char* restrict host, const char* restrict port) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
-    xcomm_tcp_socket_t* sockptr = malloc(sizeof(xcomm_tcp_socket_t));
-    if (!sockptr) {
+    xcomm_tcp_listener_t* listener = malloc(sizeof(xcomm_tcp_listener_t));
+    if (!listener) {
         xcomm_loge("no memory.\n");
         return NULL;
     }
-    sockptr->opaque = malloc(sizeof(platform_sock_t));
-    if (!sockptr->opaque) {
+    listener->opaque = malloc(sizeof(platform_sock_t));
+    if (!listener->opaque) {
         xcomm_loge("no memory.\n");
-        free(sockptr);
+        free(listener);
         return NULL;
     }
-    if (!atomic_load(&refcnt)) {
-        platform_socket_startup();
-    }
-    platform_sock_t sockobj =
+    platform_sock_t sock =
         platform_socket_listen(host, port, SOCK_STREAM, 0, 0, false);
-    if (sockobj != PLATFORM_SO_ERROR_INVALID_SOCKET) {
-        memcpy(sockptr->opaque, &sockobj, sizeof(platform_sock_t));
+    if (sock != PLATFORM_SO_ERROR_INVALID_SOCKET) {
+        memcpy(listener->opaque, &sock, sizeof(platform_sock_t));
     } else {
         xcomm_loge("tcp listen error.\n");
-        free(sockptr->opaque);
-        free(sockptr);
+        free(listener->opaque);
+        free(listener);
         return NULL;
     }
-    atomic_fetch_add(&refcnt, 1);
-
     xcomm_logi("%s leave.\n", __FUNCTION__);
-    return sockptr;
+    return listener;
 }
 
-xcomm_tcp_socket_t* xcomm_sync_tcp_accept(xcomm_tcp_socket_t* socketptr) {
+xcomm_tcp_connection_t* xcomm_sync_tcp_accept(xcomm_tcp_listener_t* listener) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
-    platform_sock_t* srvptr = socketptr->opaque;
-    platform_sock_t  srvobj = *srvptr;
+    platform_sock_t* srv_sock = listener->opaque;
 
-    xcomm_tcp_socket_t* cliptr = malloc(sizeof(xcomm_tcp_socket_t));
-    if (!cliptr) {
+    xcomm_tcp_connection_t* conn = malloc(sizeof(xcomm_tcp_connection_t));
+    if (!conn) {
         xcomm_loge("no memory.\n");
         return NULL;
     }
-    cliptr->opaque = malloc(sizeof(platform_sock_t));
-    if (!cliptr->opaque) {
+    conn->opaque = malloc(sizeof(platform_sock_t));
+    if (!conn->opaque) {
         xcomm_loge("no memory.\n");
-        free(cliptr);
+        free(conn);
         return NULL;
     }
-    platform_sock_t cliobj = platform_socket_accept(srvobj, false);
-    if (cliobj != PLATFORM_SO_ERROR_INVALID_SOCKET) {
-        memcpy(cliptr->opaque, &cliobj, sizeof(platform_sock_t));
+    platform_sock_t cli_sock = platform_socket_accept(*srv_sock, false);
+    if (cli_sock != PLATFORM_SO_ERROR_INVALID_SOCKET) {
+        memcpy(conn->opaque, &cli_sock, sizeof(platform_sock_t));
     } else {
         xcomm_loge("tcp accept error.\n");
-        free(cliptr->opaque);
-        free(cliptr);
+        free(conn->opaque);
+        free(conn);
         return NULL;
     }
-    atomic_fetch_add(&refcnt, 1);
-
     xcomm_logi("%s leave.\n", __FUNCTION__);
-    return cliptr;
+    return conn;
 }
 
-int xcomm_sync_tcp_send(xcomm_tcp_socket_t* socketptr, void* buf, int len) {
-    platform_sock_t* sockptr = socketptr->opaque;
-    platform_sock_t  sockobj = *sockptr;
+int xcomm_sync_tcp_send(xcomm_tcp_connection_t* conn, void* buf, int len) {
+    platform_sock_t* sock = conn->opaque;
 
-    int ret = (int)platform_socket_sendall(sockobj, buf, len);
+    int ret = (int)platform_socket_sendall(*sock, buf, len);
     if (ret == PLATFORM_SO_ERROR_SOCKET_ERROR) {
         return -1;
     }
     return ret;
 }
 
-int xcomm_sync_tcp_recv(xcomm_tcp_socket_t* socketptr, void* buf, int len) {
-    platform_sock_t* sockptr = socketptr->opaque;
-    platform_sock_t  sockobj = *sockptr;
+int xcomm_sync_tcp_recv(xcomm_tcp_connection_t* conn, void* buf, int len) {
+    platform_sock_t* sock = conn->opaque;
 
-    int ret = (int)platform_socket_recvall(sockobj, buf, len);
+    int ret = (int)platform_socket_recvall(*sock, buf, len);
     if (ret == PLATFORM_SO_ERROR_SOCKET_ERROR) {
         return -1;
     }
@@ -168,25 +155,21 @@ int xcomm_sync_tcp_recv(xcomm_tcp_socket_t* socketptr, void* buf, int len) {
 }
 
 void xcomm_sync_tcp_set_sndtimeout(
-    xcomm_tcp_socket_t* socketptr, int timeout_ms) {
+    xcomm_tcp_connection_t* conn, int timeout_ms) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
-    platform_sock_t* sockptr = socketptr->opaque;
-    platform_sock_t  sockobj = *sockptr;
-
-    platform_socket_set_sndtimeout(sockobj, timeout_ms);
+    platform_sock_t* sock = conn->opaque;
+    platform_socket_set_sndtimeout(*sock, timeout_ms);
 
     xcomm_logi("%s leave.\n", __FUNCTION__);
 }
 
 void xcomm_sync_tcp_set_rcvtimeout(
-    xcomm_tcp_socket_t* socketptr, int timeout_ms) {
+    xcomm_tcp_connection_t* conn, int timeout_ms) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
-    platform_sock_t* sockptr = socketptr->opaque;
-    platform_sock_t  sockobj = *sockptr;
-
-    platform_socket_set_rcvtimeout(sockobj, timeout_ms);
+    platform_sock_t* sock = conn->opaque;
+    platform_socket_set_rcvtimeout(*sock, timeout_ms);
 
     xcomm_logi("%s leave.\n", __FUNCTION__);
 }

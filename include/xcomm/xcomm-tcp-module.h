@@ -26,15 +26,45 @@ _Pragma("once")
 
 typedef struct xcomm_sync_tcp_module_s  xcomm_sync_tcp_module_t;
 typedef struct xcomm_async_tcp_module_s xcomm_async_tcp_module_t;
-typedef struct xcomm_tcp_socket_s       xcomm_tcp_socket_t;
-typedef struct xcomm_tcp_channel_s      xcomm_tcp_channel_t;
+typedef struct xcomm_tcp_connection_s   xcomm_tcp_connection_t;
+typedef struct xcomm_tcp_listener_s     xcomm_tcp_listener_t;
 typedef struct xcomm_tcp_packetizer_s   xcomm_tcp_packetizer_t;
 
-struct xcomm_tcp_socket_s {
+typedef void (*xcomm_tcp_connect_cb_t)(
+    xcomm_tcp_connection_t* conn,
+    int                     error_code,
+    const char*             error_message,
+    void*                   userdata);
+
+typedef void (*xcomm_tcp_listen_cb_t)(
+    xcomm_tcp_listener_t* listener,
+    int                   error_code,
+    const char*           error_message,
+    void*                 userdata);
+
+typedef void (*xcomm_tcp_accept_cb_t)(
+    xcomm_tcp_listener_t* listener, void* userdata);
+
+typedef void (*xcomm_tcp_recv_cb_t)(
+    xcomm_tcp_connection_t* conn, void* buf, size_t len, void* userdata);
+
+typedef void (*xcomm_tcp_send_completed_cb_t)(
+    xcomm_tcp_connection_t* conn, void* buf, size_t len, void* userdata);
+
+typedef void (*xcomm_tcp_heartbeat_cb_t)(
+    xcomm_tcp_connection_t* conn, void* userdata);
+
+typedef void (*xcomm_tcp_destroy_connection_cb_t)(
+    xcomm_tcp_connection_t* conn, void* userdata);
+
+typedef void (*xcomm_tcp_destroy_listener_cb_t)(
+    xcomm_tcp_listener_t* listener, void* userdata);
+
+struct xcomm_tcp_connection_s {
     void* opaque;
 };
 
-struct xcomm_tcp_channel_s {
+struct xcomm_tcp_listener_s {
     void* opaque;
 };
 
@@ -45,36 +75,40 @@ struct xcomm_tcp_packetizer_s {
 struct xcomm_sync_tcp_module_s {
     const char* restrict name;
 
-    xcomm_tcp_socket_t* (*dial)(const char* restrict host, const char* restrict port);
-    xcomm_tcp_socket_t* (*listen)(const char* restrict host, const char* restrict port);
-    xcomm_tcp_socket_t* (*accept)(xcomm_tcp_socket_t* socket);
-    int  (*send)(xcomm_tcp_socket_t* sock, void* buf, int len);
-    int  (*recv)(xcomm_tcp_socket_t* sock, void* buf, int len);
-    void (*close)(xcomm_tcp_socket_t* sock);
-    void (*set_sndtimeo)(xcomm_tcp_socket_t* sock, int timeout_ms);
-    void (*set_rcvtimeo)(xcomm_tcp_socket_t* sock, int timeout_ms);
+    xcomm_tcp_connection_t* (*dial)(const char* restrict host, const char* restrict port);
+    xcomm_tcp_listener_t* (*listen)(const char* restrict host, const char* restrict port);
+
+    xcomm_tcp_connection_t* (*accept)(xcomm_tcp_listener_t* listener);
+    void (*destroy_listener)(xcomm_tcp_listener_t* listener);
+
+    int  (*send)(xcomm_tcp_connection_t* conn, void* buf, int len);
+    int  (*recv)(xcomm_tcp_connection_t* conn, void* buf, int len);
+    void (*destroy_connection)(xcomm_tcp_connection_t* conn);
+    void (*set_sndtimeo)(xcomm_tcp_connection_t* conn, int timeout_ms);
+    void (*set_rcvtimeo)(xcomm_tcp_connection_t* conn, int timeout_ms);
 };
 
 struct xcomm_async_tcp_module_s {
     const char* restrict name;
 
-    void (*dial)(const char* restrict host, const char* restrict port, void (*on_connect)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
-    void (*listen)(const char* restrict host, const char* restrict port, void (*on_accept)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
-
-    void (*set_recv_cb)(xcomm_tcp_channel_t* channel, void (*recv_cb)(xcomm_tcp_channel_t* channel, void* buf, size_t len, void* userdata), void* userdata);
-    void (*set_send_complete_cb)(xcomm_tcp_channel_t* channel, void (*send_complete_cb)(xcomm_tcp_channel_t* channel, void* buf, size_t len, void* userdata), void* userdata);
-    void (*set_heartbeat_cb)(xcomm_tcp_channel_t* channel, void (*heartbeat_cb)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
-    void (*set_close_cb)(xcomm_tcp_channel_t* channel, void (*close_cb)(xcomm_tcp_channel_t* channel, void* userdata), void* userdata);
-
-    void (*send)(xcomm_tcp_channel_t* channel, void* buf, size_t len);
-    void (*close)(xcomm_tcp_channel_t* channel);
-
-    void (*set_conntimeo)(xcomm_tcp_channel_t* channel, int timeout_ms);
-    void (*set_sendtimeo)(xcomm_tcp_channel_t* channel, int timeout_ms);
-    void (*set_recvtimeo)(xcomm_tcp_channel_t* channel, int timeout_ms);
-    void (*set_heartbeat_interval)(xcomm_tcp_channel_t* channel, int interval_ms);
+    void (*dial)(const char* restrict host, const char* restrict port, xcomm_tcp_connect_cb_t connect_cb, void* userdata);
+    void (*listen)(const char* restrict host, const char* restrict port, xcomm_tcp_listen_cb_t listen_cb, void* userdata);
     
-    void (*set_packetizer)(xcomm_tcp_packetizer_t* packetizer);
+    void (*set_accept_cb)(xcomm_tcp_listener_t* listener, xcomm_tcp_accept_cb_t accept_cb, void* userdata);
+    void (*set_destroy_listener_cb)(xcomm_tcp_listener_t* listener, xcomm_tcp_destroy_listener_cb_t destroy_listener_cb, void* userdata);
+    void (*destroy_listener)(xcomm_tcp_listener_t* listener);
+
+    void (*set_recv_cb)(xcomm_tcp_connection_t* conn, xcomm_tcp_recv_cb_t recv_cb, void* userdata);
+    void (*set_send_completed_cb)(xcomm_tcp_connection_t* conn, xcomm_tcp_send_completed_cb_t send_completed_cb, void* userdata);
+    void (*set_heartbeat_cb)(xcomm_tcp_connection_t* conn, xcomm_tcp_heartbeat_cb_t heartbeat_cb, void* userdata);
+    void (*set_destroy_connection_cb)(xcomm_tcp_connection_t* conn, xcomm_tcp_destroy_connection_cb_t destroy_connection_cb, void* userdata);
+    void (*send)(xcomm_tcp_connection_t* conn, void* buf, size_t len);
+    void (*destroy_connection)(xcomm_tcp_connection_t* conn);
+    void (*set_conntimeo)(xcomm_tcp_connection_t* conn, int timeout_ms);
+    void (*set_sendtimeo)(xcomm_tcp_connection_t* conn, int timeout_ms);
+    void (*set_recvtimeo)(xcomm_tcp_connection_t* conn, int timeout_ms);
+    void (*set_heartbeat_interval)(xcomm_tcp_connection_t* conn, int interval_ms);
+    void (*set_packetizer)(xcomm_tcp_connection_t* conn,xcomm_tcp_packetizer_t* packetizer);
 };
 
 extern xcomm_sync_tcp_module_t  xcomm_sync_tcp;
