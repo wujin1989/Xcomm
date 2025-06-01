@@ -29,22 +29,21 @@ typedef struct xcomm_timers_s xcomm_timers_t;
 
 struct xcomm_timers_s {
     xcomm_heap_t heap;
-    size_t       ntimers;
+    uint64_t     ntimers;
 };
 
 struct xcomm_timer_s {
     void (*routine)(void* param);
     void*             param;
-    size_t            birth;
-    size_t            id;
-    size_t            expire;
+    uint64_t          birth;
+    uint64_t          expire;
     bool              repeat;
     xcomm_heap_node_t node;
 };
 
 extern void xcomm_timers_init(xcomm_timers_t* timers);
 extern void xcomm_timers_del(xcomm_timers_t* timers, xcomm_timer_t* timer);
-extern void xcomm_timers_reset(xcomm_timers_t* timers, xcomm_timer_t* timer, size_t expire_ms);
+extern void xcomm_timers_reset(xcomm_timers_t* timers, xcomm_timer_t* timer, uint64_t expire_ms);
 extern bool xcomm_timers_empty(xcomm_timers_t* timers);
 extern xcomm_timer_t* xcomm_timers_min(xcomm_timers_t* timers);
-extern xcomm_timer_t* xcomm_timers_add(xcomm_timers_t* timers, void (*routine)(void*), void* param, size_t expire_ms, bool repeat);
+extern xcomm_timer_t* xcomm_timers_add(xcomm_timers_t* timers, void (*routine)(void*), void* param, uint64_t expire_ms, bool repeat);

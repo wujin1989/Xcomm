@@ -29,16 +29,16 @@ _Pragma("once")
 
 typedef struct xcomm_eventloop_s  xcomm_eventloop_t;
 typedef enum xcomm_event_type_e   xcomm_event_type_t;
-typedef struct xcomm_event_base_s xcomm_event_base_t;
-typedef struct xcomm_event_io_s   xcomm_event_io_t;
-typedef struct xcomm_event_rt_s   xcomm_event_rt_t;
-typedef struct xcomm_event_tm_s   xcomm_event_tm_t;
+typedef struct xcomm_event_s      xcomm_event_t;
+typedef struct xcomm_io_event_s   xcomm_io_event_t;
+typedef struct xcomm_rt_event_s   xcomm_rt_event_t;
+typedef struct xcomm_tm_event_s   xcomm_tm_event_t;
 
 struct xcomm_eventloop_s {
     bool                running;
     thrd_t              tid;
     platform_event_sq_t sq;
-    platform_sock_t     wkup[2];
+    platform_sock_t     wakefds[2];
     mtx_t               rt_mtx;
     xcomm_list_t        rt_evts;
     xcomm_rbtree_t      io_evts;
@@ -51,31 +51,31 @@ enum xcomm_event_type_e {
     XCOMM_EVENT_TYPE_TM = 3,
 };
 
-struct xcomm_event_base_s {
+struct xcomm_event_s {
     xcomm_event_type_t type;
 
-    void (*execute)(void* context, platform_event_op_t op);
-    void (*cleanup)(void* context, platform_event_op_t op);
+    void (*execute_cb)(void* context, platform_event_op_t op);
+    void (*cleanup_cb)(void* context, platform_event_op_t op);
     void* context;
 };
 
-struct xcomm_event_tm_s {
-    xcomm_event_base_t base;
+struct xcomm_rt_event_s {
+    xcomm_event_t base;
 };
 
-struct xcomm_event_rt_s {
-    xcomm_event_base_t base;
+struct xcomm_tm_event_s {
+    xcomm_event_t base;
 };
 
-struct xcomm_event_io_s {
-    xcomm_event_base_t   base;
+struct xcomm_io_event_s {
+    xcomm_event_t        base;
     platform_event_sqe_t sqe;
+    xcomm_rbtree_node_t  node;
 };
 
 extern void xcomm_eventloop_init(xcomm_eventloop_t* loop);
 extern void xcomm_eventloop_destroy(xcomm_eventloop_t* loop);
 extern void xcomm_eventloop_run(xcomm_eventloop_t* loop);
-extern void xcomm_eventloop_wakeup(xcomm_eventloop_t* loop);
-extern void xcomm_eventloop_register(xcomm_eventloop_t* loop, xcomm_event_base_t* event);
-extern void xcomm_eventloop_update(xcomm_eventloop_t* loop, xcomm_event_base_t* event);
-extern void xcomm_eventloop_unregister(xcomm_eventloop_t* loop, xcomm_event_base_t* event);
+extern void xcomm_eventloop_register(xcomm_eventloop_t* loop, xcomm_event_t* event);
+extern void xcomm_eventloop_update(xcomm_eventloop_t* loop, xcomm_event_t* event);
+extern void xcomm_eventloop_unregister(xcomm_eventloop_t* loop, xcomm_event_t* event);

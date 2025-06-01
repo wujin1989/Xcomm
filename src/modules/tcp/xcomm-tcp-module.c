@@ -30,11 +30,11 @@ xcomm_sync_tcp_module_t xcomm_sync_tcp = {
     .listen             = xcomm_sync_tcp_listen,
 
     .accept             = xcomm_sync_tcp_accept,
-    .destroy_listener   = xcomm_sync_tcp_destroy_listener,
+    .close_listener     = xcomm_sync_tcp_close_listener,
 
     .send               = xcomm_sync_tcp_send,
     .recv               = xcomm_sync_tcp_recv,
-    .destroy_connection = xcomm_sync_tcp_destroy_connection,
+    .close_connection   = xcomm_sync_tcp_close_connection,
     .set_sndtimeo       = xcomm_sync_tcp_set_sndtimeout,
     .set_rcvtimeo       = xcomm_sync_tcp_set_rcvtimeout,
 };
@@ -46,15 +46,15 @@ xcomm_async_tcp_module_t xcomm_async_tcp = {
     .listen                    = xcomm_async_tcp_listen,
 
     .set_accept_cb             = xcomm_async_tcp_set_accept_cb,
-    .set_destroy_listener_cb   = xcomm_async_tcp_set_destroy_listener_cb,
-    .destroy_listener          = xcomm_async_tcp_destroy_listener,
+    .set_listener_close_cb     = xcomm_async_tcp_set_listener_close_cb,
+    .close_listener            = xcomm_async_tcp_close_listener,
 
     .set_recv_cb               = xcomm_async_tcp_set_recv_cb,
     .set_send_completed_cb     = xcomm_async_tcp_set_send_completed_cb,
     .set_heartbeat_cb          = xcomm_async_tcp_set_heartbeat_cb,
-    .set_destroy_connection_cb = xcomm_async_tcp_set_destroy_connection_cb,
+    .set_connection_close_cb   = xcomm_async_tcp_set_connection_close_cb,
+    .close_connection          = xcomm_async_tcp_close_connection,
     .send                      = xcomm_async_tcp_send,
-    .set_conntimeo             = xcomm_async_tcp_set_conntimeo,
     .set_sendtimeo             = xcomm_async_tcp_set_sendtimeo,
     .set_recvtimeo             = xcomm_async_tcp_set_recvtimeo,
     .set_heartbeat_interval    = xcomm_async_tcp_set_heartbeat_interval,

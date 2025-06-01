@@ -20,3 +20,16 @@
  */
 
 #include "xcomm-utils.h"
+
+void xcomm_utils_execute_task(void (*task)(void* param), void* param) {
+
+}
+
+uint64_t xcomm_utils_execute_timer(
+    void (*task)(void* param), void* param, uint64_t timeout_ms, bool repeat) {
+
+}
+
+void xcomm_utils_cancel_timer(uint64_t id) {
+
+}

@@ -26,11 +26,16 @@
 
 #define xcomm_eventloop_container_of(x, t, m) ((t*)((char*)(x)-offsetof(t, m)))
 
-static void _io_event_cb(void* context) {
+static void _eventloop_wake(xcomm_eventloop_t* loop) {
+    char buf = 'w';
+    platform_socket_send(loop->wakefds[0], &buf, sizeof(buf));
+}
+
+static void _eventloop_wake_cb(void* context) {
     xcomm_eventloop_t* loop = (xcomm_eventloop_t*)context;
 
     char buf;
-    platform_socket_recv(loop->wkup[1], &buf, sizeof(buf));
+    platform_socket_recv(loop->wakefds[1], &buf, sizeof(buf));
 }
 
 void xcomm_eventloop_init(xcomm_eventloop_t* loop) {
@@ -44,56 +49,51 @@ void xcomm_eventloop_init(xcomm_eventloop_t* loop) {
     xcomm_timers_init(&loop->tm_evts);
 
     platform_event_init(&loop->sq);
-    platform_socket_socketpair(AF_INET, SOCK_STREAM, 0, loop->wkup);
-    platform_socket_enable_nonblocking(loop->wkup[1], true);
+    platform_socket_socketpair(AF_INET, SOCK_STREAM, 0, loop->wakefds);
+    platform_socket_enable_nonblocking(loop->wakefds[1], true);
 
-    xcomm_event_io_t* event = malloc(sizeof(xcomm_event_io_t));
+    xcomm_io_event_t* event = malloc(sizeof(xcomm_io_event_t));
     if (!event) {
         return;
     }
-    platform_event_sqe_t sqe = {
-        .op = PLATFORM_EVENT_RD_OP, 
-        .fd = (platform_event_fd_t)loop->wkup[1],
-        .ud = event
-    };
-    event->base.type = XCOMM_EVENT_TYPE_IO;
-    event->base.context = loop;
-    event->base.execute = _io_event_cb;
-    event->base.cleanup = NULL;
+    event->base.type       = XCOMM_EVENT_TYPE_IO;
+    event->base.context    = loop;
+    event->base.execute_cb = _eventloop_wake_cb;
+    event->base.execute_cb = NULL;
 
-    event->sqe = sqe;
-    platform_event_add(loop->sq, &sqe);
+    event->sqe.op = PLATFORM_EVENT_RD_OP;
+    event->sqe.fd = (platform_event_fd_t)loop->wakefds[1];
+    event->sqe.ud = event;
+    event->node.key.ptr = loop;
+
+    xcomm_rbtree_insert(&loop->io_evts, &event->node);
+    platform_event_add(loop->sq, &event->sqe);
 }
 
-void xcomm_eventloop_wakeup(xcomm_eventloop_t* loop) {
-    char buf = 'W';
-    platform_socket_send(loop->wkup[0], &buf, sizeof(buf));
-}
-
-void xcomm_eventloop_register(
-    xcomm_eventloop_t* loop, xcomm_event_base_t* event) {
+void xcomm_eventloop_register(xcomm_eventloop_t* loop, xcomm_event_t* event) {
     switch (event->type) {
     case XCOMM_EVENT_TYPE_IO: {
-        xcomm_event_io_t* io_evt =
-            xcomm_eventloop_container_of(event, xcomm_event_io_t, base);
+        xcomm_io_event_t* io_evt =
+            xcomm_eventloop_container_of(event, xcomm_io_event_t, base);
 
+        xcomm_rbtree_insert(&loop->io_evts, &io_evt->node);
         platform_event_add(loop->sq, &io_evt->sqe);
         break;
     }
     case XCOMM_EVENT_TYPE_RT: {
-        xcomm_event_rt_t* rt_evt =
-            xcomm_eventloop_container_of(event, xcomm_event_rt_t, base);
+        xcomm_rt_event_t* rt_evt =
+            xcomm_eventloop_container_of(event, xcomm_rt_event_t, base);
 
         mtx_lock(&loop->rt_mtx);
         xcomm_list_insert_tail(&loop->rt_evts, event);
         mtx_unlock(&loop->rt_mtx);
 
-        xcomm_eventloop_wakeup(loop);
+        _eventloop_wake(loop);
         break;
     }
     case XCOMM_EVENT_TYPE_TM: {
-        xcomm_event_tm_t* tm_evt =
-            xcomm_eventloop_container_of(event, xcomm_event_tm_t, base);
+        xcomm_tm_event_t* tm_evt =
+            xcomm_eventloop_container_of(event, xcomm_tm_event_t, base);
 
         xcomm_timers_add(&loop->tm_evts, event);
         break;
@@ -103,15 +103,13 @@ void xcomm_eventloop_register(
     }
 }
 
-void xcomm_eventloop_update(
-    xcomm_eventloop_t* loop, xcomm_event_base_t* event) {
+void xcomm_eventloop_update(xcomm_eventloop_t* loop, xcomm_event_t* event) {
     platform_event_sqe_t sqe = {
         .op = event->operate, .handle = event->handle, .ud = event->userdata};
     platform_event_mod(loop->sq, &sqe);
 }
 
-void xcomm_eventloop_unregister(
-    xcomm_eventloop_t* loop, xcomm_event_base_t* event) {
+void xcomm_eventloop_unregister(xcomm_eventloop_t* loop, xcomm_event_t* event) {
     
 }
 
@@ -119,17 +117,17 @@ void xcomm_eventloop_run(xcomm_eventloop_t* loop) {
     platform_event_cqe_t cqes[PLATFORM_EVENT_CQE_NUM] = {0};
     while (loop->running) {
         int nevents =
-            platform_event_wait(loop->sq, cqes, _timeout_update(poller));
+            platform_event_wait(loop->sq, cqes, _timeout_update(loop));
 
         for (int i = 0; i < nevents; i++) {
             xcomm_event_t* event = cqes[i].ud;
 
             if (event && event->execute_cb) {
-                event->execute(event->context);
+                event->execute_cb(event->context, cqes[i].op);
             }
         }
-        if (!_timeout_update(poller)) {
-            _timer_handle(poller);
+        if (!_timeout_update(loop)) {
+            _timer_handle(loop);
         }
     }
 }

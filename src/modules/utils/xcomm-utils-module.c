@@ -23,6 +23,9 @@
 #include "xcomm/xcomm-utils-module.h"
 
 xcomm_utils_module_t xcomm_utils = {
-    .name  = "Xcomm Utils Module",
-    .post  = xcomm_utils_post,
+    .name          = "Xcomm Utils Module",
+
+    .execute_task  = xcomm_utils_execute_task,
+    .execute_timer = xcomm_utils_execute_timer,
+    .cancel_timer  = xcomm_utils_cancel_timer
 };

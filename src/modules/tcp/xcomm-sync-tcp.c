@@ -23,7 +23,7 @@
 #include "xcomm-sync-tcp.h"
 #include "platform/platform-socket.h"
 
-void xcomm_sync_tcp_destroy_listener(xcomm_tcp_listener_t* listener) {
+void xcomm_sync_tcp_close_listener(xcomm_tcp_listener_t* listener) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
     platform_sock_t* sock = listener->opaque;
@@ -34,7 +34,7 @@ void xcomm_sync_tcp_destroy_listener(xcomm_tcp_listener_t* listener) {
     xcomm_logi("%s leave.\n", __FUNCTION__);
 }
 
-void xcomm_sync_tcp_destroy_connection(xcomm_tcp_connection_t* conn) {
+void xcomm_sync_tcp_close_connection(xcomm_tcp_connection_t* conn) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
     platform_sock_t* sock = conn->opaque;

@@ -21,14 +21,17 @@
 
 _Pragma("once")
 
-#include "xcomm/xcomm-tcp-module.h"
+#include <stdint.h>
+#include <stdbool.h>
 
-extern xcomm_tcp_connection_t* xcomm_sync_tcp_dial(const char* restrict host, const char* restrict port);
-extern xcomm_tcp_listener_t* xcomm_sync_tcp_listen(const char* restrict host, const char* restrict port);
-extern xcomm_tcp_connection_t* xcomm_sync_tcp_accept(xcomm_tcp_listener_t* listener);
-extern void xcomm_sync_tcp_close_connection(xcomm_tcp_connection_t* conn);
-extern void xcomm_sync_tcp_close_listener(xcomm_tcp_listener_t* listener);
-extern int  xcomm_sync_tcp_send(xcomm_tcp_connection_t* conn, void* buf, int len);
-extern int  xcomm_sync_tcp_recv(xcomm_tcp_connection_t* conn, void* buf, int len);
-extern void xcomm_sync_tcp_set_sndtimeout(xcomm_tcp_connection_t* conn, int timeout_ms);
-extern void xcomm_sync_tcp_set_rcvtimeout(xcomm_tcp_connection_t* conn, int timeout_ms);
+typedef struct xcomm_utils_module_s xcomm_utils_module_t;
+
+struct xcomm_utils_module_s {
+    const char* restrict name;
+
+    void     (*execute_task)(void (*task)(void* param), void* param);
+    uint64_t (*execute_timer)(void (*task)(void* param), void* param, uint64_t timeout_ms, bool repeat);
+    void     (*cancel_timer)(uint64_t id);
+};
+
+extern xcomm_utils_module_t xcomm_utils;

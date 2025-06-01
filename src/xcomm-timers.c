@@ -44,12 +44,12 @@ void xcomm_timers_init(xcomm_timers_t* timers) {
 
 void xcomm_timers_del(xcomm_timers_t* timers, xcomm_timer_t* timer) {
     xcomm_heap_remove(&timers->heap, &timer->node);
-    timers->ntimers--;
     free(timer);
+    timers->ntimers--;
 }
 
 void xcomm_timers_reset(
-    xcomm_timers_t* timers, xcomm_timer_t* timer, size_t expire_ms) {
+    xcomm_timers_t* timers, xcomm_timer_t* timer, uint64_t expire_ms) {
     xcomm_heap_remove(&timers->heap, &timer->node);
 
     timer->birth = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
@@ -73,13 +73,12 @@ xcomm_timer_t* xcomm_timers_add(
     xcomm_timers_t* timers,
     void (*routine)(void*),
     void*           param,
-    size_t          expire_ms,
+    uint64_t        expire_ms,
     bool            repeat) {
     xcomm_timer_t* timer = malloc(sizeof(xcomm_timer_t));
     if (!timer) {
         return NULL;
     }
-    timer->id = timers->ntimers++;
     timer->param = param;
     timer->birth = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
     timer->expire = expire_ms;
@@ -87,5 +86,6 @@ xcomm_timer_t* xcomm_timers_add(
     timer->routine = routine;
     
     xcomm_heap_insert(&timers->heap, &timer->node);
+    timers->ntimers++;
     return timer;
 }

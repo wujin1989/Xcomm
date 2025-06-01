@@ -24,9 +24,9 @@
 void xcomm_async_tcp_dial(
     const char* restrict   host,
     const char* restrict   port,
+    int                    timeout_ms,
     xcomm_tcp_connect_cb_t connect_cb,
     void*                  userdata) {
-
 }
 
 void xcomm_async_tcp_listen(
@@ -44,14 +44,14 @@ void xcomm_async_tcp_set_accept_cb(
 
 }
 
-void xcomm_async_tcp_set_destroy_listener_cb(
-    xcomm_tcp_listener_t*           listener,
-    xcomm_tcp_destroy_listener_cb_t destroy_listener_cb,
-    void*                           userdata) {
+void xcomm_async_tcp_set_listener_close_cb(
+    xcomm_tcp_listener_t*         listener,
+    xcomm_tcp_listener_close_cb_t listener_close_cb,
+    void*                         userdata) {
 
 }
 
-void xcomm_async_tcp_destroy_listener(xcomm_tcp_listener_t* listener) {
+void xcomm_async_tcp_close_listener(xcomm_tcp_listener_t* listener) {
 
 }
 
@@ -67,10 +67,14 @@ void xcomm_async_tcp_set_send_completed_cb(
 
 }
 
-void xcomm_async_tcp_set_destroy_connection_cb(
-    xcomm_tcp_connection_t*           conn,
-    xcomm_tcp_destroy_connection_cb_t destroy_connection_cb,
-    void*                             userdata) {
+void xcomm_async_tcp_set_connection_close_cb(
+    xcomm_tcp_connection_t*         conn,
+    xcomm_tcp_connection_close_cb_t connection_close_cb,
+    void*                           userdata) {
+
+}
+
+void xcomm_async_tcp_close_connection(xcomm_tcp_connection_t* conn) {
 
 }
 
@@ -82,15 +86,6 @@ void xcomm_async_tcp_set_heartbeat_cb(
 }
 
 void xcomm_async_tcp_send(xcomm_tcp_connection_t* conn, void* buf, size_t len) {
-
-}
-
-void xcomm_async_tcp_close(xcomm_tcp_channel_t* channel) {
-
-}
-
-void xcomm_async_tcp_set_conntimeo(
-    xcomm_tcp_connection_t* conn, int timeout_ms) {
 
 }
 

@@ -43,7 +43,10 @@ typedef void (*xcomm_tcp_listen_cb_t)(
     void*                 userdata);
 
 typedef void (*xcomm_tcp_accept_cb_t)(
-    xcomm_tcp_listener_t* listener, void* userdata);
+    xcomm_tcp_connection_t* conn, 
+    int                     error_code,
+    const char*             error_message,
+    void*                   userdata);
 
 typedef void (*xcomm_tcp_recv_cb_t)(
     xcomm_tcp_connection_t* conn, void* buf, size_t len, void* userdata);
@@ -54,10 +57,10 @@ typedef void (*xcomm_tcp_send_completed_cb_t)(
 typedef void (*xcomm_tcp_heartbeat_cb_t)(
     xcomm_tcp_connection_t* conn, void* userdata);
 
-typedef void (*xcomm_tcp_destroy_connection_cb_t)(
+typedef void (*xcomm_tcp_connection_close_cb_t)(
     xcomm_tcp_connection_t* conn, void* userdata);
 
-typedef void (*xcomm_tcp_destroy_listener_cb_t)(
+typedef void (*xcomm_tcp_listener_close_cb_t)(
     xcomm_tcp_listener_t* listener, void* userdata);
 
 struct xcomm_tcp_connection_s {
@@ -79,11 +82,11 @@ struct xcomm_sync_tcp_module_s {
     xcomm_tcp_listener_t* (*listen)(const char* restrict host, const char* restrict port);
 
     xcomm_tcp_connection_t* (*accept)(xcomm_tcp_listener_t* listener);
-    void (*destroy_listener)(xcomm_tcp_listener_t* listener);
+    void (*close_listener)(xcomm_tcp_listener_t* listener);
 
     int  (*send)(xcomm_tcp_connection_t* conn, void* buf, int len);
     int  (*recv)(xcomm_tcp_connection_t* conn, void* buf, int len);
-    void (*destroy_connection)(xcomm_tcp_connection_t* conn);
+    void (*close_connection)(xcomm_tcp_connection_t* conn);
     void (*set_sndtimeo)(xcomm_tcp_connection_t* conn, int timeout_ms);
     void (*set_rcvtimeo)(xcomm_tcp_connection_t* conn, int timeout_ms);
 };
@@ -91,20 +94,19 @@ struct xcomm_sync_tcp_module_s {
 struct xcomm_async_tcp_module_s {
     const char* restrict name;
 
-    void (*dial)(const char* restrict host, const char* restrict port, xcomm_tcp_connect_cb_t connect_cb, void* userdata);
+    void (*dial)(const char* restrict host, const char* restrict port, int timeout_ms, xcomm_tcp_connect_cb_t connect_cb, void* userdata);
     void (*listen)(const char* restrict host, const char* restrict port, xcomm_tcp_listen_cb_t listen_cb, void* userdata);
     
     void (*set_accept_cb)(xcomm_tcp_listener_t* listener, xcomm_tcp_accept_cb_t accept_cb, void* userdata);
-    void (*set_destroy_listener_cb)(xcomm_tcp_listener_t* listener, xcomm_tcp_destroy_listener_cb_t destroy_listener_cb, void* userdata);
-    void (*destroy_listener)(xcomm_tcp_listener_t* listener);
+    void (*set_listener_close_cb)(xcomm_tcp_listener_t* listener, xcomm_tcp_listener_close_cb_t listener_close_cb, void* userdata);
+    void (*close_listener)(xcomm_tcp_listener_t* listener);
 
     void (*set_recv_cb)(xcomm_tcp_connection_t* conn, xcomm_tcp_recv_cb_t recv_cb, void* userdata);
     void (*set_send_completed_cb)(xcomm_tcp_connection_t* conn, xcomm_tcp_send_completed_cb_t send_completed_cb, void* userdata);
     void (*set_heartbeat_cb)(xcomm_tcp_connection_t* conn, xcomm_tcp_heartbeat_cb_t heartbeat_cb, void* userdata);
-    void (*set_destroy_connection_cb)(xcomm_tcp_connection_t* conn, xcomm_tcp_destroy_connection_cb_t destroy_connection_cb, void* userdata);
+    void (*set_connection_close_cb)(xcomm_tcp_connection_t* conn, xcomm_tcp_connection_close_cb_t connection_close_cb, void* userdata);
+    void (*close_connection)(xcomm_tcp_connection_t* conn);
     void (*send)(xcomm_tcp_connection_t* conn, void* buf, size_t len);
-    void (*destroy_connection)(xcomm_tcp_connection_t* conn);
-    void (*set_conntimeo)(xcomm_tcp_connection_t* conn, int timeout_ms);
     void (*set_sendtimeo)(xcomm_tcp_connection_t* conn, int timeout_ms);
     void (*set_recvtimeo)(xcomm_tcp_connection_t* conn, int timeout_ms);
     void (*set_heartbeat_interval)(xcomm_tcp_connection_t* conn, int interval_ms);
