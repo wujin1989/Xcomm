@@ -35,17 +35,15 @@ set(SRCS
 	src/xcomm-utils.c
 	src/xcomm-varint.c
 	src/xcomm-stack.c
-	src/xcomm-timers.c
 	src/xcomm-rwlock.c
 	src/xcomm-spinlock.c
 	src/xcomm-wg.c
 	src/xcomm-thrdpool.c
 	src/xcomm-ringbuffer.c
 	src/xcomm-bswap.c
-	src/xcomm-eventloop.c
-	src/xcomm-channel.c
-	src/xcomm-tcpchannel.c
-	src/xcomm-udpchannel.c
+	src/xcomm-event-loop.c
+	src/xcomm-event-timer.c
+	src/xcomm-event-io.c
 
 	src/modules/dumper/xcomm-dumper.c
 	src/modules/dumper/xcomm-dumper-module.c

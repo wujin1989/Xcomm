@@ -19,14 +19,30 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-eventloop.h"
+#include "xcomm-event-loop.h"
 
 #include "platform/platform-event.h"
 #include "platform/platform-socket.h"
 
 #define xcomm_eventloop_container_of(x, t, m) ((t*)((char*)(x)-offsetof(t, m)))
 
-static void _eventloop_wake(xcomm_eventloop_t* loop) {
+static inline int
+_event_loop_minheap_cmp(xcomm_heap_node_t* a, xcomm_heap_node_t* b) {
+    xcomm_event_timer_t* ta = xcomm_heap_data(a, xcomm_event_timer_t, node);
+    xcomm_event_timer_t* tb = xcomm_heap_data(b, xcomm_event_timer_t, node);
+
+    if ((ta->birth + ta->expire) < (tb->birth + tb->expire)) {
+        return 1;
+    }
+    if ((ta->birth + ta->expire) == (tb->birth + tb->expire)) {
+        if ((ta->id < tb->id)) {
+            return 1;
+        }
+    }
+    return 0;
+}
+
+static void _event_loop_wake(xcomm_eventloop_t* loop) {
     char buf = 'w';
     platform_socket_send(loop->wakefds[0], &buf, sizeof(buf));
 }
@@ -46,7 +62,9 @@ void xcomm_eventloop_init(xcomm_eventloop_t* loop) {
     
     xcomm_list_init(&loop->rt_evts);
     xcomm_rbtree_init(&loop->io_evts, xcomm_rbtree_keycmp_ptr);
-    xcomm_timers_init(&loop->tm_evts);
+
+    xcomm_heap_init(&loop->ev_tm_mgr, _event_loop_minheap_cmp);
+    loop->ev_tm_mgr->ntimers = 0;
 
     platform_event_init(&loop->sq);
     platform_socket_socketpair(AF_INET, SOCK_STREAM, 0, loop->wakefds);

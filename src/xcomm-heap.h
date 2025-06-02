@@ -25,7 +25,7 @@ _Pragma("once")
 #include <stddef.h>
 #include <stdbool.h>
 
-#define xcomm_heap_data(x, t, m) ((t*)((char*)(x) - offsetof(t, m)))
+#define xcomm_heap_data(x, t, m) ((t *)((char *)(x) - offsetof(t, m)))
 
 typedef struct xcomm_heap_s      xcomm_heap_t;
 typedef struct xcomm_heap_node_s xcomm_heap_node_t;

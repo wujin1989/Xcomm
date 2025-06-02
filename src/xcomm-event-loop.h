@@ -22,19 +22,19 @@
 _Pragma("once")
 
 #include "xcomm-list.h"
-#include "xcomm-timers.h"
 #include "xcomm-rbtree.h"
+#include "xcomm-event-timer.h"
 
 #include "platform/platform-types.h"
 
-typedef struct xcomm_eventloop_s  xcomm_eventloop_t;
+typedef struct xcomm_event_loop_s xcomm_event_loop_t;
 typedef enum xcomm_event_type_e   xcomm_event_type_t;
 typedef struct xcomm_event_s      xcomm_event_t;
 typedef struct xcomm_io_event_s   xcomm_io_event_t;
 typedef struct xcomm_rt_event_s   xcomm_rt_event_t;
 typedef struct xcomm_tm_event_s   xcomm_tm_event_t;
 
-struct xcomm_eventloop_s {
+struct xcomm_event_loop_s {
     bool                running;
     thrd_t              tid;
     platform_event_sq_t sq;
@@ -42,7 +42,9 @@ struct xcomm_eventloop_s {
     mtx_t               rt_mtx;
     xcomm_list_t        rt_evts;
     xcomm_rbtree_t      io_evts;
-    xcomm_timers_t      tm_evts;
+
+    xcomm_heap_t        ev_tm_mgr;
+    uint64_t            ev_tm_num;
 };
 
 enum xcomm_event_type_e {
@@ -73,9 +75,9 @@ struct xcomm_io_event_s {
     xcomm_rbtree_node_t  node;
 };
 
-extern void xcomm_eventloop_init(xcomm_eventloop_t* loop);
-extern void xcomm_eventloop_destroy(xcomm_eventloop_t* loop);
-extern void xcomm_eventloop_run(xcomm_eventloop_t* loop);
-extern void xcomm_eventloop_register(xcomm_eventloop_t* loop, xcomm_event_t* event);
-extern void xcomm_eventloop_update(xcomm_eventloop_t* loop, xcomm_event_t* event);
-extern void xcomm_eventloop_unregister(xcomm_eventloop_t* loop, xcomm_event_t* event);
+extern void xcomm_event_loop_init(xcomm_event_loop_t* loop);
+extern void xcomm_event_loop_destroy(xcomm_event_loop_t* loop);
+extern void xcomm_event_loop_run(xcomm_event_loop_t* loop);
+extern void xcomm_event_loop_register(xcomm_event_loop_t* loop, xcomm_event_t* event);
+extern void xcomm_event_loop_update(xcomm_event_loop_t* loop, xcomm_event_t* event);
+extern void xcomm_event_loop_unregister(xcomm_event_loop_t* loop, xcomm_event_t* event);
