@@ -29,7 +29,7 @@ static inline bool _event_timer_validate_timeout(xcomm_event_loop_t* loop) {
         return INT_MAX - 1;
     }
     xcomm_event_timer_t* timer = xcomm_event_timer_min(loop);
-    if ((timer->birth + timer->expire) <=
+    if ((timer->event.tm.birth + timer->event.tm.expire) <=
         xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC)) {
         return true;
     } else {
@@ -45,8 +45,8 @@ static void _event_timer_execute_cb(void* context, platform_event_op_t op) {
         if (timer->routine) {
             timer->routine(timer->param);
         }
-        if (timer->repeat) {
-            xcomm_event_timer_reset(timer->loop, timer, timer->expire);
+        if (timer->event.tm.repeat) {
+            xcomm_event_timer_reset(timer->loop, timer, timer->event.tm.expire);
         } else {
             xcomm_event_timer_del(timer->loop, timer);
         }
@@ -73,8 +73,8 @@ void xcomm_event_timer_reset(
     xcomm_event_loop_t* loop, xcomm_event_timer_t* timer, uint64_t expire_ms) {
     xcomm_event_loop_unregister(loop, &timer->event);
 
-    timer->birth = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
-    timer->expire = expire_ms;
+    timer->event.tm.birth = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
+    timer->event.tm.expire = expire_ms;
 
     xcomm_event_loop_register(loop, &timer->event);
 }
@@ -103,7 +103,6 @@ xcomm_event_timer_t* xcomm_event_timer_add(
     if (!timer) {
         return NULL;
     }
-    timer->repeat  = repeat;
     timer->routine = routine;
     timer->param   = param;
     timer->loop    = loop;
@@ -112,6 +111,7 @@ xcomm_event_timer_t* xcomm_event_timer_add(
     timer->event.tm.birth   = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
     timer->event.tm.expire  = expire_ms;
     timer->event.tm.id      = loop->tm_ev_num;
+    timer->event.tm.repeat  = repeat;
     timer->event.execute_cb = _event_timer_execute_cb;
     timer->event.cleanup_cb = _event_timer_cleanup_cb;
     timer->event.context    = timer;

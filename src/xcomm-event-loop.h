@@ -59,9 +59,10 @@ struct xcomm_event_s {
     xcomm_event_type_t type;
 
     struct {
+        uint64_t id;
         uint64_t birth;
         uint64_t expire;
-        uint64_t id;
+        bool     repeat;
     } tm;
 
     struct {

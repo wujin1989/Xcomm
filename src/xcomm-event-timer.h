@@ -31,9 +31,6 @@ struct xcomm_event_timer_s {
     void (*routine)(void* param);
     xcomm_event_loop_t* loop;
     void*               param;
-    uint64_t            id;
-    uint64_t            birth;
-    uint64_t            expire;
     bool                repeat;
     xcomm_event_t       event;
 };
