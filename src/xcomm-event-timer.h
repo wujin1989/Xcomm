@@ -28,15 +28,14 @@ _Pragma("once")
 typedef struct xcomm_event_timer_s xcomm_event_timer_t;
 
 struct xcomm_event_timer_s {
-
     void (*routine)(void* param);
-    uint64_t          id;
-    void*             param;
-    uint64_t          birth;
-    uint64_t          expire;
-    bool              repeat;
-    xcomm_event_t     event;
-    xcomm_heap_node_t node;
+    xcomm_event_loop_t* loop;
+    void*               param;
+    uint64_t            id;
+    uint64_t            birth;
+    uint64_t            expire;
+    bool                repeat;
+    xcomm_event_t       event;
 };
 
 extern void xcomm_event_timer_del(xcomm_event_loop_t* loop, xcomm_event_timer_t* timer);

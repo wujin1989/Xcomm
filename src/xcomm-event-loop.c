@@ -19,101 +19,131 @@
  *  IN THE SOFTWARE.
  */
 
+#include "xcomm-utils.h"
 #include "xcomm-event-loop.h"
 
 #include "platform/platform-event.h"
 #include "platform/platform-socket.h"
 
-#define xcomm_eventloop_container_of(x, t, m) ((t*)((char*)(x)-offsetof(t, m)))
-
 static inline int
 _event_loop_minheap_cmp(xcomm_heap_node_t* a, xcomm_heap_node_t* b) {
-    xcomm_event_timer_t* ta = xcomm_heap_data(a, xcomm_event_timer_t, node);
-    xcomm_event_timer_t* tb = xcomm_heap_data(b, xcomm_event_timer_t, node);
+    xcomm_event_t* event_a = xcomm_heap_data(a, xcomm_event_t, tm_node);
+    xcomm_event_t* event_b = xcomm_heap_data(b, xcomm_event_t, tm_node);
 
-    if ((ta->birth + ta->expire) < (tb->birth + tb->expire)) {
+    uint64_t expire_a = event_a->tm.birth + event_a->tm.expire;
+    uint64_t expire_b = event_b->tm.birth + event_b->tm.expire;
+
+    if (expire_a < expire_b) {
         return 1;
     }
-    if ((ta->birth + ta->expire) == (tb->birth + tb->expire)) {
-        if ((ta->id < tb->id)) {
-            return 1;
-        }
+    if (expire_a > expire_b) {
+        return 0;
     }
-    return 0;
+    return (event_a->tm.id < event_b->tm.id) ? 1 : 0;
 }
 
-static void _event_loop_wake(xcomm_eventloop_t* loop) {
+static void _event_loop_wake(xcomm_event_loop_t* loop) {
     char buf = 'w';
     platform_socket_send(loop->wakefds[0], &buf, sizeof(buf));
 }
 
-static void _eventloop_wake_cb(void* context) {
-    xcomm_eventloop_t* loop = (xcomm_eventloop_t*)context;
-
+static void _event_loop_wake_cb(void* context, platform_event_op_t op) {
+    (void)op;
+    xcomm_event_loop_t* loop = (xcomm_event_loop_t*)context;
     char buf;
     platform_socket_recv(loop->wakefds[1], &buf, sizeof(buf));
 }
 
-void xcomm_eventloop_init(xcomm_eventloop_t* loop) {
+static void _event_loop_process_timers(xcomm_event_loop_t* loop) {
+    uint64_t now = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
+
+    while (!xcomm_heap_empty(&loop->tm_ev_mgr)) {
+        xcomm_heap_node_t* min = xcomm_heap_min(&loop->tm_ev_mgr);
+        xcomm_event_t*     evt = xcomm_heap_data(min, xcomm_event_t, tm_node);
+
+        if (evt->tm.birth + evt->tm.expire > now) {
+            break;
+        }
+        if (evt->execute_cb) {
+            evt->execute_cb(evt->context, PLATFORM_EVENT_NO_OP);
+        }
+    }
+}
+
+static int _event_loop_calculate_timeout(xcomm_event_loop_t* loop) {
+    if (xcomm_heap_empty(&loop->tm_ev_mgr)) {
+        return INT_MAX - 1;
+    }
+
+    xcomm_heap_node_t* min = xcomm_heap_min(&loop->tm_ev_mgr);
+    xcomm_event_t*     evt = xcomm_heap_data(min, xcomm_event_t, tm_node);
+
+    uint64_t now = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
+    if (evt->tm.birth + evt->tm.expire <= now) {
+        return 0;
+    }
+    return (int)(evt->tm.birth + evt->tm.expire - now);
+}
+
+void xcomm_event_loop_init(xcomm_event_loop_t* loop) {
     loop->running = true;
     loop->tid = thrd_current();
     
-    mtx_init(&loop->rt_mtx, mtx_plain);
+    mtx_init(&loop->rt_ev_mtx, mtx_plain);
     
-    xcomm_list_init(&loop->rt_evts);
-    xcomm_rbtree_init(&loop->io_evts, xcomm_rbtree_keycmp_ptr);
+    xcomm_queue_init(&loop->rt_ev_mgr);
+    loop->rt_ev_num = 0;
 
-    xcomm_heap_init(&loop->ev_tm_mgr, _event_loop_minheap_cmp);
-    loop->ev_tm_mgr->ntimers = 0;
+    xcomm_list_init(&loop->io_ev_mgr);
+    loop->io_ev_num = 0;
+
+    xcomm_heap_init(&loop->tm_ev_mgr, _event_loop_minheap_cmp);
+    loop->tm_ev_num = 0;
 
     platform_event_init(&loop->sq);
     platform_socket_socketpair(AF_INET, SOCK_STREAM, 0, loop->wakefds);
     platform_socket_enable_nonblocking(loop->wakefds[1], true);
 
-    xcomm_io_event_t* event = malloc(sizeof(xcomm_io_event_t));
+    xcomm_event_t* event = malloc(sizeof(xcomm_event_t));
     if (!event) {
         return;
     }
-    event->base.type       = XCOMM_EVENT_TYPE_IO;
-    event->base.context    = loop;
-    event->base.execute_cb = _eventloop_wake_cb;
-    event->base.execute_cb = NULL;
+    event->type = XCOMM_EVENT_TYPE_IO;
+    event->context = loop;
+    event->execute_cb = _event_loop_wake_cb;
+    event->cleanup_cb = NULL;
 
-    event->sqe.op = PLATFORM_EVENT_RD_OP;
-    event->sqe.fd = (platform_event_fd_t)loop->wakefds[1];
-    event->sqe.ud = event;
-    event->node.key.ptr = loop;
+    event->io.sqe.op = PLATFORM_EVENT_RD_OP;
+    event->io.sqe.fd = (platform_event_fd_t)loop->wakefds[1];
+    event->io.sqe.ud = event;
 
-    xcomm_rbtree_insert(&loop->io_evts, &event->node);
-    platform_event_add(loop->sq, &event->sqe);
+    xcomm_list_insert_tail(&loop->io_ev_mgr, &event->io_node);
+    loop->io_ev_num++;
+
+    platform_event_add(loop->sq, &event->io.sqe);
 }
 
-void xcomm_eventloop_register(xcomm_eventloop_t* loop, xcomm_event_t* event) {
+void xcomm_event_loop_register(xcomm_event_loop_t* loop, xcomm_event_t* event) {
     switch (event->type) {
     case XCOMM_EVENT_TYPE_IO: {
-        xcomm_io_event_t* io_evt =
-            xcomm_eventloop_container_of(event, xcomm_io_event_t, base);
+        xcomm_list_insert_tail(&loop->io_ev_mgr, &event->io_node);
+        loop->io_ev_num++;
 
-        xcomm_rbtree_insert(&loop->io_evts, &io_evt->node);
-        platform_event_add(loop->sq, &io_evt->sqe);
+        platform_event_add(loop->sq, &event->io.sqe);
         break;
     }
     case XCOMM_EVENT_TYPE_RT: {
-        xcomm_rt_event_t* rt_evt =
-            xcomm_eventloop_container_of(event, xcomm_rt_event_t, base);
+        mtx_lock(&loop->rt_ev_mtx);
+        xcomm_queue_enqueue(&loop->rt_ev_mgr, &event->rt_node);
+        loop->rt_ev_num++;
+        mtx_unlock(&loop->rt_ev_mtx);
 
-        mtx_lock(&loop->rt_mtx);
-        xcomm_list_insert_tail(&loop->rt_evts, event);
-        mtx_unlock(&loop->rt_mtx);
-
-        _eventloop_wake(loop);
+        _event_loop_wake(loop);
         break;
     }
     case XCOMM_EVENT_TYPE_TM: {
-        xcomm_tm_event_t* tm_evt =
-            xcomm_eventloop_container_of(event, xcomm_tm_event_t, base);
-
-        xcomm_timers_add(&loop->tm_evts, event);
+        xcomm_heap_insert(&loop->tm_ev_mgr, &event->tm_node);
+        loop->tm_ev_num++;
         break;
     }
     default:
@@ -121,21 +151,41 @@ void xcomm_eventloop_register(xcomm_eventloop_t* loop, xcomm_event_t* event) {
     }
 }
 
-void xcomm_eventloop_update(xcomm_eventloop_t* loop, xcomm_event_t* event) {
-    platform_event_sqe_t sqe = {
-        .op = event->operate, .handle = event->handle, .ud = event->userdata};
-    platform_event_mod(loop->sq, &sqe);
+void xcomm_event_loop_update(xcomm_event_loop_t* loop, xcomm_event_t* event) {
+    if (event->type == XCOMM_EVENT_TYPE_IO) {
+        platform_event_mod(loop->sq, &event->io.sqe);
+    }
 }
 
-void xcomm_eventloop_unregister(xcomm_eventloop_t* loop, xcomm_event_t* event) {
-    
+void xcomm_event_loop_unregister(xcomm_event_loop_t* loop, xcomm_event_t* event) {
+    switch (event->type) {
+    case XCOMM_EVENT_TYPE_IO: {
+        xcomm_list_remove(&event->io_node);
+        loop->io_ev_num--;
+
+        platform_event_del(loop->sq, &event->io.sqe);
+        break;
+    }
+    case XCOMM_EVENT_TYPE_RT: {
+        break;
+    }
+    case XCOMM_EVENT_TYPE_TM: {
+        xcomm_heap_remove(&loop->tm_ev_mgr, &event->tm_node);
+        loop->tm_ev_num--;
+        break;
+    }
+    default:
+        break;
+    }
 }
 
-void xcomm_eventloop_run(xcomm_eventloop_t* loop) {
+void xcomm_event_loop_run(xcomm_event_loop_t* loop) {
     platform_event_cqe_t cqes[PLATFORM_EVENT_CQE_NUM] = {0};
     while (loop->running) {
-        int nevents =
-            platform_event_wait(loop->sq, cqes, _timeout_update(loop));
+        _event_loop_process_timers(loop);
+
+        int nevents = platform_event_wait(
+            loop->sq, cqes, _event_loop_calculate_timeout(loop));
 
         for (int i = 0; i < nevents; i++) {
             xcomm_event_t* event = cqes[i].ud;
@@ -144,11 +194,9 @@ void xcomm_eventloop_run(xcomm_eventloop_t* loop) {
                 event->execute_cb(event->context, cqes[i].op);
             }
         }
-        if (!_timeout_update(loop)) {
-            _timer_handle(loop);
-        }
+        _event_loop_process_timers(loop);
     }
 }
 
-void xcomm_eventloop_destroy(xcomm_eventloop_t* loop) {
+void xcomm_event_loop_destroy(xcomm_event_loop_t* loop) {
 }

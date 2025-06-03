@@ -40,7 +40,7 @@ void platform_event_add(platform_event_sq_t* sq, platform_event_sqe_t* sqe) {
         ee.events |= EPOLLOUT;
     }
     ee.data.ptr = sqe->ud;
-    epoll_ctl(*sq, EPOLL_CTL_ADD, sqe->handle, (struct epoll_event*)&ee);
+    epoll_ctl(*sq, EPOLL_CTL_ADD, sqe->fd, (struct epoll_event*)&ee);
 }
 
 void platform_event_mod(platform_event_sq_t* sq, platform_event_sqe_t* sqe) {
@@ -53,11 +53,11 @@ void platform_event_mod(platform_event_sq_t* sq, platform_event_sqe_t* sqe) {
         ee.events |= EPOLLOUT;
     }
     ee.data.ptr = sqe->ud;
-    epoll_ctl(*sq, EPOLL_CTL_MOD, sqe->handle, (struct epoll_event*)&ee);
+    epoll_ctl(*sq, EPOLL_CTL_MOD, sqe->fd, (struct epoll_event*)&ee);
 }
 
 void platform_event_del(platform_event_sq_t* sq, platform_event_sqe_t* sqe) {
-    epoll_ctl(*sq, EPOLL_CTL_DEL, &sqe->handle, NULL);
+    epoll_ctl(*sq, EPOLL_CTL_DEL, &sqe->fd, NULL);
 }
 
 int platform_event_wait(

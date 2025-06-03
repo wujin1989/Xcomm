@@ -22,33 +22,75 @@
 #include "xcomm-utils.h"
 #include "xcomm-event-timer.h"
 
+#define xcomm_event_timer_data(x, t, m) ((t *)((char *)(x) - offsetof(t, m)))
+
+static inline bool _event_timer_validate_timeout(xcomm_event_loop_t* loop) {
+    if (xcomm_event_timer_empty(loop)) {
+        return INT_MAX - 1;
+    }
+    xcomm_event_timer_t* timer = xcomm_event_timer_min(loop);
+    if ((timer->birth + timer->expire) <=
+        xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC)) {
+        return true;
+    } else {
+        return false;
+    }
+}
+
+static void _event_timer_execute_cb(void* context, platform_event_op_t op) {
+    (void)op;
+    xcomm_event_timer_t* timer = (xcomm_event_timer_t*)context;
+
+    if (_event_timer_validate_timeout(timer->loop)) {
+        if (timer->routine) {
+            timer->routine(timer->param);
+        }
+        if (timer->repeat) {
+            xcomm_event_timer_reset(timer->loop, timer, timer->expire);
+        } else {
+            xcomm_event_timer_del(timer->loop, timer);
+        }
+    }
+}
+
+static void _event_timer_cleanup_cb(void* context, platform_event_op_t op) {
+    (void)op;
+    xcomm_event_timer_t* timer = (xcomm_event_timer_t*)context;
+
+    if (timer->routine) {
+        timer->routine(timer->param);
+    }
+    xcomm_event_timer_del(timer->loop, timer);
+}
+
 void xcomm_event_timer_del(
     xcomm_event_loop_t* loop, xcomm_event_timer_t* timer) {
-    xcomm_heap_remove(&loop->ev_tm_mgr, &timer->node);
-    loop->ev_tm_num--;
-
+    xcomm_event_loop_unregister(loop, &timer->event);
     free(timer);
 }
 
 void xcomm_event_timer_reset(
     xcomm_event_loop_t* loop, xcomm_event_timer_t* timer, uint64_t expire_ms) {
-    xcomm_heap_remove(&loop->ev_tm_mgr, &timer->node);
+    xcomm_event_loop_unregister(loop, &timer->event);
 
     timer->birth = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
     timer->expire = expire_ms;
-    xcomm_heap_insert(&loop->ev_tm_mgr, &timer->node);
+
+    xcomm_event_loop_register(loop, &timer->event);
 }
 
 bool xcomm_event_timer_empty(xcomm_event_loop_t* loop) {
-    return xcomm_heap_empty(&loop->ev_tm_mgr);
+    return xcomm_heap_empty(&loop->tm_ev_mgr);
 }
 
 xcomm_event_timer_t* xcomm_event_timer_min(xcomm_event_loop_t* loop) {
-    xcomm_heap_node_t* min = xcomm_heap_min(&loop->ev_tm_mgr);
-    if (!min) {
+    if (xcomm_heap_empty(&loop->tm_ev_mgr)) {
         return NULL;
     }
-    return xcomm_heap_data(min, xcomm_event_timer_t, node);
+    xcomm_heap_node_t* min = xcomm_heap_min(&loop->tm_ev_mgr);
+    xcomm_event_t*     evt = xcomm_heap_data(min, xcomm_event_t, tm_node);
+
+    return xcomm_event_timer_data(evt, xcomm_event_t, event);
 }
 
 xcomm_event_timer_t* xcomm_event_timer_add(
@@ -61,14 +103,19 @@ xcomm_event_timer_t* xcomm_event_timer_add(
     if (!timer) {
         return NULL;
     }
-    timer->param   = param;
-    timer->birth   = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
-    timer->expire  = expire_ms;
     timer->repeat  = repeat;
     timer->routine = routine;
-    
-    xcomm_heap_insert(&loop->ev_tm_mgr, &timer->node);
-    loop->ev_tm_num++;
+    timer->param   = param;
+    timer->loop    = loop;
 
+    timer->event.type       = XCOMM_EVENT_TYPE_TM;
+    timer->event.tm.birth   = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
+    timer->event.tm.expire  = expire_ms;
+    timer->event.tm.id      = loop->tm_ev_num;
+    timer->event.execute_cb = _event_timer_execute_cb;
+    timer->event.cleanup_cb = _event_timer_cleanup_cb;
+    timer->event.context    = timer;
+    
+    xcomm_event_loop_register(loop, &timer->event);
     return timer;
 }
