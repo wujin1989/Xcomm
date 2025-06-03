@@ -70,6 +70,31 @@ static void _event_loop_process_timers(xcomm_event_loop_t* loop) {
     }
 }
 
+static void _event_loop_process_routines(xcomm_event_loop_t* loop) {
+    // 一次性取出所有实时事件，减少锁竞争
+    xcomm_queue_t temp_queue;
+    xcomm_queue_init(&temp_queue);
+
+    mtx_lock(&loop->rt_ev_mtx);
+    if (!xcomm_queue_empty(&loop->rt_ev_mgr)) {
+        // 移动整个队列到临时队列
+        temp_queue = loop->rt_ev_mgr;
+        xcomm_queue_init(&loop->rt_ev_mgr);
+        loop->rt_ev_num = 0;
+    }
+    mtx_unlock(&loop->rt_ev_mtx);
+
+    // 处理所有实时事件
+    while (!xcomm_queue_empty(&temp_queue)) {
+        xcomm_queue_node_t* node = xcomm_queue_dequeue(&temp_queue);
+        xcomm_event_t*      event = container_of(node, xcomm_event_t, rt_node);
+
+        if (event->execute_cb) {
+            event->execute_cb(event->context, 0); // RT事件无操作类型
+        }
+    }
+}
+
 static int _event_loop_calculate_timeout(xcomm_event_loop_t* loop) {
     if (xcomm_heap_empty(&loop->tm_ev_mgr)) {
         return INT_MAX - 1;
