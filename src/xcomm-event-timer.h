@@ -31,7 +31,6 @@ struct xcomm_event_timer_s {
     void (*routine)(void* param);
     xcomm_event_loop_t* loop;
     void*               param;
-    bool                repeat;
     xcomm_event_t       event;
 };
 
