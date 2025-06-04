@@ -23,20 +23,4 @@ _Pragma("once")
 
 #include "xcomm-event-loop.h"
 
-typedef struct xcomm_event_timer_s xcomm_event_timer_t;
-
-struct xcomm_event_timer_s {
-    void (*routine)(void* param);
-    void*         param;
-    uint64_t      id;
-    uint64_t      birth;
-    uint64_t      expire;
-    bool          repeat;
-    xcomm_event_t event;
-};
-
-extern void xcomm_event_timer_del(xcomm_event_loop_t* loop, xcomm_event_timer_t* timer);
-extern void xcomm_event_timer_reset(xcomm_event_loop_t* loop, xcomm_event_timer_t* timer, uint64_t expire_ms);
-extern bool xcomm_event_timer_empty(xcomm_event_loop_t* loop);
-extern xcomm_event_timer_t* xcomm_event_timer_min(xcomm_event_loop_t* loop);
-extern xcomm_event_timer_t* xcomm_event_timer_add(xcomm_event_loop_t* loop, void (*routine)(void*), void* param, uint64_t expire_ms, bool repeat);
+extern void xcomm_event_routine_post(xcomm_event_loop_t* loop, void (*routine)(void*), void* param);

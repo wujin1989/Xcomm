@@ -44,6 +44,7 @@ set(SRCS
 	src/xcomm-event-loop.c
 	src/xcomm-event-timer.c
 	src/xcomm-event-io.c
+	src/xcomm-event-routine.c
 
 	src/modules/dumper/xcomm-dumper.c
 	src/modules/dumper/xcomm-dumper-module.c

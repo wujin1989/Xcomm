@@ -19,5 +19,5 @@
  *  IN THE SOFTWARE.
  */
 
-#include "xcomm-channel.h"
+#include "xcomm-event-io.h"
 

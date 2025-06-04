@@ -25,23 +25,6 @@
 #include "platform/platform-event.h"
 #include "platform/platform-socket.h"
 
-static inline int
-_event_loop_minheap_cmp(xcomm_heap_node_t* a, xcomm_heap_node_t* b) {
-    xcomm_event_t* event_a = xcomm_heap_data(a, xcomm_event_t, tm_node);
-    xcomm_event_t* event_b = xcomm_heap_data(b, xcomm_event_t, tm_node);
-
-    uint64_t expire_a = event_a->tm.birth + event_a->tm.expire;
-    uint64_t expire_b = event_b->tm.birth + event_b->tm.expire;
-
-    if (expire_a < expire_b) {
-        return 1;
-    }
-    if (expire_a > expire_b) {
-        return 0;
-    }
-    return (event_a->tm.id < event_b->tm.id) ? 1 : 0;
-}
-
 static void _event_loop_wake(xcomm_event_loop_t* loop) {
     char buf = 'w';
     platform_socket_send(loop->wakefds[0], &buf, sizeof(buf));
@@ -54,60 +37,40 @@ static void _event_loop_wake_cb(void* context, platform_event_op_t op) {
     platform_socket_recv(loop->wakefds[1], &buf, sizeof(buf));
 }
 
-static void _event_loop_process_timers(xcomm_event_loop_t* loop) {
-    uint64_t now = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
-
-    while (!xcomm_heap_empty(&loop->tm_ev_mgr)) {
-        xcomm_heap_node_t* min = xcomm_heap_min(&loop->tm_ev_mgr);
-        xcomm_event_t*     evt = xcomm_heap_data(min, xcomm_event_t, tm_node);
-
-        if (evt->tm.birth + evt->tm.expire > now) {
-            break;
-        }
-        if (evt->execute_cb) {
-            evt->execute_cb(evt->context, PLATFORM_EVENT_NO_OP);
-        }
-    }
-}
-
-static void _event_loop_process_routines(xcomm_event_loop_t* loop) {
-    // 一次性取出所有实时事件，减少锁竞争
-    xcomm_queue_t temp_queue;
-    xcomm_queue_init(&temp_queue);
-
-    mtx_lock(&loop->rt_ev_mtx);
-    if (!xcomm_queue_empty(&loop->rt_ev_mgr)) {
-        // 移动整个队列到临时队列
-        temp_queue = loop->rt_ev_mgr;
-        xcomm_queue_init(&loop->rt_ev_mgr);
-        loop->rt_ev_num = 0;
-    }
-    mtx_unlock(&loop->rt_ev_mtx);
-
-    // 处理所有实时事件
-    while (!xcomm_queue_empty(&temp_queue)) {
-        xcomm_queue_node_t* node = xcomm_queue_dequeue(&temp_queue);
-        xcomm_event_t*      event = container_of(node, xcomm_event_t, rt_node);
-
-        if (event->execute_cb) {
-            event->execute_cb(event->context, 0); // RT事件无操作类型
-        }
-    }
-}
-
 static int _event_loop_calculate_timeout(xcomm_event_loop_t* loop) {
     if (xcomm_heap_empty(&loop->tm_ev_mgr)) {
         return INT_MAX - 1;
     }
+    xcomm_event_t* event = xcomm_heap_data(
+        xcomm_heap_min(&loop->tm_ev_mgr), xcomm_event_t, tm_node);
 
-    xcomm_heap_node_t* min = xcomm_heap_min(&loop->tm_ev_mgr);
-    xcomm_event_t*     evt = xcomm_heap_data(min, xcomm_event_t, tm_node);
+    return event->tm.calculate_timeout_cb(event->context);
+}
 
+static void _event_loop_process_timers(xcomm_event_loop_t* loop) {
     uint64_t now = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
-    if (evt->tm.birth + evt->tm.expire <= now) {
-        return 0;
+
+    while (!xcomm_heap_empty(&loop->tm_ev_mgr)) {
+        xcomm_event_t* event = xcomm_heap_data(
+            xcomm_heap_min(&loop->tm_ev_mgr), xcomm_event_t, tm_node);
+        
+        if (event->tm.calculate_timeout_cb(event->context)) {
+            break;
+        }
+        event->tm.execute_cb(event->context);
     }
-    return (int)(evt->tm.birth + evt->tm.expire - now);
+}
+
+static void _event_loop_process_routines(xcomm_event_loop_t* loop) {
+
+}
+
+static inline int
+_event_loop_minheap_cmp(xcomm_heap_node_t* a, xcomm_heap_node_t* b) {
+    xcomm_event_t* event_a = xcomm_heap_data(a, xcomm_event_t, tm_node);
+    xcomm_event_t* event_b = xcomm_heap_data(b, xcomm_event_t, tm_node);
+
+    return event_a->tm.compare_minheap_cb(event_a->context, event_b->context);
 }
 
 void xcomm_event_loop_init(xcomm_event_loop_t* loop) {
@@ -115,6 +78,8 @@ void xcomm_event_loop_init(xcomm_event_loop_t* loop) {
     loop->tid = thrd_current();
     
     mtx_init(&loop->rt_ev_mtx, mtx_plain);
+    mtx_init(&loop->tm_ev_mtx, mtx_plain);
+    mtx_init(&loop->io_ev_mtx, mtx_plain);
     
     xcomm_queue_init(&loop->rt_ev_mgr);
     loop->rt_ev_num = 0;
@@ -134,9 +99,11 @@ void xcomm_event_loop_init(xcomm_event_loop_t* loop) {
         return;
     }
     event->type = XCOMM_EVENT_TYPE_IO;
-    event->context = loop;
-    event->execute_cb = _event_loop_wake_cb;
-    event->cleanup_cb = NULL;
+    event->loop = loop;
+
+    event->io.execute_cb = _event_loop_wake_cb;
+    event->io.cleanup_cb = NULL;
+    event->context       = loop;
 
     event->io.sqe.op = PLATFORM_EVENT_RD_OP;
     event->io.sqe.fd = (platform_event_fd_t)loop->wakefds[1];
@@ -206,17 +173,20 @@ void xcomm_event_loop_unregister(xcomm_event_loop_t* loop, xcomm_event_t* event)
 
 void xcomm_event_loop_run(xcomm_event_loop_t* loop) {
     platform_event_cqe_t cqes[PLATFORM_EVENT_CQE_NUM] = {0};
+
     while (loop->running) {
-        _event_loop_process_timers(loop);
+        _event_loop_process_routines(loop);
 
         int nevents = platform_event_wait(
             loop->sq, cqes, _event_loop_calculate_timeout(loop));
 
+        _event_loop_process_timers(loop);
+
         for (int i = 0; i < nevents; i++) {
             xcomm_event_t* event = cqes[i].ud;
 
-            if (event && event->execute_cb) {
-                event->execute_cb(event->context, cqes[i].op);
+            if (event && event->io.execute_cb) {
+                event->io.execute_cb(event->context, cqes[i].op);
             }
         }
         _event_loop_process_timers(loop);

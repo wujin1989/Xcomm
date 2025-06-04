@@ -22,9 +22,8 @@
 _Pragma("once")
 
 #include "xcomm-list.h"
+#include "xcomm-heap.h"
 #include "xcomm-queue.h"
-#include "xcomm-rbtree.h"
-#include "xcomm-event-timer.h"
 
 #include "platform/platform-types.h"
 
@@ -42,9 +41,11 @@ struct xcomm_event_loop_s {
     xcomm_queue_t       rt_ev_mgr;
     uint64_t            rt_ev_num;
 
+    mtx_t               io_ev_mtx;
     xcomm_list_t        io_ev_mgr;
     uint64_t            io_ev_num;
 
+    mtx_t               tm_ev_mtx;
     xcomm_heap_t        tm_ev_mgr;
     uint64_t            tm_ev_num;
 };
@@ -56,27 +57,34 @@ enum xcomm_event_type_e {
 };
 
 struct xcomm_event_s {
-    xcomm_event_type_t type;
+    xcomm_event_type_t  type;
+    xcomm_event_loop_t* loop;
 
     struct {
-        uint64_t id;
-        uint64_t birth;
-        uint64_t expire;
-        bool     repeat;
+        void (*execute_cb)(void* context);
+        void (*cleanup_cb)(void* context);
+    } rt;
+
+    struct {
+        void (*execute_cb)(void* context);
+        void (*cleanup_cb)(void* context);
+        int  (*calculate_timeout_cb)(void* context);
+        int  (*compare_minheap_cb)(void* context1, void* context2);
     } tm;
 
     struct {
+        void (*execute_cb)(void* context, platform_event_op_t op);
+        void (*cleanup_cb)(void* context);
         platform_event_sqe_t sqe;
     } io;
+
+    void* context;
 
     union {
         xcomm_queue_node_t rt_node;
         xcomm_heap_node_t  tm_node;
         xcomm_list_node_t  io_node;
     };
-    void (*execute_cb)(void* context, platform_event_op_t op);
-    void (*cleanup_cb)(void* context);
-    void* context;
 };
 
 extern void xcomm_event_loop_init(xcomm_event_loop_t* loop);
