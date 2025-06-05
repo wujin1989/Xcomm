@@ -68,7 +68,7 @@ if(WIN32)
 	list(APPEND SRCS 
 		src/platform/win/platform-info.c
 		src/platform/win/platform-socket.c
-		src/platform/win/platform-event.c
+		src/platform/win/platform-poller.c
 		src/platform/win/wepoll/wepoll.c
 		src/platform/win/platform-loader.c
 		src/platform/win/platform-io.c
@@ -80,7 +80,7 @@ if(UNIX)
 	list(APPEND SRCS 
 		src/platform/unix/platform-info.c
 		src/platform/unix/platform-socket.c
-		src/platform/unix/platform-event.c
+		src/platform/unix/platform-poller.c
 		src/platform/unix/platform-loader.c
 		src/platform/unix/platform-io.c
 		src/platform/unix/platform-uart.c

@@ -27,10 +27,10 @@
 int main(void) {
     char sbuf[64] = "pong";
     char rbuf[64] = {0};
-    xcomm_socket_t* srv = xcomm_sync_tcp.listen("0.0.0.0", "1234");
+    xcomm_tcp_listener_t* srv = xcomm_sync_tcp.listen("0.0.0.0", "1234");
 
     while (true) {
-        xcomm_socket_t* cli = xcomm_sync_tcp.accept(srv);
+        xcomm_tcp_connection_t* cli = xcomm_sync_tcp.accept(srv);
 
         xcomm_sync_tcp.recv(cli, rbuf, sizeof(rbuf));
         printf("srv recv %s from cli.\n", rbuf);
@@ -38,8 +38,8 @@ int main(void) {
         xcomm_sync_tcp.send(cli, sbuf, sizeof(sbuf));
         printf("srv send %s to cli.\n", sbuf);
 
-        xcomm_sync_tcp.close(cli);
+        xcomm_sync_tcp.close_connection(cli);
     }
-    xcomm_sync_tcp.close(srv);
+    xcomm_sync_tcp.close_listener(srv);
     return 0;
 }

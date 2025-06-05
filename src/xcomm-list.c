@@ -76,3 +76,48 @@ xcomm_list_node_t* xcomm_list_prev(xcomm_list_node_t* node) {
 xcomm_list_node_t* xcomm_list_sentinel(xcomm_list_t* list) {
     return (list);
 }
+
+void xcomm_list_swap(xcomm_list_t* list1, xcomm_list_t* list2) {
+    if (list1 == list2) {
+        return;
+    }
+    bool list1_empty = (list1->next == list1);
+    bool list2_empty = (list2->next == list2);
+
+    if (list1_empty && list2_empty) {
+        return;
+    }
+    if (list1_empty) {
+        list1->next = list2->next;
+        list1->prev = list2->prev;
+        list1->next->prev = list1;
+        list1->prev->next = list1;
+
+        list2->next = list2;
+        list2->prev = list2;
+        return;
+    }
+
+    if (list2_empty) {
+        list2->next = list1->next;
+        list2->prev = list1->prev;
+        list2->next->prev = list2;
+        list2->prev->next = list2;
+
+        list1->next = list1;
+        list1->prev = list1;
+        return;
+    }
+    xcomm_list_node_t* temp_next = list1->next;
+    xcomm_list_node_t* temp_prev = list1->prev;
+
+    list1->next = list2->next;
+    list1->prev = list2->prev;
+    list2->next = temp_next;
+    list2->prev = temp_prev;
+
+    list1->next->prev = list1;
+    list1->prev->next = list1;
+    list2->next->prev = list2;
+    list2->prev->next = list2;
+}

@@ -25,13 +25,18 @@ _Pragma("once")
 #include <stdbool.h>
 
 typedef struct xcomm_utils_module_s xcomm_utils_module_t;
+typedef struct xcomm_utils_timer_s  xcomm_utils_timer_t;
+
+struct xcomm_utils_timer_s {
+    void* opaque;
+};
 
 struct xcomm_utils_module_s {
     const char* restrict name;
 
-    void     (*execute_task)(void (*task)(void* param), void* param);
-    uint64_t (*execute_timer)(void (*task)(void* param), void* param, uint64_t timeout_ms, bool repeat);
-    void     (*cancel_timer)(uint64_t id);
+    void (*add_routine)(void (*routine)(void* param), void* param);
+    xcomm_utils_timer_t* (*add_timer)(void (*routine)(void* param), void* param, uint64_t timeout_ms, bool repeat);
+    void (*del_timer)(xcomm_utils_timer_t* timer);
 };
 
 extern xcomm_utils_module_t xcomm_utils;

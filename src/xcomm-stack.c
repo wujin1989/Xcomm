@@ -42,3 +42,7 @@ xcomm_stack_node_t* xcomm_stack_pop(xcomm_stack_t* stack) {
     xcomm_list_remove(node);
     return node;
 }
+
+void xcomm_stack_swap(xcomm_stack_t* stack1, xcomm_stack_t* stack2) {
+    xcomm_list_swap(stack1, stack2);
+}

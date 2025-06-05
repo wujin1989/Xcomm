@@ -72,7 +72,7 @@ struct xcomm_tcp_listener_s {
 };
 
 struct xcomm_tcp_packetizer_s {
-
+    int a;
 };
 
 struct xcomm_sync_tcp_module_s {

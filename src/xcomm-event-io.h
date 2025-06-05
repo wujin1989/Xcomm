@@ -24,5 +24,5 @@ _Pragma("once")
 typedef struct xcomm_event_io_s xcomm_event_io_t;
 
 struct xcomm_event_io_s {
-
+    int a;
 };

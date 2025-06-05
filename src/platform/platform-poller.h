@@ -23,9 +23,9 @@ _Pragma("once")
 
 #include "platform-types.h"
 
-extern void platform_event_init(platform_event_sq_t* sq);
-extern void platform_event_destroy(platform_event_sq_t* sq);
-extern void platform_event_add(platform_event_sq_t* sq, platform_event_sqe_t* sqe);
-extern void platform_event_mod(platform_event_sq_t* sq, platform_event_sqe_t* sqe);
-extern void platform_event_del(platform_event_sq_t* sq, platform_event_sqe_t* sqe);
-extern int  platform_event_wait(platform_event_sq_t* sq, platform_event_cqe_t* cqe, int timeout);
+extern void platform_poller_init(platform_poller_sq_t* sq);
+extern void platform_poller_destroy(platform_poller_sq_t* sq);
+extern void platform_poller_add(platform_poller_sq_t* sq, platform_poller_sqe_t* sqe);
+extern void platform_poller_mod(platform_poller_sq_t* sq, platform_poller_sqe_t* sqe);
+extern void platform_poller_del(platform_poller_sq_t* sq, platform_poller_sqe_t* sqe);
+extern int  platform_poller_wait(platform_poller_sq_t* sq, platform_poller_cqe_t* cqe, int timeout);

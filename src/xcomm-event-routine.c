@@ -21,15 +21,19 @@
 
 #include "xcomm-event-routine.h"
 
-typedef struct xcomm_event_routine_s xcomm_event_routine_t;
+static void _event_routine_execute_cb(void* context) {
+    xcomm_event_routine_t* task = (xcomm_event_routine_t*)context;
+    if (task->routine) {
+        task->routine(task->param);
+    }
+    xcomm_event_routine_del(task->event.loop, task);
+}
 
-struct xcomm_event_routine_s {
-    void (*routine)(void* param);
-    void*         param;
-    xcomm_event_t event;
-};
+static void _event_routine_cleanup_cb(void* context) {
+    (void)context;
+}
 
-void xcomm_event_routine_post(
+void xcomm_event_routine_add(
     xcomm_event_loop_t* loop, void (*routine)(void*), void* param) {
     xcomm_event_routine_t* task = malloc(sizeof(xcomm_event_routine_t));
     if (!task) {
@@ -38,5 +42,17 @@ void xcomm_event_routine_post(
     task->routine = routine;
     task->param   = param;
 
+    task->event.type          = XCOMM_EVENT_TYPE_RT;
+    task->event.loop          = loop;
+    task->event.rt.execute_cb = _event_routine_execute_cb;
+    task->event.rt.cleanup_cb = _event_routine_cleanup_cb;
+    task->event.context       = task;
+
     xcomm_event_loop_register(loop, &task->event);
+}
+
+void xcomm_event_routine_del(
+    xcomm_event_loop_t* loop, xcomm_event_routine_t* task) {
+    xcomm_event_loop_unregister(loop, &task->event);
+    free(task);
 }

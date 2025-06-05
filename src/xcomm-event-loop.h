@@ -32,22 +32,22 @@ typedef enum xcomm_event_type_e   xcomm_event_type_t;
 typedef struct xcomm_event_s      xcomm_event_t;
 
 struct xcomm_event_loop_s {
-    bool                running;
-    thrd_t              tid;
-    platform_event_sq_t sq;
-    platform_sock_t     wakefds[2];
+    bool                 running;
+    thrd_t               tid;
+    platform_poller_sq_t sq;
+    platform_poller_fd_t wakefds[2];
 
-    mtx_t               rt_ev_mtx;
-    xcomm_queue_t       rt_ev_mgr;
-    uint64_t            rt_ev_num;
+    mtx_t                rt_ev_mtx;
+    xcomm_queue_t        rt_ev_mgr;
+    uint64_t             rt_ev_num;
 
-    mtx_t               io_ev_mtx;
-    xcomm_list_t        io_ev_mgr;
-    uint64_t            io_ev_num;
+    mtx_t                io_ev_mtx;
+    xcomm_list_t         io_ev_mgr;
+    uint64_t             io_ev_num;
 
-    mtx_t               tm_ev_mtx;
-    xcomm_heap_t        tm_ev_mgr;
-    uint64_t            tm_ev_num;
+    mtx_t                tm_ev_mtx;
+    xcomm_heap_t         tm_ev_mgr;
+    uint64_t             tm_ev_num;
 };
 
 enum xcomm_event_type_e {
@@ -73,9 +73,9 @@ struct xcomm_event_s {
     } tm;
 
     struct {
-        void (*execute_cb)(void* context, platform_event_op_t op);
+        void (*execute_cb)(void* context, platform_poller_op_t op);
         void (*cleanup_cb)(void* context);
-        platform_event_sqe_t sqe;
+        platform_poller_sqe_t sqe;
     } io;
 
     void* context;
@@ -89,6 +89,7 @@ struct xcomm_event_s {
 
 extern void xcomm_event_loop_init(xcomm_event_loop_t* loop);
 extern void xcomm_event_loop_destroy(xcomm_event_loop_t* loop);
+extern void xcomm_event_loop_stop(xcomm_event_loop_t* loop);
 extern void xcomm_event_loop_run(xcomm_event_loop_t* loop);
 extern void xcomm_event_loop_register(xcomm_event_loop_t* loop, xcomm_event_t* event);
 extern void xcomm_event_loop_update(xcomm_event_loop_t* loop, xcomm_event_t* event);

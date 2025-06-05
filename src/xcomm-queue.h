@@ -29,6 +29,7 @@ typedef struct xcomm_list_node_s xcomm_queue_t;
 typedef struct xcomm_list_node_s xcomm_queue_node_t;
 
 extern void xcomm_queue_init(xcomm_queue_t* queue);
+extern void xcomm_queue_swap(xcomm_queue_t* queue1, xcomm_queue_t* queue2);
 extern void xcomm_queue_enqueue(xcomm_queue_t* queue, xcomm_queue_node_t* node);
 extern bool xcomm_queue_empty(xcomm_queue_t* queue);
 extern xcomm_queue_node_t* xcomm_queue_dequeue(xcomm_queue_t* queue);

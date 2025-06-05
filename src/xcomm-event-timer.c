@@ -96,7 +96,7 @@ xcomm_event_timer_t* xcomm_event_timer_min(xcomm_event_loop_t* loop) {
     xcomm_event_t* base = xcomm_heap_data(
         xcomm_heap_min(&loop->tm_ev_mgr), xcomm_event_t, tm_node);
 
-    return xcomm_event_timer_data(base, xcomm_event_t, event);
+    return xcomm_event_timer_data(base, xcomm_event_timer_t, event);
 }
 
 xcomm_event_timer_t* xcomm_event_timer_add(

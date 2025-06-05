@@ -92,7 +92,7 @@ _Pragma("once")
 #pragma comment(lib, "ws2_32.lib")
 #endif
 
-#define PLATFORM_EVENT_CQE_NUM 64
+#define PLATFORM_POLLER_CQE_NUM 64
 
 #if defined(__linux__) || defined(__APPLE__)
 #if defined(__APPLE__)
@@ -105,49 +105,45 @@ typedef pid_t platform_tid_t;
 
 typedef int                      platform_sock_t;
 typedef pid_t                    platform_pid_t;
-typedef int                      platform_event_sq_t;
+typedef int                      platform_poller_sq_t;
 typedef int                      platform_uart_t;
 #endif
 
 #if defined(_WIN32)
 typedef DWORD   platform_tid_t;
 typedef DWORD   platform_pid_t;
-typedef HANDLE  platform_event_sq_t;
+typedef HANDLE  platform_poller_sq_t;
 typedef SOCKET  platform_sock_t;
 typedef HANDLE  platform_uart_t;
 typedef SSIZE_T ssize_t;
 #endif
 
-typedef platform_sock_t                platform_event_fd_t;
-typedef enum platform_event_op_e       platform_event_op_t;
-typedef struct platform_event_cqe_s    platform_event_cqe_t;
-typedef struct platform_event_sqe_s    platform_event_sqe_t;
+typedef platform_sock_t                platform_poller_fd_t;
+typedef enum platform_poller_op_e      platform_poller_op_t;
+typedef struct platform_poller_cqe_s   platform_poller_cqe_t;
+typedef struct platform_poller_sqe_s   platform_poller_sqe_t;
 typedef struct platform_uart_config_s  platform_uart_config_t;
 typedef enum platform_uart_baudrate_e  platform_uart_baudrate_t;
 typedef enum platform_uart_parity_e    platform_uart_parity_t;
 typedef enum platform_uart_databits_e  platform_uart_databits_t;
 typedef enum platform_uart_stopbits_e  platform_uart_stopbits_t;
 
-struct platform_event_cqe_s {
-    platform_event_op_t op;
+struct platform_poller_cqe_s {
+    platform_poller_op_t op;
     void*               ud;
 };
 
-struct platform_event_fd_s {
-
+struct platform_poller_sqe_s {
+    platform_poller_op_t op;
+    platform_poller_fd_t fd;
+    void*                ud;
 };
 
-struct platform_event_sqe_s {
-    platform_event_op_t op;
-    platform_event_fd_t fd;
-    void*               ud;
-};
-
-enum platform_event_op_e {
-    PLATFORM_EVENT_NO_OP = 0,
-    PLATFORM_EVENT_RD_OP = 1,
-    PLATFORM_EVENT_WR_OP = 2,
-    PLATFORM_EVENT_RW_OP = 3,
+enum platform_poller_op_e {
+    PLATFORM_POLLER_NO_OP = 0,
+    PLATFORM_POLLER_RD_OP = 1,
+    PLATFORM_POLLER_WR_OP = 2,
+    PLATFORM_POLLER_RW_OP = 3,
 };
 
 enum platform_uart_baudrate_e {

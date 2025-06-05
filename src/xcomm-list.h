@@ -40,6 +40,7 @@ extern void xcomm_list_insert_head(xcomm_list_t* list, xcomm_list_node_t* node);
 extern void xcomm_list_insert_tail(xcomm_list_t* list, xcomm_list_node_t* node);
 extern void xcomm_list_remove(xcomm_list_node_t* node);
 extern bool xcomm_list_empty(xcomm_list_t* list);
+extern void xcomm_list_swap(xcomm_list_t* list1, xcomm_list_t* list2);
 extern xcomm_list_node_t* xcomm_list_head(xcomm_list_t* list);
 extern xcomm_list_node_t* xcomm_list_tail(xcomm_list_t* list);
 extern xcomm_list_node_t* xcomm_list_next(xcomm_list_node_t* node);

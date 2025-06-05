@@ -42,3 +42,7 @@ xcomm_queue_node_t* xcomm_queue_dequeue(xcomm_queue_t* queue) {
     xcomm_list_remove(node);
     return node;
 }
+
+void xcomm_queue_swap(xcomm_queue_t* queue1, xcomm_queue_t* queue2) {
+    xcomm_list_swap(queue1, queue2);
+}

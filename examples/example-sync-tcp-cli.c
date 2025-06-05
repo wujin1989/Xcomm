@@ -27,15 +27,15 @@
 int main(void) {
     char sbuf[64] = "ping";
     char rbuf[64] = {0};
-    xcomm_tcp_socket_t* socket =
+    xcomm_tcp_connection_t* conn =
         xcomm_sync_tcp.dial("127.0.0.1", "1234");
     
-    xcomm_sync_tcp.send(socket, sbuf, sizeof(sbuf));
+    xcomm_sync_tcp.send(conn, sbuf, sizeof(sbuf));
     printf("cli send %s to srv.\n", sbuf);
 
-    xcomm_sync_tcp.recv(socket, rbuf, sizeof(rbuf));
+    xcomm_sync_tcp.recv(conn, rbuf, sizeof(rbuf));
     printf("cli recv %s from srv.\n", rbuf);
 
-    xcomm_sync_tcp.close(socket);
+    xcomm_sync_tcp.close_connection(conn);
 	return 0;
 }
