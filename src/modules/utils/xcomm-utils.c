@@ -20,16 +20,48 @@
  */
 
 #include "xcomm-utils.h"
+#include "xcomm-logger.h"
+#include "xcomm-event-timer.h"
+#include "xcomm-event-routine.h"
 
-void xcomm_utils_execute_task(void (*task)(void* param), void* param) {
+void xcomm_utils_add_routine(void (*routine)(void* param), void* param) {
+    xcomm_logi("%s enter.\n", __FUNCTION__);
 
+    xcomm_event_routine_add(loop, routine, param);
+
+    xcomm_logi("%s leave.\n", __FUNCTION__);
 }
 
-uint64_t xcomm_utils_execute_timer(
-    void (*task)(void* param), void* param, uint64_t timeout_ms, bool repeat) {
+void xcomm_utils_del_timer(xcomm_utils_timer_t* timer) {
+    xcomm_logi("%s enter.\n", __FUNCTION__);
+    
+    xcomm_event_timer_del(loop, timer->opaque);
+    free(timer);
 
+    xcomm_logi("%s leave.\n", __FUNCTION__);
 }
 
-void xcomm_utils_cancel_timer(uint64_t id) {
+xcomm_utils_timer_t* xcomm_utils_add_timer(
+    void (*routine)(void* param),
+    void*    param,
+    uint64_t expire_ms,
+    bool     repeat) {
+    xcomm_logi("%s enter.\n", __FUNCTION__);
 
+    xcomm_utils_timer_t* timer = malloc(sizeof(xcomm_utils_timer_t));
+    if (!timer) {
+        xcomm_loge("no memory.\n");
+        return NULL;
+    }
+    timer->opaque = malloc(sizeof(xcomm_event_timer_t));
+    if (!timer->opaque) {
+        xcomm_loge("no memory.\n");
+        free(timer);
+        return NULL;
+    }
+    timer->opaque =
+        xcomm_event_timer_add(loop, routine, param, expire_ms, repeat);
+
+    xcomm_logi("%s leave.\n", __FUNCTION__);
+    return timer;
 }

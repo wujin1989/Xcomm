@@ -21,8 +21,10 @@
 
 _Pragma("once")
 
+#include "xcomm-event-loop.h"
+
 typedef struct xcomm_event_io_s xcomm_event_io_t;
 
 struct xcomm_event_io_s {
-    int a;
+    xcomm_event_t event;
 };

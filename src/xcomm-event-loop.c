@@ -148,6 +148,10 @@ void xcomm_event_loop_init(xcomm_event_loop_t* loop) {
     platform_poller_add(loop->sq, &event->io.sqe);
 }
 
+void xcomm_event_loop_destroy(xcomm_event_loop_t* loop) {
+
+}
+
 void xcomm_event_loop_register(xcomm_event_loop_t* loop, xcomm_event_t* event) {
     switch (event->type) {
     case XCOMM_EVENT_TYPE_IO: {
@@ -233,9 +237,6 @@ void xcomm_event_loop_run(xcomm_event_loop_t* loop) {
         }
         _event_loop_process_timers(loop);
     }
-}
-
-void xcomm_event_loop_destroy(xcomm_event_loop_t* loop) {
 }
 
 void xcomm_event_loop_stop(xcomm_event_loop_t* loop) {

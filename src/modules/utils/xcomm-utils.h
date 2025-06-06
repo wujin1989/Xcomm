@@ -23,6 +23,6 @@ _Pragma("once")
 
 #include "xcomm/xcomm-utils-module.h"
 
-extern void     xcomm_utils_execute_task(void (*task)(void* param), void* param);
-extern uint64_t xcomm_utils_execute_timer(void (*task)(void* param), void* param, uint64_t timeout_ms, bool repeat);
-extern void     xcomm_utils_cancel_timer(uint64_t id);
+extern void xcomm_utils_add_routine(void (*routine)(void* param), void* param);
+extern void xcomm_utils_del_timer(xcomm_utils_timer_t* timer);
+extern xcomm_utils_timer_t* xcomm_utils_add_timer(void (*routine)(void* param), void* param, uint64_t expire_ms, bool repeat);

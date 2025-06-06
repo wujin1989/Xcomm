@@ -35,8 +35,8 @@ struct xcomm_utils_module_s {
     const char* restrict name;
 
     void (*add_routine)(void (*routine)(void* param), void* param);
-    xcomm_utils_timer_t* (*add_timer)(void (*routine)(void* param), void* param, uint64_t timeout_ms, bool repeat);
     void (*del_timer)(xcomm_utils_timer_t* timer);
+    xcomm_utils_timer_t* (*add_timer)(void (*routine)(void* param), void* param, uint64_t expire_ms, bool repeat);
 };
 
 extern xcomm_utils_module_t xcomm_utils;
