@@ -48,6 +48,7 @@ struct xcomm_event_loop_s {
     mtx_t                tm_ev_mtx;
     xcomm_heap_t         tm_ev_mgr;
     uint64_t             tm_ev_num;
+    atomic_uint_fast64_t tm_ev_id;
 };
 
 enum xcomm_event_type_e {

@@ -69,8 +69,9 @@ static void _event_loop_process_timers(xcomm_event_loop_t* loop) {
             break;
         }
         mtx_unlock(&loop->tm_ev_mtx);
-
-        event->tm.execute_cb(event->context);
+        if (event->tm.execute_cb) {
+            event->tm.execute_cb(event->context);
+        }
         mtx_lock(&loop->tm_ev_mtx);
     }
     mtx_unlock(&loop->tm_ev_mtx);
@@ -91,9 +92,6 @@ static void _event_loop_process_routines(xcomm_event_loop_t* loop) {
 
         if (event->rt.execute_cb) {
             event->rt.execute_cb(event->context);
-        }
-        if (event->rt.cleanup_cb) {
-            event->rt.cleanup_cb(event->context);
         }
     }
 }
@@ -122,6 +120,8 @@ void xcomm_event_loop_init(xcomm_event_loop_t* loop) {
 
     xcomm_heap_init(&loop->tm_ev_mgr, _event_loop_minheap_cmp);
     loop->tm_ev_num = 0;
+
+    atomic_init(&loop->tm_ev_id, 0);
 
     platform_poller_init(&loop->sq);
     platform_socket_socketpair(AF_INET, SOCK_STREAM, 0, loop->wakefds);
