@@ -66,29 +66,26 @@ static int _event_timer_compare_minheap_cb(void* context1, void* context2) {
     if ((timer1->birth + timer1->expire) > (timer2->birth + timer2->expire)) {
         return 0;
     }
-    uint64_t id1 = atomic_load_explicit(
-        &timer1->event.loop->tm_ev_id, memory_order_relaxed);
-
-    uint64_t id2 = atomic_load_explicit(
-        &timer2->event.loop->tm_ev_id, memory_order_relaxed);
-
-    return id1 < id2 ? 1 : 0;
+    return timer1->id < timer2->id ? 1 : 0;
 }
 
 void xcomm_event_timer_del(
     xcomm_event_loop_t* loop, xcomm_event_timer_t* timer) {
-    xcomm_event_loop_unregister(loop, &timer->event);
+    xcomm_heap_remove(&loop->tm_ev_mgr, &timer->event.tm_node);
+    loop->tm_ev_num--;
     free(timer);
 }
 
 void xcomm_event_timer_reset(
     xcomm_event_loop_t* loop, xcomm_event_timer_t* timer, uint64_t expire_ms) {
-    xcomm_event_loop_unregister(loop, &timer->event);
+    xcomm_heap_remove(&loop->tm_ev_mgr, &timer->event.tm_node);
+    loop->tm_ev_num--;
 
     timer->birth = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
     timer->expire = expire_ms;
 
-    xcomm_event_loop_register(loop, &timer->event);
+    xcomm_heap_insert(&loop->tm_ev_mgr, &timer->event.tm_node);
+    loop->tm_ev_num++;
 }
 
 bool xcomm_event_timer_empty(xcomm_event_loop_t* loop) {
@@ -117,7 +114,7 @@ xcomm_event_timer_t* xcomm_event_timer_add(
     }
     timer->routine = routine;
     timer->param   = param;
-    timer->id      = atomic_fetch_add_explicit(&loop->tm_ev_id, 1, memory_order_relaxed);
+    timer->id      = loop->tm_ev_next_id++;
     timer->birth   = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
     timer->expire  = expire_ms;
     timer->repeat  = repeat;
@@ -131,7 +128,8 @@ xcomm_event_timer_t* xcomm_event_timer_add(
     timer->event.tm.calculate_timeout_cb = _event_timer_calculate_timeout_cb;
     timer->event.tm.compare_minheap_cb   = _event_timer_compare_minheap_cb;
     
-    
-    xcomm_event_loop_register(loop, &timer->event);
+    xcomm_heap_insert(&loop->tm_ev_mgr, &timer->event.tm_node);
+    loop->tm_ev_num++;
+
     return timer;
 }

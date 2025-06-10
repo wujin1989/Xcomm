@@ -41,14 +41,12 @@ struct xcomm_event_loop_s {
     xcomm_queue_t        rt_ev_mgr;
     uint64_t             rt_ev_num;
 
-    mtx_t                io_ev_mtx;
     xcomm_list_t         io_ev_mgr;
     uint64_t             io_ev_num;
 
-    mtx_t                tm_ev_mtx;
     xcomm_heap_t         tm_ev_mgr;
     uint64_t             tm_ev_num;
-    atomic_uint_fast64_t tm_ev_id;
+    uint64_t             tm_ev_next_id;
 };
 
 enum xcomm_event_type_e {
@@ -63,7 +61,6 @@ struct xcomm_event_s {
 
     struct {
         void (*execute_cb)(void* context);
-        void (*cleanup_cb)(void* context);
     } rt;
 
     struct {
@@ -92,6 +89,4 @@ extern void xcomm_event_loop_init(xcomm_event_loop_t* loop);
 extern void xcomm_event_loop_destroy(xcomm_event_loop_t* loop);
 extern void xcomm_event_loop_stop(xcomm_event_loop_t* loop);
 extern void xcomm_event_loop_run(xcomm_event_loop_t* loop);
-extern void xcomm_event_loop_register(xcomm_event_loop_t* loop, xcomm_event_t* event);
-extern void xcomm_event_loop_update(xcomm_event_loop_t* loop, xcomm_event_t* event);
-extern void xcomm_event_loop_unregister(xcomm_event_loop_t* loop, xcomm_event_t* event);
+extern void xcomm_event_loop_post(xcomm_event_loop_t* loop, xcomm_event_t* event);

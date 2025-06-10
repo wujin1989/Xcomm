@@ -24,7 +24,30 @@
 #include "xcomm-event-timer.h"
 #include "xcomm-event-routine.h"
 
-void xcomm_utils_add_routine(void (*routine)(void* param), void* param) {
+typedef struct async_timer_context_s async_timer_context_t;
+
+struct async_timer_context_s {
+    void (*routine)(void* param);
+    void*                param;
+    uint64_t             expire_ms;
+    bool                 repeat;
+    xcomm_event_loop_t*  loop;
+};
+
+static void _async_timer_add(void* param) {
+    async_timer_context_t* context = param;
+
+    xcomm_event_timer_add(
+        context->loop,
+        context->routine,
+        context->param,
+        context->expire_ms,
+        context->repeat);
+
+    free(context);
+}
+
+void xcomm_utils_post_routine(void (*routine)(void* param), void* param) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
     xcomm_event_routine_add(loop, routine, param);
@@ -32,36 +55,24 @@ void xcomm_utils_add_routine(void (*routine)(void* param), void* param) {
     xcomm_logi("%s leave.\n", __FUNCTION__);
 }
 
-void xcomm_utils_del_timer(xcomm_utils_timer_t* timer) {
-    xcomm_logi("%s enter.\n", __FUNCTION__);
-    
-    xcomm_event_timer_del(loop, timer->opaque);
-    free(timer);
-
-    xcomm_logi("%s leave.\n", __FUNCTION__);
-}
-
-xcomm_utils_timer_t* xcomm_utils_add_timer(
+void xcomm_utils_post_timer(
     void (*routine)(void* param),
     void*    param,
     uint64_t expire_ms,
     bool     repeat) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
 
-    xcomm_utils_timer_t* timer = malloc(sizeof(xcomm_utils_timer_t));
-    if (!timer) {
-        xcomm_loge("no memory.\n");
-        return NULL;
+    async_timer_context_t* context = malloc(sizeof(async_timer_context_t));
+    if (!context) {
+        return;
     }
-    timer->opaque = malloc(sizeof(xcomm_event_timer_t));
-    if (!timer->opaque) {
-        xcomm_loge("no memory.\n");
-        free(timer);
-        return NULL;
-    }
-    timer->opaque =
-        xcomm_event_timer_add(loop, routine, param, expire_ms, repeat);
+    context->routine   = routine;
+    context->param     = param;
+    context->expire_ms = expire_ms;
+    context->repeat    = repeat;
+    context->loop      = loop;
+
+    xcomm_event_routine_add(loop, _async_timer_add, context);
 
     xcomm_logi("%s leave.\n", __FUNCTION__);
-    return timer;
 }

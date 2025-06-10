@@ -23,13 +23,4 @@ _Pragma("once")
 
 #include "xcomm-event-loop.h"
 
-typedef struct xcomm_event_routine_s xcomm_event_routine_t;
-
-struct xcomm_event_routine_s {
-    void (*routine)(void* param);
-    void*         param;
-    xcomm_event_t event;
-};
-
 extern void xcomm_event_routine_add(xcomm_event_loop_t* loop, void (*routine)(void*), void* param);
-extern void xcomm_event_routine_del(xcomm_event_loop_t* loop, xcomm_event_routine_t* task);

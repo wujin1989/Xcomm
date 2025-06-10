@@ -58,9 +58,6 @@ static int _event_loop_calculate_timeout(xcomm_event_loop_t* loop) {
 }
 
 static void _event_loop_process_timers(xcomm_event_loop_t* loop) {
-    uint64_t now = xcomm_utils_getnow(XCOMM_TIME_PRECISION_MSEC);
-
-    mtx_lock(&loop->tm_ev_mtx);
     while (!xcomm_heap_empty(&loop->tm_ev_mgr)) {
         xcomm_event_t* event = xcomm_heap_data(
             xcomm_heap_min(&loop->tm_ev_mgr), xcomm_event_t, tm_node);
@@ -68,13 +65,10 @@ static void _event_loop_process_timers(xcomm_event_loop_t* loop) {
         if (event->tm.calculate_timeout_cb(event->context)) {
             break;
         }
-        mtx_unlock(&loop->tm_ev_mtx);
         if (event->tm.execute_cb) {
             event->tm.execute_cb(event->context);
         }
-        mtx_lock(&loop->tm_ev_mtx);
     }
-    mtx_unlock(&loop->tm_ev_mtx);
 }
 
 static void _event_loop_process_routines(xcomm_event_loop_t* loop) {
@@ -109,8 +103,6 @@ void xcomm_event_loop_init(xcomm_event_loop_t* loop) {
     loop->tid = thrd_current();
     
     mtx_init(&loop->rt_ev_mtx, mtx_plain);
-    mtx_init(&loop->tm_ev_mtx, mtx_plain);
-    mtx_init(&loop->io_ev_mtx, mtx_plain);
     
     xcomm_queue_init(&loop->rt_ev_mgr);
     loop->rt_ev_num = 0;
@@ -120,8 +112,7 @@ void xcomm_event_loop_init(xcomm_event_loop_t* loop) {
 
     xcomm_heap_init(&loop->tm_ev_mgr, _event_loop_minheap_cmp);
     loop->tm_ev_num = 0;
-
-    atomic_init(&loop->tm_ev_id, 0);
+    loop->tm_ev_next_id = 0;
 
     platform_poller_init(&loop->sq);
     platform_socket_socketpair(AF_INET, SOCK_STREAM, 0, loop->wakefds);
@@ -171,10 +162,8 @@ void xcomm_event_loop_register(xcomm_event_loop_t* loop, xcomm_event_t* event) {
         break;
     }
     case XCOMM_EVENT_TYPE_TM: {
-        mtx_lock(&loop->tm_ev_mtx);
         xcomm_heap_insert(&loop->tm_ev_mgr, &event->tm_node);
         loop->tm_ev_num++;
-        mtx_unlock(&loop->tm_ev_mtx);
         break;
     }
     default:
@@ -217,6 +206,15 @@ void xcomm_event_loop_unregister(xcomm_event_loop_t* loop, xcomm_event_t* event)
     }
 }
 
+void xcomm_event_loop_post(xcomm_event_loop_t* loop, xcomm_event_t* event) {
+    mtx_lock(&loop->rt_ev_mtx);
+    xcomm_queue_enqueue(&loop->rt_ev_mgr, &event->rt_node);
+    loop->rt_ev_num++;
+    mtx_unlock(&loop->rt_ev_mtx);
+
+    _event_loop_wake(loop);
+}
+
 void xcomm_event_loop_run(xcomm_event_loop_t* loop) {
     platform_poller_cqe_t cqes[PLATFORM_POLLER_CQE_NUM] = {0};
 
@@ -226,12 +224,10 @@ void xcomm_event_loop_run(xcomm_event_loop_t* loop) {
         int nevents = platform_poller_wait(
             loop->sq, cqes, _event_loop_calculate_timeout(loop));
 
-        _event_loop_process_timers(loop);
-
         for (int i = 0; i < nevents; i++) {
             xcomm_event_t* event = cqes[i].ud;
 
-            if (event && event->io.execute_cb) {
+            if (event->io.execute_cb) {
                 event->io.execute_cb(event->context, cqes[i].op);
             }
         }

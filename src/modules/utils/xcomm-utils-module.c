@@ -25,6 +25,6 @@
 xcomm_utils_module_t xcomm_utils = {
     .name        = "Xcomm Utils Module",
 
-    .add_routine = xcomm_utils_add_routine,
-    .add_timer   = xcomm_utils_add_timer,
-    .del_timer   = xcomm_utils_del_timer};
+    .post_routine = xcomm_utils_post_routine,
+    .post_timer   = xcomm_utils_post_timer,
+};
