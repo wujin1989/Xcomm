@@ -39,4 +39,4 @@ extern void xcomm_async_tcp_send(xcomm_tcp_connection_t* conn, void* buf, size_t
 extern void xcomm_async_tcp_set_sendtimeo(xcomm_tcp_connection_t* conn, int timeout_ms);
 extern void xcomm_async_tcp_set_recvtimeo(xcomm_tcp_connection_t* conn, int timeout_ms);
 extern void xcomm_async_tcp_set_heartbeat_interval(xcomm_tcp_connection_t* conn, int interval_ms);
-extern void xcomm_async_tcp_set_packetizer(xcomm_tcp_connection_t* conn,xcomm_tcp_packetizer_t* packetizer);
+extern void xcomm_async_tcp_set_packetizer(xcomm_tcp_connection_t* conn, xcomm_tcp_packetizer_t* packetizer);

@@ -21,36 +21,5 @@
 
 _Pragma("once")
 
-#include "xcomm/xcomm-tcp-module.h"
-#include "xcomm/xcomm-utils-module.h"
-#include "xcomm/xcomm-dumper-module.h"
-#include "xcomm/xcomm-melsec-module.h"
-#include "xcomm/xcomm-serial-module.h"
-
-typedef enum xcomm_dumper_level_e    xcomm_dumper_level_t;
-typedef enum xcomm_dumper_mode_s     xcomm_dumper_mode_t;
-typedef struct xcomm_dumper_config_s xcomm_dumper_config_t;
-
-enum xcomm_dumper_mode_s {
-    XCOMM_DUMPER_MODE_FILE,
-    XCOMM_DUMPER_MODE_CALLBACK,
-};
-
-enum xcomm_dumper_level_e {
-    XCOMM_DUMPER_LEVEL_DEBUG,
-    XCOMM_DUMPER_LEVEL_INFO,
-    XCOMM_DUMPER_LEVEL_WARN,
-    XCOMM_DUMPER_LEVEL_ERROR,
-};
-
-struct xcomm_dumper_config_s {
-    union {
-        const char* restrict filename;
-        void (*callback)(xcomm_dumper_level_t level, const char* restrict msg);
-    };
-    xcomm_dumper_mode_t  mode;
-    xcomm_dumper_level_t level;
-};
-
-extern void xcomm_startup(int concurrency, xcomm_dumper_config_t* conf);
-extern void xcomm_cleanup(void);
+extern void xcomm_engine_startup(int concurrency);
+extern void xcomm_engine_cleanup(void);

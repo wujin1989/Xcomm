@@ -19,6 +19,8 @@
  *  IN THE SOFTWARE.
  */
 
+#include <stdatomic.h>
+
 #include "xcomm.h"
 #include "xcomm-wg.h"
 #include "xcomm-event-loop.h"
@@ -26,71 +28,143 @@
 
 #include "platform/platform-socket.h"
 
-typedef struct xcomm_engine_s xcomm_engine_t;
+typedef struct engine_s        engine_t;
+typedef struct engine_worker_s engine_worker_t;
 
-struct xcomm_engine_s {
-    thrd_t*              thrdids;
-    atomic_int           thrdcnt;
-    atomic_flag          initialized;
-    xcomm_event_loop_t** loopers;
-    xcomm_wg_t*          loopers_wg;
-    mtx_t                loopers_mtx;
-    cnd_t                loopers_cnd;
-    xcomm_event_loop_t* (*roundrobin)(void);
+struct engine_worker_s {
+    xcomm_event_loop_t looper;
+    atomic_int         refcnt;
+    xcomm_list_node_t  node;
 };
 
-xcomm_engine_t engine = {.initialized = ATOMIC_FLAG_INIT};
+struct engine_s {
+    atomic_flag  initialized;
+    xcomm_list_t workers;
+    mtx_t        mutex;
+    cnd_t        cond;
+    xcomm_wg_t   waitgroup;
+    engine_worker_t* (*roundrobin)(void);
+};
 
-static xcomm_event_loop_t* _roundrobin(void) {
-    static atomic_int next = 0;
-    return engine
-        .loopers[atomic_fetch_add(&next, 1) % atomic_load(&engine.thrdcnt)];
+engine_t engine = {
+    .initialized = ATOMIC_FLAG_INIT,
+    .workers     = {0},
+    .waitgroup   = {0},
+    .roundrobin  = NULL
+};
+
+static void _engine_worker_ref(engine_worker_t* worker) {
+    atomic_fetch_add(&worker->refcnt, 1);
 }
 
-static int _event_loop_thread(void* param) {
-    xcomm_event_loop_t* loop = (xcomm_event_loop_t*)param;
+static void _engine_worker_unref(engine_worker_t* worker) {
+    if (atomic_fetch_sub(&worker->refcnt, 1) == 1) {
+        free(worker);
+    }
+}
+
+static engine_worker_t* _engine_roundrobin(void) {
+    mtx_lock(&engine.mutex);
+
+    while (xcomm_list_empty(&engine.workers)) {
+        cnd_wait(&engine.cond, &engine.mutex);
+    }
+    xcomm_list_node_t* head = xcomm_list_head(&engine.workers);
+    engine_worker_t* worker = xcomm_list_data(head, engine_worker_t, node);
     
-    loop->tid = thrd_current();
+    _engine_worker_ref(worker);
 
-    xcomm_event_loop_run(loop);
-    xcomm_event_loop_destroy(loop);
+    xcomm_list_remove(head);
+    xcomm_list_insert_tail(&engine.workers, head);
 
-    xcomm_wg_done(engine.loopers_wg);
+    mtx_unlock(&engine.mutex);
+
+    return worker;
+}
+
+static engine_worker_t* _engine_create_worker(void) {
+    engine_worker_t* worker = calloc(1, sizeof(engine_worker_t));
+    if (!worker) {
+        return NULL;
+    }
+    atomic_init(&worker->refcnt, 0);
+    _engine_worker_ref(worker);
+
+    xcomm_event_loop_init(&worker->looper);
+
+    mtx_lock(&engine.mutex);
+    xcomm_list_insert_tail(&engine.workers, &worker->node);
+    cnd_signal(&engine.cond);
+    mtx_unlock(&engine.mutex);
+
+    return worker;
+}
+
+static void _engine_destroy_worker(engine_worker_t* worker) {
+    mtx_lock(&engine.mutex);
+    xcomm_list_remove(&worker->node);
+    mtx_unlock(&engine.mutex);
+
+    xcomm_event_loop_destroy(&worker->looper);
+
+    _engine_worker_unref(worker);
+}
+
+static int _worker_thread(void* param) {
+    (void)param;
+
+    engine_worker_t* worker = _engine_create_worker();
+    if (!worker) {
+        return -1;
+    }
+    xcomm_event_loop_run(&worker->looper);
+    
+    _engine_destroy_worker(worker);
+
+    xcomm_wg_done(&engine.waitgroup);
     return 0;
 }
 
 static void _engine_startup(int concurrency) {
     platform_socket_startup();
 
-    atomic_store(&engine.thrdcnt, concurrency > 0 ? concurrency : 1);
+    int thrdcnt = (concurrency > 0) ? concurrency : 1;
+    
+    cnd_init(&engine.cond);
+    mtx_init(&engine.mutex, mtx_plain);
 
-    mtx_init(&engine.loopers_mtx, mtx_plain);
-    cnd_init(&engine.loopers_cnd);
+    xcomm_wg_init(&engine.waitgroup);
+    xcomm_list_init(&engine.workers);
 
-    xcomm_wg_init(&engine.loopers_wg);
-    xcomm_wg_add(&engine.loopers_wg, engine.thrdcnt);
-
-    int thrdcnt = atomic_load(&engine.thrdcnt);
-    engine.thrdids = malloc(thrdcnt * sizeof(thrd_t));
-    engine.loopers = malloc(thrdcnt * sizeof(xcomm_event_loop_t*));
-
-    if (!engine.thrdids || !engine.loopers) {
-        return;
+    engine.roundrobin = _engine_roundrobin;
+    
+    for (int i = 0; i < thrdcnt; i++) {
+        thrd_t tid;
+        thrd_create(&tid, _worker_thread, NULL);
+        thrd_detach(tid);
     }
-    for (int i = 0; i < engine.thrdcnt; i++) {
-        xcomm_event_loop_init(engine.loopers[i]);
-
-        thrd_create(&engine.thrdids[i], _event_loop_thread, engine.loopers[i]);
-        thrd_detach(engine.thrdids[i]);
-    }
-    engine.roundrobin = _roundrobin;
+    xcomm_wg_add(&engine.waitgroup, thrdcnt);
 }
 
 static void _engine_cleanup(void) {
+    mtx_lock(&engine.mutex);
+    xcomm_list_node_t* node = xcomm_list_head(&engine.workers);
+    while (node != xcomm_list_sentinel(&engine.workers)) {
+        engine_worker_t* worker = xcomm_list_data(node, engine_worker_t, node);
+        node = xcomm_list_next(node);
+
+        xcomm_event_loop_stop(&worker->looper);
+    }
+    mtx_unlock(&engine.mutex);
+
+    xcomm_wg_wait(&engine.waitgroup);
+
+    mtx_destroy(&engine.mutex);
+    cnd_destroy(&engine.cond);
     platform_socket_cleanup();
 }
 
-void xcomm_startup(int concurrency) {
+void xcomm_startup(int concurrency, xcomm_dumper_config_t* conf) {
     if (!atomic_flag_test_and_set(&engine.initialized)) {
         _engine_startup(concurrency);
     }

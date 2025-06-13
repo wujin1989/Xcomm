@@ -143,68 +143,68 @@ void xcomm_event_loop_destroy(xcomm_event_loop_t* loop) {
 
 }
 
-void xcomm_event_loop_register(xcomm_event_loop_t* loop, xcomm_event_t* event) {
-    switch (event->type) {
-    case XCOMM_EVENT_TYPE_IO: {
-        xcomm_list_insert_tail(&loop->io_ev_mgr, &event->io_node);
-        loop->io_ev_num++;
-
-        platform_poller_add(loop->sq, &event->io.sqe);
-        break;
-    }
-    case XCOMM_EVENT_TYPE_RT: {
-        mtx_lock(&loop->rt_ev_mtx);
-        xcomm_queue_enqueue(&loop->rt_ev_mgr, &event->rt_node);
-        loop->rt_ev_num++;
-        mtx_unlock(&loop->rt_ev_mtx);
-
-        _event_loop_wake(loop);
-        break;
-    }
-    case XCOMM_EVENT_TYPE_TM: {
-        xcomm_heap_insert(&loop->tm_ev_mgr, &event->tm_node);
-        loop->tm_ev_num++;
-        break;
-    }
-    default:
-        break;
-    }
-}
-
-void xcomm_event_loop_update(xcomm_event_loop_t* loop, xcomm_event_t* event) {
-    if (event->type == XCOMM_EVENT_TYPE_IO) {
-        platform_poller_mod(loop->sq, &event->io.sqe);
-    }
-}
-
-void xcomm_event_loop_unregister(xcomm_event_loop_t* loop, xcomm_event_t* event) {
-    switch (event->type) {
-    case XCOMM_EVENT_TYPE_IO: {
-        xcomm_list_remove(&event->io_node);
-        loop->io_ev_num--;
-
-        platform_poller_del(loop->sq, &event->io.sqe);
-        break;
-    }
-    case XCOMM_EVENT_TYPE_RT: {
-        /**
-         * Due to the fact that RT events are processed in the event loop by
-         * copying the entire RT queue at once, there is no need to handle them
-         * here.
-         */
-        break;
-    }
-    case XCOMM_EVENT_TYPE_TM: {
-        mtx_lock(&loop->tm_ev_mtx);
-        xcomm_heap_remove(&loop->tm_ev_mgr, &event->tm_node);
-        loop->tm_ev_num--;
-        mtx_unlock(&loop->tm_ev_mtx);
-        break;
-    }
-    default:
-        break;
-    }
-}
+//void xcomm_event_loop_register(xcomm_event_loop_t* loop, xcomm_event_t* event) {
+//    switch (event->type) {
+//    case XCOMM_EVENT_TYPE_IO: {
+//        xcomm_list_insert_tail(&loop->io_ev_mgr, &event->io_node);
+//        loop->io_ev_num++;
+//
+//        platform_poller_add(loop->sq, &event->io.sqe);
+//        break;
+//    }
+//    case XCOMM_EVENT_TYPE_RT: {
+//        mtx_lock(&loop->rt_ev_mtx);
+//        xcomm_queue_enqueue(&loop->rt_ev_mgr, &event->rt_node);
+//        loop->rt_ev_num++;
+//        mtx_unlock(&loop->rt_ev_mtx);
+//
+//        _event_loop_wake(loop);
+//        break;
+//    }
+//    case XCOMM_EVENT_TYPE_TM: {
+//        xcomm_heap_insert(&loop->tm_ev_mgr, &event->tm_node);
+//        loop->tm_ev_num++;
+//        break;
+//    }
+//    default:
+//        break;
+//    }
+//}
+//
+//void xcomm_event_loop_update(xcomm_event_loop_t* loop, xcomm_event_t* event) {
+//    if (event->type == XCOMM_EVENT_TYPE_IO) {
+//        platform_poller_mod(loop->sq, &event->io.sqe);
+//    }
+//}
+//
+//void xcomm_event_loop_unregister(xcomm_event_loop_t* loop, xcomm_event_t* event) {
+//    switch (event->type) {
+//    case XCOMM_EVENT_TYPE_IO: {
+//        xcomm_list_remove(&event->io_node);
+//        loop->io_ev_num--;
+//
+//        platform_poller_del(loop->sq, &event->io.sqe);
+//        break;
+//    }
+//    case XCOMM_EVENT_TYPE_RT: {
+//        /**
+//         * Due to the fact that RT events are processed in the event loop by
+//         * copying the entire RT queue at once, there is no need to handle them
+//         * here.
+//         */
+//        break;
+//    }
+//    case XCOMM_EVENT_TYPE_TM: {
+//        mtx_lock(&loop->tm_ev_mtx);
+//        xcomm_heap_remove(&loop->tm_ev_mgr, &event->tm_node);
+//        loop->tm_ev_num--;
+//        mtx_unlock(&loop->tm_ev_mtx);
+//        break;
+//    }
+//    default:
+//        break;
+//    }
+//}
 
 void xcomm_event_loop_post(xcomm_event_loop_t* loop, xcomm_event_t* event) {
     mtx_lock(&loop->rt_ev_mtx);

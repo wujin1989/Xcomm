@@ -34,6 +34,8 @@ struct async_timer_context_s {
     xcomm_event_loop_t*  loop;
 };
 
+extern engine_t engine;
+
 static void _async_timer_add(void* param) {
     async_timer_context_t* context = param;
 
@@ -49,7 +51,7 @@ static void _async_timer_add(void* param) {
 
 void xcomm_utils_post_routine(void (*routine)(void* param), void* param) {
     xcomm_logi("%s enter.\n", __FUNCTION__);
-
+    engine.roundrobin();
     xcomm_event_routine_add(loop, routine, param);
 
     xcomm_logi("%s leave.\n", __FUNCTION__);
